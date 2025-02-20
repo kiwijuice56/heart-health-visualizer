@@ -1,6 +1,17 @@
-[gd_scene load_steps=2 format=3 uid="uid://b3fisyx6pvlq6"]
+[gd_scene load_steps=3 format=3 uid="uid://b3fisyx6pvlq6"]
 
 [ext_resource type="Script" uid="uid://f41vsmlou6xj" path="res://main/main.gd" id="1_53q0u"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_53q0u"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.243137, 0.243137, 0.243137, 0.215686)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="Main" type="Node"]
 script = ExtResource("1_53q0u")
@@ -18,3 +29,53 @@ grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 2
 stretch_mode = 5
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+custom_minimum_size = Vector2(128, 64)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_53q0u")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="LabelContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="P1" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/LabelContainer"]
+layout_mode = 2
+text = "P1"
+
+[node name="P2" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/LabelContainer"]
+layout_mode = 2
+text = "P2"
+
+[node name="OptionContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="P1Slider" type="HSlider" parent="MarginContainer/PanelContainer/HBoxContainer/OptionContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 23)
+layout_mode = 2
+max_value = 1.0
+step = 0.001
+
+[node name="P2Slider" type="HSlider" parent="MarginContainer/PanelContainer/HBoxContainer/OptionContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 23)
+layout_mode = 2
+max_value = 1.0
+step = 0.001
