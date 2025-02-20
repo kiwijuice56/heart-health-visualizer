@@ -23,7 +23,7 @@ void FractalFlameRenderer::_bind_methods() {
 }
 
 FractalFlameRenderer::FractalFlameRenderer() {
-    fractal_parameters.resize(2);
+    fractal_parameters.resize(3);
     fractal_parameters.fill(0);
 }
 
@@ -71,8 +71,8 @@ Ref<ImageTexture> FractalFlameRenderer::render(Vector2i image_size, double initi
                 );
 
                 point = point_distance * Vector2(
-                    +UtilityFunctions::sin(4 * angle),
-                    -UtilityFunctions::cos(4 * angle)
+                    +UtilityFunctions::sin(8 * fractal_parameters[2] + 4 * angle),
+                    -UtilityFunctions::cos(8 * fractal_parameters[2] + 4 * angle)
                 );
 
                 point_color = (point_color + Color(1.0, 0.3, 0.1)) / 2;
@@ -80,8 +80,8 @@ Ref<ImageTexture> FractalFlameRenderer::render(Vector2i image_size, double initi
                 // Cosine function
 
                 point = point_distance * Vector2(
-                    UtilityFunctions::cos(fractal_parameters[1] * 8 * PI * point.x / initial_radius),
-                    UtilityFunctions::cos(fractal_parameters[1] * 8 * PI * point.y / initial_radius)
+                    UtilityFunctions::cos(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * PI * point.x / initial_radius),
+                    UtilityFunctions::cos(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * PI * point.y / initial_radius)
                 );
 
                 point_color = (point_color + Color(0.4, 1.0, 0.4)) / 2;
@@ -89,14 +89,13 @@ Ref<ImageTexture> FractalFlameRenderer::render(Vector2i image_size, double initi
                 // Sine function
 
                 point = point_distance * Vector2(
-                    UtilityFunctions::sin(fractal_parameters[1] * 8 * PI * point.x / initial_radius),
-                    UtilityFunctions::sin(fractal_parameters[1] * 8 * PI * point.y / initial_radius)
+                    UtilityFunctions::sin(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * PI * point.x / initial_radius),
+                    UtilityFunctions::sin(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * PI * point.y / initial_radius)
                 );
 
                 point_color = (point_color + Color(0.8, 0.2, 0.8)) / 2;
             } else {
                 // Linear function
-
                 point *= Vector2(1.25, 0.85);
 
                 point_color = (point_color + Color(0.2, 0.4, 1.0)) / 2;

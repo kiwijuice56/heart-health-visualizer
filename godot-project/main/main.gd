@@ -6,23 +6,19 @@ class_name Main extends Node
 var fractal_parameters: PackedFloat64Array
 
 func _ready() -> void:
-	fractal_parameters.resize(2)
+	fractal_parameters.resize(3)
 	fractal_parameters.fill(0)
 	
-	%P1Slider.value_changed.connect(_on_p1_changed)
-	%P2Slider.value_changed.connect(_on_p2_changed)
+	for i in range(1, 4):
+		get_node("%%P%dSlider" % i).value_changed.connect(_on_p_changed.bind(i))
 
-func _on_p1_changed(val: float) -> void:
-	fractal_parameters[0] = val
-	fractal_flame_renderer.fractal_parameters = fractal_parameters
-
-func _on_p2_changed(val: float) -> void:
-	fractal_parameters[1] = val
+func _on_p_changed(val: float, idx: int) -> void:
+	fractal_parameters[idx - 1] = val
 	fractal_flame_renderer.fractal_parameters = fractal_parameters
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("render", false):
 		render_canvas.texture = fractal_flame_renderer.render(Vector2i(256, 256), 64, 64 * 32, 256, 8)
 
-func _process(delta: float) -> void:
-	render_canvas.texture = fractal_flame_renderer.render(Vector2i(256, 256), 64, 1024, 128, 8)
+func _process(_delta: float) -> void:
+	render_canvas.texture = fractal_flame_renderer.render(Vector2i(212, 212), 64, 1024, 128, 16)

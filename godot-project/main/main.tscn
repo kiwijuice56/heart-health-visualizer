@@ -62,6 +62,10 @@ text = "P1"
 layout_mode = 2
 text = "P2"
 
+[node name="P3" type="Label" parent="MarginContainer/PanelContainer/HBoxContainer/LabelContainer"]
+layout_mode = 2
+text = "P3"
+
 [node name="OptionContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -74,6 +78,13 @@ max_value = 1.0
 step = 0.001
 
 [node name="P2Slider" type="HSlider" parent="MarginContainer/PanelContainer/HBoxContainer/OptionContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 23)
+layout_mode = 2
+max_value = 1.0
+step = 0.001
+
+[node name="P3Slider" type="HSlider" parent="MarginContainer/PanelContainer/HBoxContainer/OptionContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 23)
 layout_mode = 2
