@@ -1,0 +1,9 @@
+[configuration]
+
+entry_symbol = "module_init"
+compatibility_minimum = "4.4"
+
+[libraries]
+
+windows.x86_64 = "res://bin/heart_health.windows.template_release.x86_64.dll"
+android.arm64 = "res://bin/libgdexample.android.template_release.arm64.so"

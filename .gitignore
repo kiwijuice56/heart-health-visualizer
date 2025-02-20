@@ -1,0 +1,10 @@
+# Godot project ignores
+godot-project/.godot/
+godot-project/android/
+
+# Binary files
+*.dll
+*.exp
+*.lib
+*.obj
+*.dblite
