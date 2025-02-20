@@ -1,6 +1,8 @@
 #pragma once
 
 #include <godot_cpp/classes/node.hpp>
+#include <godot_cpp/classes/image.hpp>
+#include <godot_cpp/classes/image_texture.hpp>
 
 namespace godot {
 
@@ -15,6 +17,8 @@ protected:
 public:
 	FractalFlameRenderer();
 	~FractalFlameRenderer();
+
+	Ref<ImageTexture> render(Vector2i image_size, double initial_radius, int sample_count, int iteration_count, int initial_iteration_ignore_count);
 };
 
 }
