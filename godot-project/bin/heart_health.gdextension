@@ -6,5 +6,5 @@ hot_reloadable = true
 
 [libraries]
 
-windows.x86_64 = "res://bin/heart_health.windows.template_release.x86_64.dll"
-android.arm64 = "res://bin/libgdexample.android.template_release.arm64.so"
+windows.x86_64 = "res://bin/lib_hearthealth.windows.template_release.x86_64.dll"
+android.arm64 = "res://bin/lib_hearthealth.android.template_release.arm64.so"

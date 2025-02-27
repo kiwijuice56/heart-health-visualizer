@@ -8,3 +8,5 @@ godot-project/android/
 *.lib
 *.obj
 *.dblite
+*.so
+*.os
