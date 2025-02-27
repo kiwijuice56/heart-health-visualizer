@@ -23,6 +23,10 @@ window/stretch/mode="viewport"
 window/stretch/aspect="keep_height"
 window/handheld/orientation=1
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/GodotAndroidCamera/plugin.cfg")
+
 [input]
 
 render={

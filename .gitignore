@@ -10,3 +10,4 @@ godot-project/android/
 *.dblite
 *.so
 *.os
+*.aar
