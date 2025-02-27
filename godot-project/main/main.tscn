@@ -90,3 +90,9 @@ custom_minimum_size = Vector2(0, 23)
 layout_mode = 2
 max_value = 1.0
 step = 0.001
+
+[node name="RecordButton" type="Button" parent="MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+text = "Record"
