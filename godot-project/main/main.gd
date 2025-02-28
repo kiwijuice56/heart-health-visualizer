@@ -32,7 +32,7 @@ func _ready() -> void:
 
 func _on_record_pressed() -> void:
 	print(_plugin_singleton.isCameraAvailable())
-	_plugin_singleton.openCamera()
+	_plugin_singleton.recordVideo()
 
 func _on_p_changed(val: float, idx: int) -> void:
 	fractal_parameters[idx - 1] = val
