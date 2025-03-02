@@ -17,11 +17,17 @@ config/icon="res://icon.svg"
 
 [display]
 
-window/size/viewport_width=512
-window/size/viewport_height=512
+window/size/viewport_width=1080
+window/size/viewport_height=1920
+window/size/window_width_override=608
+window/size/window_height_override=1080
 window/stretch/mode="viewport"
 window/stretch/aspect="keep_width"
 window/handheld/orientation=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/GodotAndroidCamera/plugin.cfg")
 
 [input]
 
