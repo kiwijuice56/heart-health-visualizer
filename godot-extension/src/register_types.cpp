@@ -1,5 +1,7 @@
 #include "../include/register_types.hpp"
 #include "../include/fractal_flame_renderer.hpp"
+#include "../include/ppg_reader.hpp"
+
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -13,6 +15,7 @@ void initialize_module(ModuleInitializationLevel p_level) {
 	}
 
 	GDREGISTER_CLASS(FractalFlameRenderer);
+	GDREGISTER_CLASS(PpgReader);
 }
 
 void uninitialize_module(ModuleInitializationLevel p_level) {
