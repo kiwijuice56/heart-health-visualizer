@@ -3,24 +3,35 @@ class_name Main extends Node
 @onready var render_canvas: TextureRect = %RenderCanvas
 @onready var camera_canvas: TextureRect = %CameraCanvas
 
-@onready var ppg_chart: Chart = %PpgChart
+@onready var raw_ppg_chart: Chart = %RawPpgChart
+@onready var smooth_ppg_chart: Chart = %SmoothPpgChart
+
 @onready var record_button: Button = %RecordButton
 @onready var render_button: Button = %RenderButton
 
 var fractal_flame_renderer: FractalFlameRenderer 
-var ppg_reader: PpgReader
+var ppg_analyzer: PpgAnalyzer
 var camera: AndroidCamera
 
 var fractal_parameters: PackedFloat64Array
 var recording: bool = false
 var rendering: bool = false
 
+var ppg_signal: PackedInt32Array
+var ppg_buffer: Array[int] = []
+var ppg_ignore_count: int = ppg_ignore_amount
+
+const ppg_ignore_amount: int = 16
+const signal_size: int = 150
+const smooth_window_size: int = 4
+const ppg_buffer_size: int = 64
+
 func _ready() -> void:
 	set_process(rendering)
 	
 	# Initialize GDextension modules
 	fractal_flame_renderer = FractalFlameRenderer.new()
-	ppg_reader = PpgReader.new()
+	ppg_analyzer = PpgAnalyzer.new()
 	
 	# Initialize parameters
 	fractal_parameters.resize(3)
@@ -37,9 +48,31 @@ func _ready() -> void:
 		get_node("%%P%dSlider" % i).value_changed.connect(_on_p_changed.bind(i))
 
 func _on_camera_frame(frame: ImageTexture) -> void:
+	if ppg_ignore_count > 0:
+		ppg_ignore_count -= 1
+		return
+	
 	camera_canvas.texture = frame
-	var ppg_val: int = ppg_reader.read_ppg_from_image(frame.get_image(), Rect2i(Vector2i(0, 0), Vector2i(1080, 1080)))
-	ppg_chart.add_point(ppg_val, Time.get_unix_time_from_system())
+	
+	# Add to signal
+	var ppg_value: int = ppg_analyzer.read_ppg_from_image(frame.get_image(), Rect2i(Vector2i(0, 0), Vector2i(512, 512)))
+	ppg_buffer.append(ppg_value)
+
+	if len(ppg_buffer) > ppg_buffer_size:
+		ppg_signal.append(ppg_buffer.pop_front())
+	
+	if len(ppg_signal) > signal_size:
+		ppg_signal.remove_at(0)
+	
+	# Plot signals
+	
+	if len(ppg_signal) > 0:
+		raw_ppg_chart.plot(ppg_signal)
+	
+	if len(ppg_signal) > smooth_window_size:
+		var smooth_ppg_signal: PackedInt32Array = ppg_analyzer.smoothed_ppg_signal(ppg_signal, smooth_window_size)
+		smooth_ppg_chart.plot(smooth_ppg_signal.slice(smooth_window_size))
+	
 
 func _on_record_pressed() -> void:
 	if not camera.request_camera_permissions():
@@ -47,7 +80,8 @@ func _on_record_pressed() -> void:
 		return
 	recording = not recording
 	if recording:
-		camera.start_camera(1080, 1080, 60, false)
+		ppg_ignore_count = ppg_ignore_amount
+		camera.start_camera(1080, 1080, 60, true)
 	else:
 		camera.stop_camera()
 

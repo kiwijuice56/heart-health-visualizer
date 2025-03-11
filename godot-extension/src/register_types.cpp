@@ -1,6 +1,6 @@
 #include "../include/register_types.hpp"
 #include "../include/fractal_flame_renderer.hpp"
-#include "../include/ppg_reader.hpp"
+#include "../include/ppg_analyzer.hpp"
 
 
 #include <gdextension_interface.h>
@@ -15,7 +15,7 @@ void initialize_module(ModuleInitializationLevel p_level) {
 	}
 
 	GDREGISTER_CLASS(FractalFlameRenderer);
-	GDREGISTER_CLASS(PpgReader);
+	GDREGISTER_CLASS(PpgAnalyzer);
 }
 
 void uninitialize_module(ModuleInitializationLevel p_level) {
