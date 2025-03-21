@@ -2,7 +2,6 @@
 #include "../include/fractal_flame_renderer.hpp"
 #include "../include/ppg_analyzer.hpp"
 
-
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>

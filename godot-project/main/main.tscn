@@ -143,8 +143,8 @@ custom_minimum_size = Vector2(0, 256)
 layout_mode = 2
 size_flags_vertical = 10
 script = ExtResource("3_xwkvk")
-time_window = 12.0
 line_color = Color(0.22736, 0.578602, 0.613458, 1)
+peak_line_color = Color(1, 1, 1, 1)
 line_width = 4.0
 
 [node name="RawPpgChart" type="Control" parent="MarginContainer/VBoxContainer"]
@@ -153,6 +153,14 @@ custom_minimum_size = Vector2(0, 256)
 layout_mode = 2
 size_flags_vertical = 8
 script = ExtResource("3_xwkvk")
-time_window = 12.0
 line_color = Color(0.186525, 0.475349, 0.721524, 1)
+peak_line_color = Color(1, 1, 1, 1)
 line_width = 4.0
+
+[node name="HeartRateLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HeartRateVariabilityLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2

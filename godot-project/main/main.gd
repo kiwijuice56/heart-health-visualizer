@@ -67,12 +67,20 @@ func _on_camera_frame(frame: ImageTexture) -> void:
 	# Plot signals
 	
 	if len(ppg_signal) > 0:
-		raw_ppg_chart.plot(ppg_signal)
+		# We need to chop off the beginning samples of the smoothed signal
+		if len(ppg_signal) > 4:
+			var smoothed_ppg_signal: PackedInt32Array = ppg_analyzer.smoothed_ppg_signal(ppg_signal, 4).slice(4)
+			smooth_ppg_chart.plot(smoothed_ppg_signal, ppg_analyzer.peak_finder(smoothed_ppg_signal))
+		
+		raw_ppg_chart.plot(ppg_signal, PackedInt32Array())
 	
-	if len(ppg_signal) > smooth_window_size:
-		var smooth_ppg_signal: PackedInt32Array = ppg_analyzer.smoothed_ppg_signal(ppg_signal, smooth_window_size)
-		smooth_ppg_chart.plot(smooth_ppg_signal.slice(smooth_window_size))
+	# Calculate heart rate
 	
+	var heart_rate: float = ppg_analyzer.calculate_heart_rate(ppg_signal, 30)
+	var heart_rate_variability: float = ppg_analyzer.calculate_heart_rate_variability(ppg_signal, 30)
+	
+	%HeartRateLabel.text = "Heart rate (bpm): %.2f" % heart_rate
+	%HeartRateVariabilityLabel.text = "HRV (ms): %.2f" % heart_rate_variability 
 
 func _on_record_pressed() -> void:
 	if not camera.request_camera_permissions():
@@ -81,7 +89,7 @@ func _on_record_pressed() -> void:
 	recording = not recording
 	if recording:
 		ppg_ignore_count = ppg_ignore_amount
-		camera.start_camera(1080, 1080, 60, true)
+		camera.start_camera(1080, 1080, 30, true)
 	else:
 		camera.stop_camera()
 

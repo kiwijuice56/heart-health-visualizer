@@ -1,12 +1,14 @@
 #include "../include/ppg_analyzer.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
 void PpgAnalyzer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("read_ppg_from_image", "camera_frame", "bounding_box"), &PpgAnalyzer::read_ppg_from_image);
     ClassDB::bind_method(D_METHOD("smoothed_ppg_signal", "ppg_values", "window_size"), &PpgAnalyzer::smoothed_ppg_signal);
+    ClassDB::bind_method(D_METHOD("peak_finder", "ppg_values"), &PpgAnalyzer::peak_finder);
     ClassDB::bind_method(D_METHOD("calculate_heart_rate", "ppg_values", "sampling_frequency"), &PpgAnalyzer::calculate_heart_rate);
     ClassDB::bind_method(D_METHOD("calculate_heart_rate_variability", "ppg_values", "sampling_frequency"), &PpgAnalyzer::calculate_heart_rate_variability);
 }
@@ -57,10 +59,65 @@ PackedInt32Array PpgAnalyzer::smoothed_ppg_signal(PackedInt32Array ppg_values, i
     return smoothed_signal;
 }
 
+PackedInt32Array PpgAnalyzer::peak_finder(PackedInt32Array ppg_values) {
+    PackedInt32Array peak_indices;
+
+    for (int i = 1; i < ppg_values.size() - 1; i++) {
+        if (ppg_values[i - 1] < ppg_values[i] && ppg_values[i] > ppg_values[i + 1]) {
+            peak_indices.append(i);
+        }
+    }
+
+    return peak_indices;
+}
+
 float PpgAnalyzer::calculate_heart_rate(PackedInt32Array ppg_values, float sampling_frequency) {
-    return 0.0;
+    // Since we only care about peaks, we want to smooth away the dicrotic notch
+    // and any noise with a heavy smoothing filter
+    PackedInt32Array smoothed_signal = smoothed_ppg_signal(ppg_values, HEART_SMOOTHING_SIZE);
+    PackedInt32Array peak_indices = peak_finder(smoothed_signal);
+
+    if (peak_indices.size() <= 1) {
+        return 0.0;
+    }
+
+    double interbeat_interval_sum = 0.0;
+    for (int i = 1; i < peak_indices.size(); i++) {
+        double index_distance = peak_indices[i] - peak_indices[i - 1];
+        interbeat_interval_sum += index_distance / sampling_frequency;
+    }
+
+    double average_beat_length = interbeat_interval_sum / (peak_indices.size() - 1);
+
+    return sampling_frequency / average_beat_length;
 }
 
 float PpgAnalyzer::calculate_heart_rate_variability(PackedInt32Array ppg_values, float sampling_frequency) {
-    return 0.0;
+    const PackedInt32Array smoothed_signal = smoothed_ppg_signal(ppg_values, HEART_SMOOTHING_SIZE);
+    const PackedInt32Array peak_indices = peak_finder(smoothed_signal);
+
+    if (peak_indices.size() <= 1) {
+        return 0.0;
+    }
+
+    // Calculate the mean interbeat interval
+    double interbeat_interval_sum = 0.0;
+    for (int i = 1; i < peak_indices.size(); i++) {
+        double index_distance = peak_indices[i] - peak_indices[i - 1];
+        double interbeat_interval = index_distance / sampling_frequency;
+        interbeat_interval_sum += interbeat_interval;
+    }
+    const double mean_interbeat_interval = interbeat_interval_sum / (peak_indices.size() - 1);
+
+    // Calculate the variance of interbeat intervals
+    double variance = 0.0;
+    for (int i = 1; i < peak_indices.size(); i++) {
+        double index_distance = peak_indices[i] - peak_indices[i - 1];
+        double interbeat_interval = index_distance / sampling_frequency;
+
+        variance += (interbeat_interval - mean_interbeat_interval) * (interbeat_interval - mean_interbeat_interval);
+    }
+
+    // s to ms
+    return 1000 * UtilityFunctions::sqrt(variance / (peak_indices.size() - 1));
 }

@@ -1,13 +1,13 @@
 class_name Chart extends Control
 
-## Measured in seconds.
-@export var time_window: float = 8 
-
 @export var line_color: Color = Color(0.5, 0.2, 0.9)
+@export var peak_line_color: Color = Color(0.5, 0.2, 0.9)
+
 @export var line_width: float = 1.0
 @export var padding: float = 0.1
 
 var stream: PackedInt32Array
+var peaks: Dictionary[int, bool]
 
 func _draw() -> void:
 	if len(stream) == 0:
@@ -40,11 +40,18 @@ func _draw() -> void:
 			size.y - fit(norm_y[i], 0, 1, size.y))
 		from.y = from.y * (1.0 - padding) + size.y * padding / 2.0
 		to.y = to.y * (1.0 - padding) + size.y * padding / 2.0
-		draw_line(from, to, line_color, line_width, true)
+		
+		draw_line(from, to, peak_line_color if i in peaks else line_color, line_width, true)
 
 func fit(v: float, min_v: float, max_v: float, scalar: float) -> float:
 	return (v - min_v) / float(max_v - min_v) * scalar
 
-func plot(new_stream: PackedInt32Array) -> void:
+# Accepts time series signal + an array of indices in that signal that are peaks.
+# Peaks are highlighted in a different color. You can pass in an empty array if this effect
+# is not desired.
+func plot(new_stream: PackedInt32Array, peak_indices: PackedInt32Array) -> void:
 	stream = new_stream
+	peaks = {}
+	for peak in peak_indices:
+		peaks[peak] = true
 	queue_redraw()
