@@ -1,4 +1,78 @@
-[gd_resource type="Theme" format=3 uid="uid://bqitn6bx4np8k"]
+[gd_resource type="Theme" load_steps=9 format=3 uid="uid://bqitn6bx4np8k"]
+
+[ext_resource type="Texture2D" uid="uid://ci8gh5eey81gi" path="res://main/ui/theme/grabber.png" id="1_ci5du"]
+[ext_resource type="FontFile" uid="uid://ce4lfcklsewe2" path="res://main/ui/theme/Poppins-Regular.ttf" id="1_rpgwa"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ci5du"]
+content_margin_left = 8.0
+content_margin_top = 16.0
+content_margin_right = 8.0
+content_margin_bottom = 16.0
+bg_color = Color(0.45, 0.36, 0.429, 1)
+border_width_bottom = 6
+border_color = Color(0.266047, 0.2156, 0.28, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_muqbw"]
+content_margin_left = 8.0
+content_margin_top = 16.0
+content_margin_right = 8.0
+content_margin_bottom = 16.0
+bg_color = Color(0.266667, 0.215686, 0.278431, 1)
+border_width_bottom = 6
+border_color = Color(0.266047, 0.2156, 0.28, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rpgwa"]
+content_margin_left = 8.0
+content_margin_top = 16.0
+content_margin_right = 8.0
+content_margin_bottom = 16.0
+bg_color = Color(0.39, 0.3042, 0.36998, 1)
+border_width_bottom = 6
+border_color = Color(0.266047, 0.2156, 0.28, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bvxxh"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.69, 0.5865, 0.667575, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c4ta3"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.266667, 0.215686, 0.278431, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="FontVariation" id="FontVariation_ci5du"]
+base_font = ExtResource("1_rpgwa")
 
 [resource]
+default_font = SubResource("FontVariation_ci5du")
 default_font_size = 32
+Button/styles/hover = SubResource("StyleBoxFlat_ci5du")
+Button/styles/hover_pressed = SubResource("StyleBoxFlat_muqbw")
+Button/styles/normal = SubResource("StyleBoxFlat_rpgwa")
+Button/styles/pressed = SubResource("StyleBoxFlat_muqbw")
+HSlider/icons/grabber = ExtResource("1_ci5du")
+HSlider/icons/grabber_disabled = ExtResource("1_ci5du")
+HSlider/icons/grabber_highlight = ExtResource("1_ci5du")
+HSlider/styles/grabber_area = SubResource("StyleBoxFlat_bvxxh")
+HSlider/styles/grabber_area_highlight = SubResource("StyleBoxFlat_bvxxh")
+HSlider/styles/slider = SubResource("StyleBoxFlat_c4ta3")

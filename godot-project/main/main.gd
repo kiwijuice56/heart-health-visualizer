@@ -55,7 +55,7 @@ func _on_camera_frame(frame: ImageTexture) -> void:
 	camera_canvas.texture = frame
 	
 	# Add to signal
-	var ppg_value: int = ppg_analyzer.read_ppg_from_image(frame.get_image(), Rect2i(Vector2i(0, 0), Vector2i(512, 512)))
+	var ppg_value: int = ppg_analyzer.read_ppg_from_image(frame.get_image(), Rect2i(Vector2i(0, 0), Vector2i(frame.get_width(), frame.get_height())))
 	ppg_buffer.append(ppg_value)
 
 	if len(ppg_buffer) > ppg_buffer_size:
