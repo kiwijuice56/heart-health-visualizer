@@ -1,5 +1,8 @@
 #include "../include/ppg_analyzer.hpp"
 
+#include "../matlab-generated/preprocess_ppg_pulse.h"
+#include "../matlab-generated/coder_array.h"
+
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -11,6 +14,7 @@ void PpgAnalyzer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("peak_finder", "ppg_values"), &PpgAnalyzer::peak_finder);
     ClassDB::bind_method(D_METHOD("calculate_heart_rate", "ppg_values", "sampling_frequency"), &PpgAnalyzer::calculate_heart_rate);
     ClassDB::bind_method(D_METHOD("calculate_heart_rate_variability", "ppg_values", "sampling_frequency"), &PpgAnalyzer::calculate_heart_rate_variability);
+    ClassDB::bind_method(D_METHOD("matlab_test"), &PpgAnalyzer::matlab_test);
 }
 
 PpgAnalyzer::PpgAnalyzer() {
@@ -121,3 +125,25 @@ float PpgAnalyzer::calculate_heart_rate_variability(PackedInt32Array ppg_values,
     // s to ms
     return 1000 * UtilityFunctions::sqrt(variance / (peak_indices.size() - 1));
 }
+
+void PpgAnalyzer::matlab_test() {
+    coder::array<double, 2U> ppg_signal;
+    // Set the size of the array.
+    // Change this size to the value that the application requires.
+    ppg_signal.set_size(1, 2);
+    // Loop over the array to initialize each element.
+    for (int idx0{0}; idx0 < 1; idx0++) {
+      for (int idx1{0}; idx1 < ppg_signal.size(1); idx1++) {
+        // Set the value of the array element.
+        // Change this value to the value that the application requires.
+        ppg_signal[idx1] = 0.0;
+      }
+    }
+
+
+  coder::array<double, 2U> processed_ppg_signal;
+
+  preprocess_ppg_pulse(ppg_signal, processed_ppg_signal);
+  //preprocess_ppg_pulse_terminate();
+}
+

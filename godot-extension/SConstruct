@@ -12,8 +12,10 @@ env = SConscript("godot-cpp/SConstruct")
 # - CPPDEFINES are for pre-processor defines
 # - LINKFLAGS are for linking flags
 
-env.Append(CPPPATH=["src/", "include/"])
-sources = Glob("src/*.cpp")
+env.Append(CPPPATH=["src/", "include/", "matlab-generated/"])
+sources = Glob("src/*.cpp") + Glob("matlab-generated/*.cpp")
+for x in sources:
+    print(x)
 
 if env["platform"] == "macos":
     library = env.SharedLibrary(

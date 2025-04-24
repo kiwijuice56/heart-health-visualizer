@@ -2,6 +2,8 @@
 godot-project/.godot/
 godot-project/android/
 
+.vscode
+
 # Binary files
 *.dll
 *.exp

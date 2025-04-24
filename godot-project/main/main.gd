@@ -33,6 +33,9 @@ func _ready() -> void:
 	fractal_flame_renderer = FractalFlameRenderer.new()
 	ppg_analyzer = PpgAnalyzer.new()
 	
+	# TODO: remove this test
+	ppg_analyzer.matlab_test()
+	
 	# Initialize parameters
 	fractal_parameters.resize(3)
 	fractal_parameters.fill(0)

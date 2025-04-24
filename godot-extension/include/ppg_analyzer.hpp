@@ -3,6 +3,10 @@
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/classes/image.hpp>
 
+#include "../matlab-generated/rtwtypes.h"
+#include <cstddef>
+#include <cstdlib>
+
 namespace godot {
 
 class PpgAnalyzer : public Node {
@@ -35,6 +39,15 @@ public:
 	// Returns heart rate variability in units of milliseconds
 	float calculate_heart_rate_variability(PackedInt32Array ppg_values, float sampling_frequency);
 
+	// Returns the mean PPG pulse waveform of a PPG signal
+	// PackedFloat64Array calculate_mean_ppg_pulse_waveform(PackedInt32Array ppg_values, float sampling_frequency);
+
+	// Given a single PPG pulse waveform (i.e. one heartbeat) as an array, return the A/B fourier coefficients
+	// as a 2D array in the format [A, B]
+	// TypedArray<TypedArray<float>> calculate_fourier_coefficients(PackedFloat64Array ppg_pulse_waveform, float sampling_frequency);
+
+
+	void matlab_test();
 };
 
 }
