@@ -1,8 +1,8 @@
-[gd_scene load_steps=19 format=3 uid="uid://b3fisyx6pvlq6"]
+[gd_scene load_steps=18 format=3 uid="uid://b3fisyx6pvlq6"]
 
 [ext_resource type="Script" uid="uid://f41vsmlou6xj" path="res://main/main.gd" id="1_53q0u"]
-[ext_resource type="Shader" uid="uid://cbwcksp14estw" path="res://main/ui/god_rays.gdshader" id="2_c651c"]
 [ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="2_pjrb6"]
+[ext_resource type="Script" uid="uid://c1b220xylayrp" path="res://main/ui/screen_manager.gd" id="3_67ri8"]
 [ext_resource type="Script" uid="uid://bc3n71aokopes" path="res://main/ui/chart.gd" id="3_xwkvk"]
 [ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="4_67ri8"]
 [ext_resource type="Texture2D" uid="uid://dqpg4ouitwhvv" path="res://main/ui/icons/record.png" id="5_kfbq2"]
@@ -19,22 +19,6 @@ width = 256
 height = 256
 fill_from = Vector2(0.442006, 1)
 fill_to = Vector2(0.764444, 0)
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3wy1v"]
-shader = ExtResource("2_c651c")
-shader_parameter/angle = -0.3
-shader_parameter/position = -0.2
-shader_parameter/spread = 0.5
-shader_parameter/cutoff = 0.1
-shader_parameter/falloff = 0.2
-shader_parameter/edge_fade = 0.15
-shader_parameter/speed = 1.0
-shader_parameter/ray1_density = 8.0
-shader_parameter/ray2_density = 30.0
-shader_parameter/ray2_intensity = 0.3
-shader_parameter/color = Color(1, 1, 1, 0.0352941)
-shader_parameter/hdr = false
-shader_parameter/seed = 5.0
 
 [sub_resource type="Gradient" id="Gradient_grrlh"]
 colors = PackedColorArray(0.16875, 0.0625, 0.25, 1, 1, 0.88, 0.928, 1)
@@ -110,38 +94,36 @@ grow_vertical = 0
 size_flags_horizontal = 8
 size_flags_vertical = 10
 
-[node name="GodRays" type="ColorRect" parent="."]
-visible = false
-material = SubResource("ShaderMaterial_3wy1v")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ScreenContainer" type="VBoxContainer" parent="."]
+[node name="ScreenManager" type="VBoxContainer" parent="." node_paths=PackedStringArray("tabs", "tab_buttons")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_pjrb6")
+script = ExtResource("3_67ri8")
+tab_colors = Array[Color]([Color(0.164706, 0.219608, 0.239216, 1), Color(0.232664, 0.186166, 0.278186, 1), Color(0.205746, 0.21939, 0.127608, 1)])
+focus_color = Color(1, 1, 1, 1)
+unfocus_color = Color(0.478431, 0.462745, 0.490196, 1)
+tabs = [NodePath("MainContainer/VBoxContainer/RecordContainer"), NodePath("MainContainer/VBoxContainer/HistoryContainer"), NodePath("MainContainer/VBoxContainer/SettingsContainer")]
+tab_buttons = [NodePath("NavigationBar/TabContainer/RecordTab/TabRecordButton"), NodePath("NavigationBar/TabContainer/HistoryTab/TabHistoryButton"), NodePath("NavigationBar/TabContainer/SettingsTab/TabSettingsButton")]
 
-[node name="RecordScreen" type="MarginContainer" parent="ScreenContainer"]
+[node name="MainContainer" type="MarginContainer" parent="ScreenManager"]
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("2_pjrb6")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ScreenContainer/RecordScreen"]
+[node name="VBoxContainer" type="VBoxContainer" parent="ScreenManager/MainContainer"]
 layout_mode = 2
 theme_override_constants/separation = 32
 
-[node name="TitleContainer" type="PanelContainer" parent="ScreenContainer/RecordScreen/VBoxContainer"]
+[node name="TitleContainer" type="PanelContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
 material = SubResource("ShaderMaterial_grrlh")
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_0i4oc")
 
-[node name="Title" type="Label" parent="ScreenContainer/RecordScreen/VBoxContainer/TitleContainer"]
+[node name="Title" type="Label" parent="ScreenManager/MainContainer/VBoxContainer/TitleContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 1
@@ -150,7 +132,8 @@ theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 64
 text = "Recording"
 
-[node name="MarginContainer" type="MarginContainer" parent="ScreenContainer/RecordScreen/VBoxContainer"]
+[node name="RecordContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 128
@@ -158,11 +141,11 @@ theme_override_constants/margin_top = 96
 theme_override_constants/margin_right = 128
 theme_override_constants/margin_bottom = 128
 
-[node name="ContentContainer" type="VBoxContainer" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer"]
+[node name="ContentContainer" type="VBoxContainer" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
 layout_mode = 2
 theme_override_constants/separation = 64
 
-[node name="Description" type="Label" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer/ContentContainer"]
+[node name="Description" type="Label" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/ContentContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "Record a snapshot of your heart health. 
@@ -172,7 +155,7 @@ Your pulse will be measured with your phone camera, then analyzed for warning si
 No internet connection is needed. Results will be saved and viewable in the History tab."
 autowrap_mode = 2
 
-[node name="RecordButton" type="Button" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer/ContentContainer"]
+[node name="RecordButton" type="Button" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/ContentContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8
@@ -180,7 +163,7 @@ focus_mode = 0
 text = "Start Recording
 "
 
-[node name="RenderButton" type="Button" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer"]
+[node name="RenderButton" type="Button" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -188,31 +171,31 @@ size_flags_vertical = 8
 focus_mode = 0
 text = "Toggle Fractal"
 
-[node name="OptionContainer" type="VBoxContainer" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer"]
+[node name="OptionContainer" type="VBoxContainer" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 32
 
-[node name="P1Slider" type="HSlider" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer/OptionContainer"]
+[node name="P1Slider" type="HSlider" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/OptionContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 max_value = 1.0
 step = 0.001
 
-[node name="P2Slider" type="HSlider" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer/OptionContainer"]
+[node name="P2Slider" type="HSlider" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/OptionContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 max_value = 1.0
 step = 0.001
 
-[node name="P3Slider" type="HSlider" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer/OptionContainer"]
+[node name="P3Slider" type="HSlider" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/OptionContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 max_value = 1.0
 step = 0.001
 
-[node name="SmoothPpgChart" type="Control" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer"]
+[node name="SmoothPpgChart" type="Control" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 256)
@@ -223,7 +206,7 @@ line_color = Color(0.22736, 0.578602, 0.613458, 1)
 peak_line_color = Color(1, 1, 1, 1)
 line_width = 4.0
 
-[node name="RawPpgChart" type="Control" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer"]
+[node name="RawPpgChart" type="Control" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 256)
@@ -234,65 +217,92 @@ line_color = Color(0.186525, 0.475349, 0.721524, 1)
 peak_line_color = Color(1, 1, 1, 1)
 line_width = 4.0
 
-[node name="HeartRateLabel" type="Label" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer"]
+[node name="HeartRateLabel" type="Label" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="HeartRateVariabilityLabel" type="Label" parent="ScreenContainer/RecordScreen/VBoxContainer/MarginContainer"]
+[node name="HeartRateVariabilityLabel" type="Label" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="NavigationBar" type="PanelContainer" parent="ScreenContainer"]
+[node name="HistoryContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SettingsContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="NavigationBar" type="PanelContainer" parent="ScreenManager"]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_styles/panel = SubResource("StyleBoxFlat_67ri8")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="ScreenContainer/NavigationBar"]
+[node name="TabContainer" type="HBoxContainer" parent="ScreenManager/NavigationBar"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 10
 
-[node name="Tab" type="VBoxContainer" parent="ScreenContainer/NavigationBar/HBoxContainer"]
+[node name="RecordTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 6
 
-[node name="Button" type="TextureButton" parent="ScreenContainer/NavigationBar/HBoxContainer/Tab"]
+[node name="TabRecordButton" type="TextureButton" parent="ScreenManager/NavigationBar/TabContainer/RecordTab"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 texture_normal = ExtResource("5_kfbq2")
+texture_pressed = ExtResource("5_kfbq2")
+texture_focused = ExtResource("5_kfbq2")
 
-[node name="Label" type="Label" parent="ScreenContainer/NavigationBar/HBoxContainer/Tab"]
+[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/RecordTab"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Record"
 
-[node name="Tab2" type="VBoxContainer" parent="ScreenContainer/NavigationBar/HBoxContainer"]
+[node name="HistoryTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer"]
+unique_name_in_owner = true
 modulate = Color(0.480335, 0.463279, 0.490921, 1)
 layout_mode = 2
 size_flags_horizontal = 6
 
-[node name="Button" type="TextureButton" parent="ScreenContainer/NavigationBar/HBoxContainer/Tab2"]
+[node name="TabHistoryButton" type="TextureButton" parent="ScreenManager/NavigationBar/TabContainer/HistoryTab"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 texture_normal = ExtResource("6_4dugh")
+texture_pressed = ExtResource("6_4dugh")
+texture_hover = ExtResource("6_4dugh")
+texture_focused = ExtResource("6_4dugh")
 
-[node name="Label" type="Label" parent="ScreenContainer/NavigationBar/HBoxContainer/Tab2"]
+[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/HistoryTab"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "History"
 
-[node name="Tab3" type="VBoxContainer" parent="ScreenContainer/NavigationBar/HBoxContainer"]
+[node name="SettingsTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer"]
+unique_name_in_owner = true
 modulate = Color(0.478431, 0.462745, 0.490196, 1)
 layout_mode = 2
 size_flags_horizontal = 6
 
-[node name="Button" type="TextureButton" parent="ScreenContainer/NavigationBar/HBoxContainer/Tab3"]
+[node name="TabSettingsButton" type="TextureButton" parent="ScreenManager/NavigationBar/TabContainer/SettingsTab"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 texture_normal = ExtResource("7_4dugh")
+texture_pressed = ExtResource("7_4dugh")
+texture_hover = ExtResource("7_4dugh")
+texture_focused = ExtResource("7_4dugh")
 
-[node name="Label" type="Label" parent="ScreenContainer/NavigationBar/HBoxContainer/Tab3"]
+[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/SettingsTab"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Settings"
