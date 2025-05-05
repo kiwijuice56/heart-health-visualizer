@@ -11,14 +11,18 @@
 
 [sub_resource type="Gradient" id="Gradient_xwkvk"]
 interpolation_color_space = 2
-colors = PackedColorArray(0.0551479, 0.0551479, 0.0551478, 1, 0.141894, 0.141894, 0.141894, 1)
+offsets = PackedFloat32Array(0.00714286, 1)
+colors = PackedColorArray(0.0784314, 0.0705882, 0.0823529, 1, 0.077936, 0.0715891, 0.0838842, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_c651c"]
 gradient = SubResource("Gradient_xwkvk")
 width = 256
 height = 256
-fill_from = Vector2(0.442006, 1)
-fill_to = Vector2(0.764444, 0)
+fill_from = Vector2(0, 1)
+
+[sub_resource type="Gradient" id="Gradient_67ri8"]
+interpolation_color_space = 2
+colors = PackedColorArray(0.164193, 0.219748, 0.237662, 1, 0.34, 0.1802, 0.302713, 1)
 
 [sub_resource type="Gradient" id="Gradient_grrlh"]
 colors = PackedColorArray(0.16875, 0.0625, 0.25, 1, 1, 0.88, 0.928, 1)
@@ -27,12 +31,10 @@ colors = PackedColorArray(0.16875, 0.0625, 0.25, 1, 1, 0.88, 0.928, 1)
 gradient = SubResource("Gradient_grrlh")
 fill_from = Vector2(0, 1)
 
-[sub_resource type="Gradient" id="Gradient_67ri8"]
-interpolation_color_space = 2
-colors = PackedColorArray(0.164193, 0.219748, 0.237662, 1, 0.34, 0.1802, 0.302713, 1)
-
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_grrlh"]
 gradient = SubResource("Gradient_67ri8")
+width = 128
+height = 128
 fill_from = Vector2(0, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_grrlh"]
@@ -52,13 +54,9 @@ border_width_bottom = 2
 border_color = Color(0, 0, 0, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_67ri8"]
-content_margin_left = 32.0
-content_margin_top = 16.0
-content_margin_right = 32.0
-content_margin_bottom = 64.0
 bg_color = Color(0.02, 0.0188, 0.0191, 0.458824)
 border_width_top = 2
-border_color = Color(0.1, 0.0869333, 0.086, 0.435294)
+border_color = Color(0, 0, 0, 0.435294)
 
 [node name="Main" type="Node"]
 script = ExtResource("1_53q0u")
@@ -102,11 +100,13 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_pjrb6")
 script = ExtResource("3_67ri8")
-tab_colors = Array[Color]([Color(0.164706, 0.219608, 0.239216, 1), Color(0.232664, 0.186166, 0.278186, 1), Color(0.205746, 0.21939, 0.127608, 1)])
+gradient = SubResource("Gradient_67ri8")
+tab_colors_1 = Array[Color]([Color(0.34, 0.1802, 0.302713, 1), Color(0.373517, 0.182213, 0.138931, 1), Color(0.237042, 0.202299, 0.436531, 1)])
+tab_colors_2 = Array[Color]([Color(0.164193, 0.219748, 0.237662, 1), Color(0.124431, 0.238785, 0.160219, 1), Color(0.207048, 0.196786, 0.281527, 1)])
 focus_color = Color(1, 1, 1, 1)
 unfocus_color = Color(0.478431, 0.462745, 0.490196, 1)
 tabs = [NodePath("MainContainer/VBoxContainer/RecordContainer"), NodePath("MainContainer/VBoxContainer/HistoryContainer"), NodePath("MainContainer/VBoxContainer/SettingsContainer")]
-tab_buttons = [NodePath("NavigationBar/TabContainer/RecordTab/TabRecordButton"), NodePath("NavigationBar/TabContainer/HistoryTab/TabHistoryButton"), NodePath("NavigationBar/TabContainer/SettingsTab/TabSettingsButton")]
+tab_buttons = [NodePath("NavigationBar/TabContainer/TabRecordButton"), NodePath("NavigationBar/TabContainer/TabHistoryButton"), NodePath("NavigationBar/TabContainer/TabSettingsButton")]
 
 [node name="MainContainer" type="MarginContainer" parent="ScreenManager"]
 layout_mode = 2
@@ -249,60 +249,113 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 10
 
-[node name="RecordTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer"]
+[node name="TabRecordButton" type="Button" parent="ScreenManager/NavigationBar/TabContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 192)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+flat = true
+icon_alignment = 1
+vertical_icon_alignment = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="ScreenManager/NavigationBar/TabContainer/TabRecordButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_top = 16
+
+[node name="RecordTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer/TabRecordButton/MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 6
+mouse_filter = 2
 
-[node name="TabRecordButton" type="TextureButton" parent="ScreenManager/NavigationBar/TabContainer/RecordTab"]
-unique_name_in_owner = true
+[node name="Icon" type="TextureRect" parent="ScreenManager/NavigationBar/TabContainer/TabRecordButton/MarginContainer/RecordTab"]
 layout_mode = 2
 size_flags_horizontal = 4
-texture_normal = ExtResource("5_kfbq2")
-texture_pressed = ExtResource("5_kfbq2")
-texture_focused = ExtResource("5_kfbq2")
+mouse_filter = 2
+texture = ExtResource("5_kfbq2")
+stretch_mode = 2
 
-[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/RecordTab"]
+[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/TabRecordButton/MarginContainer/RecordTab"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Record"
 
-[node name="HistoryTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer"]
+[node name="TabHistoryButton" type="Button" parent="ScreenManager/NavigationBar/TabContainer"]
 unique_name_in_owner = true
-modulate = Color(0.480335, 0.463279, 0.490921, 1)
+custom_minimum_size = Vector2(0, 192)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+flat = true
+icon_alignment = 1
+vertical_icon_alignment = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="ScreenManager/NavigationBar/TabContainer/TabHistoryButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_top = 16
+
+[node name="HistoryTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer/TabHistoryButton/MarginContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 6
+mouse_filter = 2
 
-[node name="TabHistoryButton" type="TextureButton" parent="ScreenManager/NavigationBar/TabContainer/HistoryTab"]
-unique_name_in_owner = true
+[node name="Icon" type="TextureRect" parent="ScreenManager/NavigationBar/TabContainer/TabHistoryButton/MarginContainer/HistoryTab"]
 layout_mode = 2
 size_flags_horizontal = 4
-texture_normal = ExtResource("6_4dugh")
-texture_pressed = ExtResource("6_4dugh")
-texture_hover = ExtResource("6_4dugh")
-texture_focused = ExtResource("6_4dugh")
+mouse_filter = 2
+texture = ExtResource("6_4dugh")
+stretch_mode = 2
 
-[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/HistoryTab"]
+[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/TabHistoryButton/MarginContainer/HistoryTab"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "History"
 
-[node name="SettingsTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer"]
+[node name="TabSettingsButton" type="Button" parent="ScreenManager/NavigationBar/TabContainer"]
 unique_name_in_owner = true
-modulate = Color(0.478431, 0.462745, 0.490196, 1)
+custom_minimum_size = Vector2(0, 192)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+flat = true
+icon_alignment = 1
+vertical_icon_alignment = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="ScreenManager/NavigationBar/TabContainer/TabSettingsButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_top = 16
+
+[node name="SettingsTab" type="VBoxContainer" parent="ScreenManager/NavigationBar/TabContainer/TabSettingsButton/MarginContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 6
+mouse_filter = 2
 
-[node name="TabSettingsButton" type="TextureButton" parent="ScreenManager/NavigationBar/TabContainer/SettingsTab"]
-unique_name_in_owner = true
+[node name="Icon" type="TextureRect" parent="ScreenManager/NavigationBar/TabContainer/TabSettingsButton/MarginContainer/SettingsTab"]
 layout_mode = 2
 size_flags_horizontal = 4
-texture_normal = ExtResource("7_4dugh")
-texture_pressed = ExtResource("7_4dugh")
-texture_hover = ExtResource("7_4dugh")
-texture_focused = ExtResource("7_4dugh")
+mouse_filter = 2
+texture = ExtResource("7_4dugh")
+stretch_mode = 2
 
-[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/SettingsTab"]
+[node name="Label" type="Label" parent="ScreenManager/NavigationBar/TabContainer/TabSettingsButton/MarginContainer/SettingsTab"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Settings"
