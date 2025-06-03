@@ -3,11 +3,11 @@
 [ext_resource type="Script" uid="uid://f41vsmlou6xj" path="res://main/main.gd" id="1_53q0u"]
 [ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="2_pjrb6"]
 [ext_resource type="Script" uid="uid://c1b220xylayrp" path="res://main/ui/screen_manager.gd" id="3_67ri8"]
-[ext_resource type="Script" uid="uid://bc3n71aokopes" path="res://main/ui/chart.gd" id="3_xwkvk"]
 [ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="4_67ri8"]
 [ext_resource type="Texture2D" uid="uid://dqpg4ouitwhvv" path="res://main/ui/icons/record.png" id="5_kfbq2"]
 [ext_resource type="Texture2D" uid="uid://dqjygey726v2e" path="res://main/ui/icons/history.png" id="6_4dugh"]
 [ext_resource type="Texture2D" uid="uid://gtg6ld76w4xm" path="res://main/ui/icons/settings.png" id="7_4dugh"]
+[ext_resource type="Script" uid="uid://cq7ajkai31su1" path="res://main/recording/recorder.gd" id="8_67ri8"]
 
 [sub_resource type="Gradient" id="Gradient_xwkvk"]
 interpolation_color_space = 2
@@ -60,6 +60,12 @@ border_color = Color(0, 0, 0, 0.435294)
 
 [node name="Main" type="Node"]
 script = ExtResource("1_53q0u")
+
+[node name="Recorder" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("8_67ri8")
+recording_length = 60
+initial_ignore_count = 10
 
 [node name="Background" type="TextureRect" parent="."]
 anchors_preset = 15
@@ -162,70 +168,6 @@ size_flags_vertical = 8
 focus_mode = 0
 text = "Start Recording
 "
-
-[node name="RenderButton" type="Button" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_vertical = 8
-focus_mode = 0
-text = "Toggle Fractal"
-
-[node name="OptionContainer" type="VBoxContainer" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 32
-
-[node name="P1Slider" type="HSlider" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/OptionContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-max_value = 1.0
-step = 0.001
-
-[node name="P2Slider" type="HSlider" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/OptionContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-max_value = 1.0
-step = 0.001
-
-[node name="P3Slider" type="HSlider" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/OptionContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-max_value = 1.0
-step = 0.001
-
-[node name="SmoothPpgChart" type="Control" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(0, 256)
-layout_mode = 2
-size_flags_vertical = 10
-script = ExtResource("3_xwkvk")
-line_color = Color(0.22736, 0.578602, 0.613458, 1)
-peak_line_color = Color(1, 1, 1, 1)
-line_width = 4.0
-
-[node name="RawPpgChart" type="Control" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(0, 256)
-layout_mode = 2
-size_flags_vertical = 8
-script = ExtResource("3_xwkvk")
-line_color = Color(0.186525, 0.475349, 0.721524, 1)
-peak_line_color = Color(1, 1, 1, 1)
-line_width = 4.0
-
-[node name="HeartRateLabel" type="Label" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-
-[node name="HeartRateVariabilityLabel" type="Label" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
 
 [node name="HistoryContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
 unique_name_in_owner = true

@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="heart-health-visualizer"
+config/version="1.0.0"
 run/main_scene="uid://b3fisyx6pvlq6"
 config/features=PackedStringArray("4.4", "Mobile")
 config/icon="res://icon.svg"
