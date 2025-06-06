@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://b3fisyx6pvlq6"]
+[gd_scene load_steps=27 format=3 uid="uid://b3fisyx6pvlq6"]
 
 [ext_resource type="Script" uid="uid://f41vsmlou6xj" path="res://main/main.gd" id="1_53q0u"]
 [ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="2_pjrb6"]
@@ -8,6 +8,11 @@
 [ext_resource type="Texture2D" uid="uid://dqjygey726v2e" path="res://main/ui/icons/history.png" id="6_4dugh"]
 [ext_resource type="Texture2D" uid="uid://gtg6ld76w4xm" path="res://main/ui/icons/settings.png" id="7_4dugh"]
 [ext_resource type="Script" uid="uid://cq7ajkai31su1" path="res://main/recording/recorder.gd" id="8_67ri8"]
+[ext_resource type="Script" uid="uid://k2mddehr4oih" path="res://main/ui/popup_menu_container.gd" id="9_bsumw"]
+[ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="9_grrlh"]
+[ext_resource type="Script" uid="uid://bs54rtgxyh1qo" path="res://main/ui/menu/recording/recording_menu.gd" id="10_fwcvl"]
+[ext_resource type="Texture2D" uid="uid://o5pd1rmdm6wd" path="res://main/ui/menu/recording/diagram1.png" id="12_fwcvl"]
+[ext_resource type="Script" uid="uid://y5dl1u5771oi" path="res://main/ui/input_blocker.gd" id="13_na0o7"]
 
 [sub_resource type="Gradient" id="Gradient_xwkvk"]
 interpolation_color_space = 2
@@ -31,8 +36,13 @@ colors = PackedColorArray(0.16875, 0.0625, 0.25, 1, 1, 0.88, 0.928, 1)
 gradient = SubResource("Gradient_grrlh")
 fill_from = Vector2(0, 1)
 
+[sub_resource type="Gradient" id="Gradient_bsumw"]
+interpolation_color_space = 2
+offsets = PackedFloat32Array(0, 0.604457)
+colors = PackedColorArray(0.164193, 0.219748, 0.237662, 1, 0.34, 0.1802, 0.302713, 1)
+
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_grrlh"]
-gradient = SubResource("Gradient_67ri8")
+gradient = SubResource("Gradient_bsumw")
 width = 128
 height = 128
 fill_from = Vector2(0, 1)
@@ -48,7 +58,7 @@ shader_parameter/fractal_mix = 0.23
 content_margin_left = 128.0
 content_margin_top = 160.0
 content_margin_right = 128.0
-content_margin_bottom = 124.0
+content_margin_bottom = 140.0
 bg_color = Color(1, 1, 1, 0.819608)
 border_width_bottom = 2
 border_color = Color(0, 0, 0, 1)
@@ -57,6 +67,25 @@ border_color = Color(0, 0, 0, 1)
 bg_color = Color(0.02, 0.0188, 0.0191, 0.458824)
 border_width_top = 2
 border_color = Color(0, 0, 0, 0.435294)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bsumw"]
+bg_color = Color(0.0745098, 0.0705882, 0.0823529, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fwcvl"]
+shader = ExtResource("4_67ri8")
+shader_parameter/gradient = SubResource("GradientTexture2D_grrlh")
+shader_parameter/fractal_gradient = SubResource("GradientTexture2D_0i4oc")
+shader_parameter/speed = 0.02
+shader_parameter/fractal_mix = 0.23
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fwcvl"]
+content_margin_left = 128.0
+content_margin_top = 128.0
+content_margin_right = 128.0
+content_margin_bottom = 90.0
+bg_color = Color(1, 1, 1, 0.819608)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
 
 [node name="Main" type="Node"]
 script = ExtResource("1_53q0u")
@@ -67,17 +96,27 @@ script = ExtResource("8_67ri8")
 recording_length = 60
 initial_ignore_count = 10
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Canvases" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Background" type="TextureRect" parent="Canvases"]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = 216.0
+offset_bottom = 216.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("GradientTexture2D_c651c")
 
-[node name="RenderCanvas" type="TextureRect" parent="."]
+[node name="RenderCanvas" type="TextureRect" parent="Canvases"]
 unique_name_in_owner = true
 texture_filter = 1
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -86,13 +125,18 @@ grow_vertical = 2
 expand_mode = 2
 stretch_mode = 5
 
-[node name="CameraCanvas" type="TextureRect" parent="."]
+[node name="CameraCanvas" type="TextureRect" parent="Canvases"]
 unique_name_in_owner = true
+layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 1040.0
+offset_top = 1880.0
+offset_right = 1040.0
+offset_bottom = 1880.0
 grow_horizontal = 0
 grow_vertical = 0
 size_flags_horizontal = 8
@@ -161,12 +205,12 @@ Your pulse will be measured with your phone camera, then analyzed for warning si
 No internet connection is needed. Results will be saved and viewable in the History tab."
 autowrap_mode = 2
 
-[node name="RecordButton" type="Button" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/ContentContainer"]
+[node name="CreateRecordingButton" type="Button" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/ContentContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8
 focus_mode = 0
-text = "Start Recording
+text = "Create Recording
 "
 
 [node name="HistoryContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
@@ -301,3 +345,120 @@ stretch_mode = 2
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Settings"
+
+[node name="RecordingMenuContainer" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1080.0
+offset_right = 1080.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("9_bsumw")
+
+[node name="RecordingMenu" type="PanelContainer" parent="RecordingMenuContainer" node_paths=PackedStringArray("close_button")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_pjrb6")
+theme_override_styles/panel = SubResource("StyleBoxFlat_bsumw")
+script = ExtResource("10_fwcvl")
+close_button = NodePath("VBoxContainer/TitleContainer/HBoxContainer/CloseButton")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="TitleContainer" type="PanelContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer"]
+material = SubResource("ShaderMaterial_fwcvl")
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_fwcvl")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/TitleContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/TitleContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 48
+text = "Instructions"
+
+[node name="CloseButton" type="Button" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/TitleContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 10
+focus_mode = 0
+icon = ExtResource("9_grrlh")
+flat = true
+
+[node name="MarginContainer" type="MarginContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 128
+theme_override_constants/margin_top = 96
+theme_override_constants/margin_right = 128
+theme_override_constants/margin_bottom = 128
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="Instructions" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="Step1" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/Instructions"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "1. Place your hand palm-up on a flat surface at an even level with your heart."
+autowrap_mode = 2
+
+[node name="Step3" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/Instructions"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "2. Close your fist and extend your pointer finger outwards."
+autowrap_mode = 2
+
+[node name="Step2" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/Instructions"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "3. Rest your device on the flat surface with the camera placed over your pointer finger."
+autowrap_mode = 2
+
+[node name="Step4" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/Instructions"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "4. Press \"Record\" and remain still for 30 seconds."
+autowrap_mode = 2
+
+[node name="Diagram" type="TextureRect" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 6
+texture = ExtResource("12_fwcvl")
+expand_mode = 5
+stretch_mode = 4
+
+[node name="RecordButton" type="Button" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+focus_mode = 0
+text = "Begin Recording"
+
+[node name="InputBlocker" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 0)
+script = ExtResource("13_na0o7")

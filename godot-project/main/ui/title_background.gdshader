@@ -24,7 +24,8 @@ float field(in vec3 p, float spice) {
 
 void fragment() {
 	float aspect_ratio = SCREEN_PIXEL_SIZE.x / SCREEN_PIXEL_SIZE.y;
-	vec2 uv = (SCREEN_UV + 0.2 * vec2(sin(speed * TIME), cos(speed * TIME)));
+	vec2 base_uv = SCREEN_UV;
+	vec2 uv = (base_uv + 0.2 * vec2(sin(speed * TIME), cos(speed * TIME)));
 	uv.y *= aspect_ratio;
 	float fractal = field(vec3(uv, sin(0.1 * speed * TIME)), speed * TIME);
 	COLOR.rgb = texture(gradient, UV).rgb * (1.0 - fractal_mix) + (1.0 - UV.y) * texture(fractal_gradient, UV).rgb * fractal * fractal_mix;
