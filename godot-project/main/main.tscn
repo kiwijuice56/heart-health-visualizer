@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://b3fisyx6pvlq6"]
+[gd_scene load_steps=32 format=3 uid="uid://b3fisyx6pvlq6"]
 
 [ext_resource type="Script" uid="uid://f41vsmlou6xj" path="res://main/main.gd" id="1_53q0u"]
 [ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="2_pjrb6"]
@@ -8,10 +8,12 @@
 [ext_resource type="Texture2D" uid="uid://dqjygey726v2e" path="res://main/ui/icons/history.png" id="6_4dugh"]
 [ext_resource type="Texture2D" uid="uid://gtg6ld76w4xm" path="res://main/ui/icons/settings.png" id="7_4dugh"]
 [ext_resource type="Script" uid="uid://cq7ajkai31su1" path="res://main/recording/recorder.gd" id="8_67ri8"]
+[ext_resource type="Script" uid="uid://jk7jl15tuvnk" path="res://main/ui/menu/menu.gd" id="9_0i4oc"]
 [ext_resource type="Script" uid="uid://k2mddehr4oih" path="res://main/ui/popup_menu_container.gd" id="9_bsumw"]
 [ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="9_grrlh"]
 [ext_resource type="Script" uid="uid://bs54rtgxyh1qo" path="res://main/ui/menu/recording/recording_menu.gd" id="10_fwcvl"]
 [ext_resource type="Texture2D" uid="uid://o5pd1rmdm6wd" path="res://main/ui/menu/recording/diagram1.png" id="12_fwcvl"]
+[ext_resource type="Texture2D" uid="uid://d12q1w33shd68" path="res://main/ui/icons/loading.png" id="13_73k8k"]
 [ext_resource type="Script" uid="uid://y5dl1u5771oi" path="res://main/ui/input_blocker.gd" id="13_na0o7"]
 
 [sub_resource type="Gradient" id="Gradient_xwkvk"]
@@ -86,6 +88,43 @@ content_margin_bottom = 90.0
 bg_color = Color(1, 1, 1, 0.819608)
 border_width_bottom = 2
 border_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Animation" id="Animation_5xyti"]
+resource_name = "spin"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TextureRect:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 6.28319]
+}
+
+[sub_resource type="Animation" id="Animation_n3o0a"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TextureRect:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_s758e"]
+_data = {
+&"RESET": SubResource("Animation_n3o0a"),
+&"spin": SubResource("Animation_5xyti")
+}
 
 [node name="Main" type="Node"]
 script = ExtResource("1_53q0u")
@@ -180,7 +219,7 @@ size_flags_vertical = 1
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 64
-text = "Recording"
+text = "Record"
 
 [node name="RecordContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
 unique_name_in_owner = true
@@ -388,7 +427,7 @@ size_flags_horizontal = 0
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 48
-text = "Instructions"
+text = "Recording"
 
 [node name="CloseButton" type="Button" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/TitleContainer/HBoxContainer"]
 layout_mode = 2
@@ -407,37 +446,41 @@ theme_override_constants/margin_bottom = 128
 
 [node name="VBoxContainer" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer"]
 layout_mode = 2
+
+[node name="InstructionsContainer" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 32
 
-[node name="Instructions" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer"]
+[node name="Instructions" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 32
 
-[node name="Step1" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/Instructions"]
+[node name="Step1" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "1. Place your hand palm-up on a flat surface at an even level with your heart."
 autowrap_mode = 2
 
-[node name="Step3" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/Instructions"]
+[node name="Step3" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "2. Close your fist and extend your pointer finger outwards."
 autowrap_mode = 2
 
-[node name="Step2" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/Instructions"]
+[node name="Step2" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "3. Rest your device on the flat surface with the camera placed over your pointer finger."
 autowrap_mode = 2
 
-[node name="Step4" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/Instructions"]
+[node name="Step4" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-text = "4. Press \"Record\" and remain still for 30 seconds."
+text = "4. Press \"Begin Recording\" and remain still for 30 seconds."
 autowrap_mode = 2
 
-[node name="Diagram" type="TextureRect" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer"]
+[node name="Diagram" type="TextureRect" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 6
@@ -451,6 +494,63 @@ layout_mode = 2
 size_flags_vertical = 8
 focus_mode = 0
 text = "Begin Recording"
+
+[node name="RecordingProgressMenuContainer" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_pjrb6")
+script = ExtResource("9_bsumw")
+
+[node name="RecordingProgressMenu" type="MarginContainer" parent="RecordingProgressMenuContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("9_0i4oc")
+
+[node name="Background" type="ColorRect" parent="RecordingProgressMenuContainer/RecordingProgressMenu"]
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="VisualContainer" type="MarginContainer" parent="RecordingProgressMenuContainer/RecordingProgressMenu"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="Label" type="Label" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 10
+text = "Recording... Please remain still."
+
+[node name="SpinnyWheel" type="Control" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 2
+
+[node name="TextureRect" type="TextureRect" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer/VBoxContainer/SpinnyWheel"]
+layout_mode = 0
+offset_left = -35.0
+offset_right = 35.0
+offset_bottom = 70.0
+pivot_offset = Vector2(35, 35)
+texture = ExtResource("13_73k8k")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer/VBoxContainer/SpinnyWheel"]
+libraries = {
+&"": SubResource("AnimationLibrary_s758e")
+}
+autoplay = "spin"
 
 [node name="InputBlocker" type="ColorRect" parent="."]
 unique_name_in_owner = true

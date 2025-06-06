@@ -1,4 +1,4 @@
-class_name Menu extends PanelContainer
+class_name Menu extends Container
 
 @export var close_button: Button
 
@@ -6,9 +6,8 @@ signal entered
 signal exited
 
 func _ready() -> void:
-	assert(is_instance_valid(close_button))
-	close_button.pressed.connect(_on_close_button_pressed)
-	exit()
+	if is_instance_valid(close_button):
+		close_button.pressed.connect(_on_close_button_pressed)
 
 func _on_close_button_pressed() -> void:
 	exit()

@@ -11,6 +11,8 @@ func _ready() -> void:
 	
 	menu.entered.connect(enter)
 	menu.exited.connect(exit)
+	
+	exit()
 
 func enter() -> void:
 	Ref.input_blocker.block()

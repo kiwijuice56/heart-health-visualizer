@@ -20,6 +20,8 @@ var recording: bool = false
 var ppg_signal: PackedInt32Array
 var ppg_ignore_count: int = initial_ignore_count # Decrement as frames come in 
 
+signal recording_completed
+
 func _ready() -> void:
 	# Initialize GDextension modules
 	ppg_analyzer = PpgAnalyzer.new()
@@ -30,6 +32,9 @@ func _ready() -> void:
 	camera.request_camera_permissions()
 
 func _on_camera_frame(frame: ImageTexture) -> void:
+	if not recording:
+		return
+	
 	if ppg_ignore_count > 0:
 		ppg_ignore_count -= 1
 		return
@@ -55,6 +60,7 @@ func start_recording() -> void:
 	recording = true
 	
 	ppg_ignore_count = initial_ignore_count
+	ppg_signal.clear()
 	camera.start_camera(1080, 1080, sampling_frequency, true)
 
 func stop_recording() -> void:
@@ -65,6 +71,8 @@ func stop_recording() -> void:
 	
 	var new_recording: Recording = create_recording()
 	ResourceSaver.save(new_recording, "res://test.tres")
+	
+	recording_completed.emit()
 
 func create_recording() -> Recording:
 	var new_recording: Recording = Recording.new()
