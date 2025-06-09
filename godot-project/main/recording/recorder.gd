@@ -1,5 +1,5 @@
 class_name Recorder extends Node
-## Handles the recording of PPG data to Recording resources
+## Handles the recording of PPG data to Recording resources.
 
 @export_range(10, 60, 1, "suffix:Hz") var sampling_frequency: int = 30
 
@@ -70,7 +70,7 @@ func stop_recording() -> void:
 	camera.stop_camera()
 	
 	var new_recording: Recording = create_recording()
-	ResourceSaver.save(new_recording, "res://test.tres")
+	Ref.saver.save_recording(new_recording)
 	
 	recording_completed.emit()
 
@@ -78,7 +78,7 @@ func create_recording() -> Recording:
 	var new_recording: Recording = Recording.new()
 	
 	new_recording.version = ProjectSettings.get_setting("application/config/version")
-	new_recording.time = Time.get_datetime_string_from_system()
+	new_recording.time = Time.get_datetime_dict_from_system()
 	new_recording.sampling_frequency = sampling_frequency
 	new_recording.raw_ppg_signal = ppg_signal.duplicate()
 	

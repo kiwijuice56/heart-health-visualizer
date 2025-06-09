@@ -1,4 +1,5 @@
 class_name Chart extends Control
+## Debug script to plot a line from time-series data.
 
 @export var line_color: Color = Color(0.5, 0.2, 0.9)
 @export var peak_line_color: Color = Color(0.5, 0.2, 0.9)

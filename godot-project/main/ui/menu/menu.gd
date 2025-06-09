@@ -1,4 +1,5 @@
 class_name Menu extends Container
+## Base class for all menus.
 
 @export var close_button: Button
 

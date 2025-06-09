@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Ref="*res://main/autoload/ref.gd"
+UUID="*res://main/autoload/uuid.gd"
 
 [display]
 

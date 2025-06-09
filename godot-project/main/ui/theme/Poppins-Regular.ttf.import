@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://ce4lfcklsewe2"
-path="res://.godot/imported/Poppins-Regular.ttf-260e2f3e3542bac6a71703e0a8c1cac2.fontdata"
+path="res://.godot/imported/poppins-regular.ttf-62639be846b3d5a6864f78683a0e8642.fontdata"
 
 [deps]
 
-source_file="res://main/ui/theme/Poppins-Regular.ttf"
-dest_files=["res://.godot/imported/Poppins-Regular.ttf-260e2f3e3542bac6a71703e0a8c1cac2.fontdata"]
+source_file="res://main/ui/theme/poppins-regular.ttf"
+dest_files=["res://.godot/imported/poppins-regular.ttf-62639be846b3d5a6864f78683a0e8642.fontdata"]
 
 [params]
 

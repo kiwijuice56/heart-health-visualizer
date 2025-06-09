@@ -1,7 +1,7 @@
 [gd_resource type="Theme" load_steps=10 format=3 uid="uid://bqitn6bx4np8k"]
 
 [ext_resource type="Texture2D" uid="uid://ci8gh5eey81gi" path="res://main/ui/theme/grabber.png" id="1_ci5du"]
-[ext_resource type="FontFile" uid="uid://ce4lfcklsewe2" path="res://main/ui/theme/Poppins-Regular.ttf" id="1_rpgwa"]
+[ext_resource type="FontFile" uid="uid://ce4lfcklsewe2" path="res://main/ui/theme/poppins-regular.ttf" id="1_rpgwa"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ci5du"]
 content_margin_left = 8.0

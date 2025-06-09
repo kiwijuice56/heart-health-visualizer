@@ -1,4 +1,5 @@
 class_name PopupMenuContainer extends Control
+## A parent to any menu that transitions in/out of the screen using a horizontal slide.
 
 @export var transition_time: float = 0.2
 

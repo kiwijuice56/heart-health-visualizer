@@ -1,4 +1,5 @@
 class_name Recording extends Resource
+## A data container for a recording session.
 
 @export var version: String
 @export var time: Dictionary

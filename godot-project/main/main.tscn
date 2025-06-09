@@ -1,7 +1,8 @@
-[gd_scene load_steps=33 format=3 uid="uid://b3fisyx6pvlq6"]
+[gd_scene load_steps=25 format=3 uid="uid://b3fisyx6pvlq6"]
 
 [ext_resource type="Script" uid="uid://f41vsmlou6xj" path="res://main/main.gd" id="1_53q0u"]
 [ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="2_pjrb6"]
+[ext_resource type="Script" uid="uid://wbhmrcck5sn4" path="res://main/saving/saver.gd" id="3_5xyti"]
 [ext_resource type="Script" uid="uid://c1b220xylayrp" path="res://main/ui/screen_manager.gd" id="3_67ri8"]
 [ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="4_67ri8"]
 [ext_resource type="Texture2D" uid="uid://dqpg4ouitwhvv" path="res://main/ui/icons/record.png" id="5_kfbq2"]
@@ -10,12 +11,9 @@
 [ext_resource type="Script" uid="uid://6tervacnfi1v" path="res://main/ui/menu/history/saved_recording_container.gd" id="6_s758e"]
 [ext_resource type="Texture2D" uid="uid://gtg6ld76w4xm" path="res://main/ui/icons/settings.png" id="7_4dugh"]
 [ext_resource type="Script" uid="uid://cq7ajkai31su1" path="res://main/recording/recorder.gd" id="8_67ri8"]
-[ext_resource type="Script" uid="uid://jk7jl15tuvnk" path="res://main/ui/menu/menu.gd" id="9_0i4oc"]
 [ext_resource type="Script" uid="uid://k2mddehr4oih" path="res://main/ui/popup_menu_container.gd" id="9_bsumw"]
-[ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="9_grrlh"]
-[ext_resource type="Script" uid="uid://bs54rtgxyh1qo" path="res://main/ui/menu/recording/recording_menu.gd" id="10_fwcvl"]
-[ext_resource type="Texture2D" uid="uid://o5pd1rmdm6wd" path="res://main/ui/menu/recording/diagram1.png" id="12_fwcvl"]
-[ext_resource type="Texture2D" uid="uid://d12q1w33shd68" path="res://main/ui/icons/loading.png" id="13_73k8k"]
+[ext_resource type="PackedScene" uid="uid://d16cpsg8a3rsm" path="res://main/ui/menu/recording/recording_menu.tscn" id="12_73k8k"]
+[ext_resource type="PackedScene" uid="uid://ebo7uyhey278" path="res://main/ui/menu/recording/recording_progress_menu.tscn" id="13_5xyti"]
 [ext_resource type="Script" uid="uid://y5dl1u5771oi" path="res://main/ui/input_blocker.gd" id="13_na0o7"]
 
 [sub_resource type="Gradient" id="Gradient_xwkvk"]
@@ -67,62 +65,6 @@ bg_color = Color(0.02, 0.0188, 0.0191, 0.458824)
 border_width_top = 2
 border_color = Color(0, 0, 0, 0.435294)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bsumw"]
-bg_color = Color(0.0745098, 0.0705882, 0.0823529, 1)
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_fwcvl"]
-shader = ExtResource("4_67ri8")
-shader_parameter/gradient = SubResource("GradientTexture2D_grrlh")
-shader_parameter/fractal_gradient = SubResource("GradientTexture2D_0i4oc")
-shader_parameter/speed = 0.02
-shader_parameter/fractal_mix = 0.23
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fwcvl"]
-content_margin_left = 128.0
-content_margin_top = 128.0
-content_margin_right = 128.0
-content_margin_bottom = 90.0
-bg_color = Color(1, 1, 1, 0.819608)
-border_width_bottom = 2
-border_color = Color(0, 0, 0, 1)
-
-[sub_resource type="Animation" id="Animation_n3o0a"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("TextureRect:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [0.0]
-}
-
-[sub_resource type="Animation" id="Animation_5xyti"]
-resource_name = "spin"
-loop_mode = 1
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("TextureRect:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 1),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [0.0, 6.28319]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_s758e"]
-_data = {
-&"RESET": SubResource("Animation_n3o0a"),
-&"spin": SubResource("Animation_5xyti")
-}
-
 [node name="Main" type="Node"]
 script = ExtResource("1_53q0u")
 
@@ -131,6 +73,10 @@ unique_name_in_owner = true
 script = ExtResource("8_67ri8")
 recording_length = 60
 initial_ignore_count = 10
+
+[node name="Saver" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("3_5xyti")
 
 [node name="Canvases" type="Control" parent="."]
 visible = false
@@ -262,77 +208,77 @@ theme_override_constants/margin_right = 32
 layout_mode = 2
 vertical_scroll_mode = 3
 
-[node name="GridContainer" type="GridContainer" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer"]
+[node name="SavedRecordingContainer" type="GridContainer" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 3
 script = ExtResource("6_s758e")
 
-[node name="SavedRecordingPanel" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel2" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel2" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel3" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel3" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel4" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel4" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel5" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel5" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel6" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel6" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel7" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel7" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel8" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel8" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel9" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel9" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel10" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel10" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel11" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel11" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel12" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel12" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel13" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel13" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel14" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel14" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel15" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel15" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel16" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel16" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel17" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel17" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel18" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel18" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel19" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel19" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel20" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel20" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel21" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel21" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel22" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/GridContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel22" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
 [node name="SettingsContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
@@ -468,113 +414,15 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 1080.0
-offset_right = 1080.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("9_bsumw")
 
-[node name="RecordingMenu" type="PanelContainer" parent="RecordingMenuContainer" node_paths=PackedStringArray("close_button")]
+[node name="RecordingMenu" parent="RecordingMenuContainer" instance=ExtResource("12_73k8k")]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("2_pjrb6")
-theme_override_styles/panel = SubResource("StyleBoxFlat_bsumw")
-script = ExtResource("10_fwcvl")
-close_button = NodePath("VBoxContainer/TitleContainer/HBoxContainer/CloseButton")
-
-[node name="VBoxContainer" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu"]
-layout_mode = 2
-theme_override_constants/separation = 32
-
-[node name="TitleContainer" type="PanelContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer"]
-material = SubResource("ShaderMaterial_fwcvl")
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_fwcvl")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/TitleContainer"]
-layout_mode = 2
-
-[node name="Title" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/TitleContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 0
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_font_sizes/font_size = 48
-text = "Recording"
-
-[node name="CloseButton" type="Button" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/TitleContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 10
-focus_mode = 0
-icon = ExtResource("9_grrlh")
-flat = true
-
-[node name="MarginContainer" type="MarginContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/margin_left = 128
-theme_override_constants/margin_top = 96
-theme_override_constants/margin_right = 128
-theme_override_constants/margin_bottom = 128
-
-[node name="VBoxContainer" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer"]
-layout_mode = 2
-
-[node name="InstructionsContainer" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 32
-
-[node name="Instructions" type="VBoxContainer" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer"]
-layout_mode = 2
-theme_override_constants/separation = 32
-
-[node name="Step1" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-text = "1. Place your hand palm-up on a flat surface at an even level with your heart."
-autowrap_mode = 2
-
-[node name="Step3" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-text = "2. Close your fist and extend your pointer finger outwards."
-autowrap_mode = 2
-
-[node name="Step2" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-text = "3. Rest your device on the flat surface with the camera placed over your pointer finger."
-autowrap_mode = 2
-
-[node name="Step4" type="Label" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-text = "4. Press \"Begin Recording\" and remain still for 30 seconds."
-autowrap_mode = 2
-
-[node name="Diagram" type="TextureRect" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 6
-texture = ExtResource("12_fwcvl")
-expand_mode = 5
-stretch_mode = 4
-
-[node name="RecordButton" type="Button" parent="RecordingMenuContainer/RecordingMenu/VBoxContainer/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 8
-focus_mode = 0
-text = "Begin Recording"
 
 [node name="RecordingProgressMenuContainer" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -584,52 +432,9 @@ grow_vertical = 2
 theme = ExtResource("2_pjrb6")
 script = ExtResource("9_bsumw")
 
-[node name="RecordingProgressMenu" type="MarginContainer" parent="RecordingProgressMenuContainer"]
+[node name="RecordingProgressMenu" parent="RecordingProgressMenuContainer" instance=ExtResource("13_5xyti")]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("9_0i4oc")
-
-[node name="Background" type="ColorRect" parent="RecordingProgressMenuContainer/RecordingProgressMenu"]
-layout_mode = 2
-color = Color(0, 0, 0, 1)
-
-[node name="VisualContainer" type="MarginContainer" parent="RecordingProgressMenuContainer/RecordingProgressMenu"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer"]
-layout_mode = 2
-theme_override_constants/separation = 32
-
-[node name="Label" type="Label" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 10
-text = "Recording... Please remain still."
-
-[node name="SpinnyWheel" type="Control" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 2
-
-[node name="TextureRect" type="TextureRect" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer/VBoxContainer/SpinnyWheel"]
-layout_mode = 0
-offset_left = -35.0
-offset_right = 35.0
-offset_bottom = 70.0
-pivot_offset = Vector2(35, 35)
-texture = ExtResource("13_73k8k")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="RecordingProgressMenuContainer/RecordingProgressMenu/VisualContainer/VBoxContainer/SpinnyWheel"]
-libraries = {
-&"": SubResource("AnimationLibrary_s758e")
-}
-autoplay = "spin"
 
 [node name="InputBlocker" type="ColorRect" parent="."]
 unique_name_in_owner = true
