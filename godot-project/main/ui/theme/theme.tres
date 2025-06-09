@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=9 format=3 uid="uid://bqitn6bx4np8k"]
+[gd_resource type="Theme" load_steps=10 format=3 uid="uid://bqitn6bx4np8k"]
 
 [ext_resource type="Texture2D" uid="uid://ci8gh5eey81gi" path="res://main/ui/theme/grabber.png" id="1_ci5du"]
 [ext_resource type="FontFile" uid="uid://ce4lfcklsewe2" path="res://main/ui/theme/Poppins-Regular.ttf" id="1_rpgwa"]
@@ -60,6 +60,8 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ci5du"]
+
 [sub_resource type="FontVariation" id="FontVariation_ci5du"]
 base_font = ExtResource("1_rpgwa")
 
@@ -76,3 +78,4 @@ HSlider/icons/grabber_highlight = ExtResource("1_ci5du")
 HSlider/styles/grabber_area = SubResource("StyleBoxFlat_bvxxh")
 HSlider/styles/grabber_area_highlight = SubResource("StyleBoxFlat_bvxxh")
 HSlider/styles/slider = SubResource("StyleBoxFlat_c4ta3")
+ScrollContainer/styles/panel = SubResource("StyleBoxEmpty_ci5du")

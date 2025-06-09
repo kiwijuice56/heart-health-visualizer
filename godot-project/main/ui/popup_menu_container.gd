@@ -13,6 +13,8 @@ func _ready() -> void:
 	menu.exited.connect(exit)
 	
 	exit()
+	
+	visible = true
 
 func enter() -> void:
 	Ref.input_blocker.block()

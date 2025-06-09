@@ -19,7 +19,7 @@ float field(in vec3 p, float spice) {
 		tw += w;
 		prev = mag;
 	}
-	return max(0., 5. * accum / tw - .7);
+	return max(0., 6. * accum / tw - .7);
 }
 
 void fragment() {

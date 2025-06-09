@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3 uid="uid://bpqdvnxkoa6mq"]
+
+[ext_resource type="Texture2D" uid="uid://cumhw64va5o10" path="res://icon.svg" id="1_jnkff"]
+[ext_resource type="Script" uid="uid://cdyx3sjx4orxo" path="res://main/ui/menu/history/saved_recording_panel/saved_recording_panel.gd" id="1_m206l"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m206l"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+
+[node name="SavedRecordingPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 400)
+size_flags_horizontal = 3
+size_flags_vertical = 8
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_m206l")
+script = ExtResource("1_m206l")
+
+[node name="Render" type="TextureRect" parent="."]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("1_jnkff")
+
+[node name="DateLabel" type="Label" parent="."]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.54902)
+layout_mode = 2
+size_flags_vertical = 0
+text = "6/10/25"
+
+[node name="ScoreLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+theme_override_font_sizes/font_size = 48
+text = "100"
