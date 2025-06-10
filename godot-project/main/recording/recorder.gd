@@ -20,7 +20,7 @@ var recording: bool = false
 var ppg_signal: PackedInt32Array
 var ppg_ignore_count: int = initial_ignore_count # Decrement as frames come in 
 
-signal recording_completed
+signal recording_completed(recording: Recording)
 
 func _ready() -> void:
 	# Initialize GDextension modules
@@ -70,9 +70,9 @@ func stop_recording() -> void:
 	camera.stop_camera()
 	
 	var new_recording: Recording = create_recording()
-	Ref.saver.save_recording(new_recording)
+	new_recording.health_score = randf()
 	
-	recording_completed.emit()
+	recording_completed.emit(new_recording)
 
 func create_recording() -> Recording:
 	var new_recording: Recording = Recording.new()

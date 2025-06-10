@@ -23,7 +23,6 @@ func reload_recordings() -> void:
 	dir.list_dir_begin()
 	var file_name: String = dir.get_next()
 	while file_name != "":
-		print(file_name)
 		var path: String = dir.get_current_dir() + "/" + file_name
 		var resource: Resource = ResourceLoader.load(path)
 		if resource is Recording:

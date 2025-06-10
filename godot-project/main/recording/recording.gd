@@ -10,3 +10,4 @@ class_name Recording extends Resource
 
 @export_group("Processed Data")
 @export var health_score: float
+@export var render: ImageTexture
