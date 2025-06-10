@@ -92,7 +92,7 @@ tab_colors_1 = Array[Color]([Color(0.34, 0.1802, 0.302713, 1), Color(0.373517, 0
 tab_colors_2 = Array[Color]([Color(0.164193, 0.219748, 0.237662, 1), Color(0.124431, 0.238785, 0.160219, 1), Color(0.207048, 0.196786, 0.281527, 1)])
 focus_color = Color(1, 1, 1, 1)
 unfocus_color = Color(0.478431, 0.462745, 0.490196, 1)
-tabs = [NodePath("MainContainer/VBoxContainer/RecordContainer"), NodePath("MainContainer/VBoxContainer/HistoryContainer"), NodePath("MainContainer/VBoxContainer/SettingsContainer")]
+tabs = [NodePath("MainContainer/ContentContainer/RecordContainer"), NodePath("MainContainer/ContentContainer/HistoryContainer"), NodePath("MainContainer/ContentContainer/SettingsContainer")]
 tab_buttons = [NodePath("NavigationBar/TabContainer/TabRecordButton"), NodePath("NavigationBar/TabContainer/TabHistoryButton"), NodePath("NavigationBar/TabContainer/TabSettingsButton")]
 
 [node name="MainContainer" type="MarginContainer" parent="ScreenManager"]
@@ -100,16 +100,16 @@ layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("2_pjrb6")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ScreenManager/MainContainer"]
+[node name="ContentContainer" type="VBoxContainer" parent="ScreenManager/MainContainer"]
 layout_mode = 2
 theme_override_constants/separation = 32
 
-[node name="TitleContainer" type="PanelContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
+[node name="TitleContainer" type="PanelContainer" parent="ScreenManager/MainContainer/ContentContainer"]
 material = SubResource("ShaderMaterial_grrlh")
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_0i4oc")
 
-[node name="Title" type="Label" parent="ScreenManager/MainContainer/VBoxContainer/TitleContainer"]
+[node name="Title" type="Label" parent="ScreenManager/MainContainer/ContentContainer/TitleContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
@@ -119,7 +119,7 @@ theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 64
 text = "Record"
 
-[node name="RecordContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
+[node name="RecordContainer" type="MarginContainer" parent="ScreenManager/MainContainer/ContentContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
@@ -128,11 +128,11 @@ theme_override_constants/margin_top = 96
 theme_override_constants/margin_right = 128
 theme_override_constants/margin_bottom = 128
 
-[node name="ContentContainer" type="VBoxContainer" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer"]
+[node name="ContentContainer" type="VBoxContainer" parent="ScreenManager/MainContainer/ContentContainer/RecordContainer"]
 layout_mode = 2
 theme_override_constants/separation = 64
 
-[node name="Description" type="Label" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/ContentContainer"]
+[node name="Description" type="Label" parent="ScreenManager/MainContainer/ContentContainer/RecordContainer/ContentContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "Record a snapshot of your heart health. 
@@ -142,7 +142,7 @@ Your pulse will be measured with your phone camera, then analyzed for warning si
 No internet connection is needed. Results will be saved and viewable in the History tab."
 autowrap_mode = 2
 
-[node name="CreateRecordingButton" type="Button" parent="ScreenManager/MainContainer/VBoxContainer/RecordContainer/ContentContainer"]
+[node name="CreateRecordingButton" type="Button" parent="ScreenManager/MainContainer/ContentContainer/RecordContainer/ContentContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8
@@ -150,7 +150,7 @@ focus_mode = 0
 text = "Create Recording
 "
 
-[node name="HistoryContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
+[node name="HistoryContainer" type="MarginContainer" parent="ScreenManager/MainContainer/ContentContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -158,88 +158,99 @@ size_flags_vertical = 3
 theme_override_constants/margin_left = 32
 theme_override_constants/margin_right = 32
 
-[node name="ScrollContainer" type="ScrollContainer" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer"]
 layout_mode = 2
 vertical_scroll_mode = 3
 
-[node name="SavedRecordingContainer" type="GridContainer" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer"]
+[node name="SavedRecordingContainer" type="GridContainer" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 columns = 3
 script = ExtResource("6_s758e")
 
-[node name="SavedRecordingPanel" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel2" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel2" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel3" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel3" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel4" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel4" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel5" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel5" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel6" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel6" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel7" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel7" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel8" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel8" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel9" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel9" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel10" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel10" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel11" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel11" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel12" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel12" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel13" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel13" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel14" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel14" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel15" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel15" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel16" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel16" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel17" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel17" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel18" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel18" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel19" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel19" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel20" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel20" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel21" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel21" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SavedRecordingPanel22" parent="ScreenManager/MainContainer/VBoxContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
+[node name="SavedRecordingPanel22" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer/SavedRecordingContainer" instance=ExtResource("6_n3o0a")]
 layout_mode = 2
 
-[node name="SettingsContainer" type="MarginContainer" parent="ScreenManager/MainContainer/VBoxContainer"]
+[node name="SettingsContainer" type="MarginContainer" parent="ScreenManager/MainContainer/ContentContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/margin_left = 128
+theme_override_constants/margin_top = 96
+theme_override_constants/margin_right = 128
+theme_override_constants/margin_bottom = 128
+
+[node name="ClearDataButton" type="Button" parent="ScreenManager/MainContainer/ContentContainer/SettingsContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+focus_mode = 0
+text = "Clear All Data"
 
 [node name="NavigationBar" type="PanelContainer" parent="ScreenManager"]
 layout_mode = 2

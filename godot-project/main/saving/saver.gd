@@ -38,3 +38,18 @@ func save_recording(new_recording: Recording) -> void:
 	ResourceSaver.save(new_recording, recording_path + file_name)
 	saved_recordings.append(new_recording)
 	recording_saved.emit(new_recording)
+
+func clear_all_data() -> void:
+	saved_recordings.clear()
+	
+	var dir: DirAccess = DirAccess.open(recording_path)
+	dir.list_dir_begin()
+	var file_name: String = dir.get_next()
+	while file_name != "":
+		var path: String = dir.get_current_dir() + "/" + file_name
+		var resource: Resource = ResourceLoader.load(path)
+		if resource is Recording:
+			DirAccess.remove_absolute(path)
+		file_name = dir.get_next()
+	
+	reload_recordings()
