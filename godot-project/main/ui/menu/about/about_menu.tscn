@@ -1,0 +1,100 @@
+[gd_scene load_steps=12 format=3 uid="uid://eix6378l1e3u"]
+
+[ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="1_jlx0t"]
+[ext_resource type="Script" uid="uid://jk7jl15tuvnk" path="res://main/ui/menu/menu.gd" id="2_2mv05"]
+[ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="3_e88nu"]
+[ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="4_rclhx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bsumw"]
+bg_color = Color(0.0745098, 0.0705882, 0.0823529, 1)
+
+[sub_resource type="Gradient" id="Gradient_grrlh"]
+colors = PackedColorArray(0.16875, 0.0625, 0.25, 1, 1, 0.88, 0.928, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_0i4oc"]
+gradient = SubResource("Gradient_grrlh")
+fill_from = Vector2(0, 1)
+
+[sub_resource type="Gradient" id="Gradient_jlx0t"]
+interpolation_color_space = 2
+colors = PackedColorArray(0.207843, 0.196078, 0.282353, 1, 0.235294, 0.203922, 0.435294, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_2mv05"]
+gradient = SubResource("Gradient_jlx0t")
+width = 128
+height = 128
+fill_from = Vector2(0, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_e88nu"]
+shader = ExtResource("3_e88nu")
+shader_parameter/gradient = SubResource("GradientTexture2D_2mv05")
+shader_parameter/fractal_gradient = SubResource("GradientTexture2D_0i4oc")
+shader_parameter/speed = 0.02
+shader_parameter/fractal_mix = 0.23
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fwcvl"]
+content_margin_left = 128.0
+content_margin_top = 128.0
+content_margin_right = 128.0
+content_margin_bottom = 90.0
+bg_color = Color(1, 1, 1, 0.819608)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+
+[node name="AboutMenu" type="PanelContainer" node_paths=PackedStringArray("close_button")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_jlx0t")
+theme_override_styles/panel = SubResource("StyleBoxFlat_bsumw")
+script = ExtResource("2_2mv05")
+close_button = NodePath("VBoxContainer/TitleContainer/HBoxContainer/CloseButton")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="TitleContainer" type="PanelContainer" parent="VBoxContainer"]
+material = SubResource("ShaderMaterial_e88nu")
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_fwcvl")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TitleContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/TitleContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 48
+text = "About"
+
+[node name="CloseButton" type="Button" parent="VBoxContainer/TitleContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 10
+focus_mode = 0
+icon = ExtResource("4_rclhx")
+flat = true
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 128
+theme_override_constants/margin_top = 96
+theme_override_constants/margin_right = 128
+theme_override_constants/margin_bottom = 128
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="Info" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "This app was created by Eric Alfaro under the guidance of Dr. Richard Ribon Fletcher as part of the Undergraduate Research Opportunity Program at MIT.
+
+No data is collected from users. All analysis is computed locally on your device."
+autowrap_mode = 2
