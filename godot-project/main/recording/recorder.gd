@@ -40,7 +40,8 @@ func _on_camera_frame(frame: ImageTexture) -> void:
 		return
 	
 	# Add to signal
-	var ppg_value: int = ppg_analyzer.read_ppg_from_image(frame.get_image(), Rect2i(Vector2i(0, 0), Vector2i(frame.get_width(), frame.get_height())))
+	# Negative sign is to correct orientation of the dicrotic notch
+	var ppg_value: int = -ppg_analyzer.read_ppg_from_image(frame.get_image(), Rect2i(Vector2i(0, 0), Vector2i(frame.get_width(), frame.get_height())))
 	ppg_signal.append(ppg_value)
 	
 	# Calculate heart rate
@@ -70,7 +71,14 @@ func stop_recording() -> void:
 	camera.stop_camera()
 	
 	var new_recording: Recording = create_recording()
-	new_recording.health_score = randf()
+	
+	# Final score is the median of all pulse scores
+	var scores: PackedFloat64Array = ppg_analyzer.calculate_pulse_scores(ppg_signal)
+	scores.sort()
+	@warning_ignore("integer_division")
+	var median_score: float = scores[len(scores) / 2]
+	
+	new_recording.health_score = median_score
 	
 	recording_completed.emit(new_recording)
 

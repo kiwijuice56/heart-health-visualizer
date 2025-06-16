@@ -5,7 +5,7 @@
 //
 // rtwtypes.h
 //
-// Code generation for function 'preprocess_ppg_pulse'
+// Code generation for function 'score_ppg_signal'
 //
 
 #ifndef RTWTYPES_H
@@ -23,15 +23,14 @@ extern "C" {
 
 /*=======================================================================*
  * Target hardware information
-*   Device type: ARM Compatible->ARM 64-bit (LP64)
-*   Number of bits:     char:   8    short:   16    int:  32
-*                       long:  64     long long:  64
-
-*                       native word size:  64
-*   Byte ordering: LittleEndian
-*   Signed integer division rounds to: Zero
-*   Shift right on a signed integer as arithmetic shift: on
-*=======================================================================*/
+ *   Device type: ARM Compatible->ARM 10
+ *   Number of bits:     char:   8    short:   16    int:  32
+ *                       long:  32
+ *                       native word size:  32
+ *   Byte ordering: LittleEndian
+ *   Signed integer division rounds to: Zero
+ *   Shift right on a signed integer as arithmetic shift: on
+ *=======================================================================*/
 
 /*=======================================================================*
  * Fixed width word size data types:                                     *
@@ -45,14 +44,12 @@ typedef short int16_T;
 typedef unsigned short uint16_T;
 typedef int int32_T;
 typedef unsigned int uint32_T;
-typedef long int64_T;
-typedef unsigned long uint64_T;
 typedef float real32_T;
 typedef double real64_T;
 
 /*===========================================================================*
  * Generic type definitions: real_T, time_T, boolean_T, int_T, uint_T,       *
- *                           ulong_T, ulonglong_T, char_T and byte_T.        *
+ *                           ulong_T, char_T and byte_T.                     *
  *===========================================================================*/
 
 typedef double real_T;
@@ -61,7 +58,6 @@ typedef bool boolean_T;
 typedef int int_T;
 typedef unsigned int uint_T;
 typedef unsigned long ulong_T;
-typedef unsigned long long ulonglong_T;
 typedef char char_T;
 typedef char_T byte_T;
 
@@ -115,16 +111,6 @@ typedef struct {
   uint32_T im;
 } cuint32_T;
 
-typedef struct {
-  int64_T re;
-  int64_T im;
-} cint64_T;
-
-typedef struct {
-  uint64_T re;
-  uint64_T im;
-} cuint64_T;
-
 /*=======================================================================*
  * Min and Max:                                                          *
  *   int8_T, int16_T, int32_T     - signed 8, 16, or 32 bit integers     *
@@ -143,10 +129,6 @@ static const int32_T MAX_int32_T = 2147483647;
 static const int32_T MIN_int32_T = -2147483647 - 1;
 static const uint32_T MAX_uint32_T = 0xFFFFFFFFU;
 static const uint32_T MIN_uint32_T = 0;
-static const int64_T MAX_int64_T = 9223372036854775807L;
-static const int64_T MIN_int64_T = -9223372036854775807L - 1L;
-static const uint64_T MAX_uint64_T = 0xFFFFFFFFFFFFFFFFUL;
-static const uint64_T MIN_uint64_T = 0UL;
 
 /* Logical type definitions */
 #if (!defined(__cplusplus)) && (!defined(__true_false_are_keywords)) &&        \
