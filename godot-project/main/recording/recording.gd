@@ -6,7 +6,8 @@ class_name Recording extends Resource
 
 @export_group("Raw Data")
 @export var raw_ppg_signal: PackedInt32Array
-@export_range(10, 60, 1, "suffix:Hz") var sampling_frequency: int = 30
+@export var raw_ppg_signal_timestamps: PackedInt64Array
+@export_range(10, 120, 1, "suffix:seconds") var recording_length: int = 15
 
 @export_group("Processed Data")
 @export var health_score: float

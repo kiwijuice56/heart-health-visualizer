@@ -133,9 +133,6 @@ PackedFloat64Array PpgAnalyzer::calculate_pulse_scores(PackedInt32Array ppg_valu
     coder::array<double, 2U> ppg_signal;
     ppg_signal.set_size(1, ppg_values.size());
 
-    UtilityFunctions::print(ppg_values.size());
-    UtilityFunctions::print(ppg_signal.size(1));
-
     for (int i = 0; i < ppg_values.size(); i++) {
         ppg_signal[i] = (double) ppg_values[i];
     }
@@ -148,9 +145,7 @@ PackedFloat64Array PpgAnalyzer::calculate_pulse_scores(PackedInt32Array ppg_valu
     PackedFloat64Array output_scores;
     output_scores.resize(scores.size(0));
 
-    UtilityFunctions::print(output_scores.size());
-    UtilityFunctions::print(scores.size(1));
-    UtilityFunctions::print(scores.size(0));
+    UtilityFunctions::print("Number of pulses: ", scores.size(0));
 
     for (int i = 0; i < scores.size(0); i++) {
         output_scores[i] = scores[i];
