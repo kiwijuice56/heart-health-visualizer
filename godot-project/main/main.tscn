@@ -67,8 +67,7 @@ script = ExtResource("2_n3o0a")
 [node name="Recorder" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("8_67ri8")
-recording_length = 1
-initial_ignore_count = 120
+recording_length = 20
 
 [node name="Saver" type="Node" parent="."]
 unique_name_in_owner = true

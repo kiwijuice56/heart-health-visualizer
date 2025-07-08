@@ -6,18 +6,18 @@ class_name Recorder extends Node
 
 ## Amount of samples to ignore when recording first starts. Used to reduce noise as the
 ## user presses the record button.
-@export_range(0, 360, 10, "suffix:samples") var initial_ignore_count: int = 60
+@export_range(0, 10, 1, "suffix:seconds") var initial_ignore_length: int = 2
 
 # Modules
 var ppg_analyzer: PpgAnalyzer
 var camera: AndroidCamera
 
 var recording: bool = false
+var ignore_timer: SceneTreeTimer
 
 # Current recording state
 var ppg_signal_timestamps: PackedInt64Array
 var ppg_signal: PackedInt32Array
-var ppg_ignore_count: int = initial_ignore_count # Decrement as frames come in 
 
 signal recording_completed(recording: Recording)
 
@@ -36,9 +36,8 @@ func _on_camera_frame(timestamp: int, frame: ImageTexture) -> void:
 	
 	# Send image to recording progress menu
 	%RecordingProgressMenu.camera_texture_rect.texture = frame
-	
-	if ppg_ignore_count > 0:
-		ppg_ignore_count -= 1
+
+	if is_instance_valid(ignore_timer) and ignore_timer.time_left > 0:
 		return
 	
 	# Add to signal
@@ -55,11 +54,12 @@ func start_recording() -> void:
 	assert(not recording)
 	recording = true
 	
-	ppg_ignore_count = initial_ignore_count
-	ppg_signal.clear()
+	ignore_timer = get_tree().create_timer(initial_ignore_length, false)
 	
+	ppg_signal.clear()
 	camera.start_camera(256, 256, false)
-	await get_tree().create_timer(recording_length).timeout
+	
+	await get_tree().create_timer(recording_length + initial_ignore_length).timeout
 	if recording:
 		stop_recording()
 
@@ -74,8 +74,11 @@ func stop_recording() -> void:
 	# Final score is the median of all pulse scores
 	var scores: PackedFloat64Array = ppg_analyzer.calculate_pulse_scores(ppg_signal)
 	scores.sort()
-	@warning_ignore("integer_division")
-	var median_score: float = scores[len(scores) / 2]
+	
+	var median_score: float = 0
+	if len(scores) > 0:
+		@warning_ignore("integer_division")
+		median_score = scores[len(scores) / 2]
 	
 	new_recording.health_score = median_score
 	
