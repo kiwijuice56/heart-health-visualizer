@@ -2,7 +2,7 @@ class_name Recorder extends Node
 ## Handles the recording of PPG data to Recording resources.
 
 ## Length of PPG recordings, in samples.
-@export_range(10, 120, 1, "suffix:seconds") var recording_length: int = 15
+@export_range(1, 120, 1, "suffix:seconds") var recording_length: int = 15
 
 ## Amount of samples to ignore when recording first starts. Used to reduce noise as the
 ## user presses the record button.
@@ -33,6 +33,9 @@ func _ready() -> void:
 func _on_camera_frame(timestamp: int, frame: ImageTexture) -> void:
 	if not recording:
 		return
+	
+	# Send image to recording progress menu
+	%RecordingProgressMenu.camera_texture_rect.texture = frame
 	
 	if ppg_ignore_count > 0:
 		ppg_ignore_count -= 1

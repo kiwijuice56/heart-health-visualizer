@@ -3,6 +3,7 @@ class_name Main extends Node
 @onready var record_button: Button = %CreateRecordingButton
 @onready var clear_button: Button = %ClearDataButton
 @onready var about_button: Button = %AboutButton
+@onready var select_folder_button: Button = %SelectFolderButton
 
 @onready var recording_menu: RecordingMenu = %RecordingMenu
 @onready var recording_progress_menu: Menu = %RecordingProgressMenu
@@ -13,8 +14,14 @@ func _ready() -> void:
 	record_button.pressed.connect(_on_record_pressed)
 	clear_button.pressed.connect(_on_clear_pressed)
 	about_button.pressed.connect(_on_about_pressed)
+	select_folder_button.pressed.connect(_on_select_folder_pressed)
 	
 	recording_menu.recording_requested.connect(_on_recording_requested)
+	
+	OS.request_permissions()
+
+func _on_select_folder_pressed() -> void:
+	Ref.file_selector.choose_folder()
 
 func _on_about_pressed() -> void:
 	about_menu.enter()

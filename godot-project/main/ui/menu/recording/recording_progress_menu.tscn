@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://ebo7uyhey278"]
 
-[ext_resource type="Script" uid="uid://jk7jl15tuvnk" path="res://main/ui/menu/menu.gd" id="1_l0uq1"]
+[ext_resource type="Script" uid="uid://bh14iwm285lpv" path="res://main/ui/menu/recording/recording_progress_menu.gd" id="1_l0uq1"]
 [ext_resource type="Texture2D" uid="uid://d12q1w33shd68" path="res://main/ui/icons/loading.png" id="2_n3l71"]
 
 [sub_resource type="Animation" id="Animation_n3o0a"]
@@ -58,7 +58,7 @@ size_flags_vertical = 3
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VisualContainer"]
 layout_mode = 2
-theme_override_constants/separation = 32
+theme_override_constants/separation = 64
 
 [node name="Label" type="Label" parent="VisualContainer/VBoxContainer"]
 layout_mode = 2
@@ -67,9 +67,10 @@ size_flags_vertical = 10
 text = "Recording... Please remain still."
 
 [node name="SpinnyWheel" type="Control" parent="VisualContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 size_flags_horizontal = 4
-size_flags_vertical = 2
+size_flags_vertical = 0
 
 [node name="TextureRect" type="TextureRect" parent="VisualContainer/VBoxContainer/SpinnyWheel"]
 layout_mode = 0
@@ -84,3 +85,9 @@ libraries = {
 &"": SubResource("AnimationLibrary_s758e")
 }
 autoplay = "spin"
+
+[node name="CameraTexture" type="TextureRect" parent="VisualContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 2
