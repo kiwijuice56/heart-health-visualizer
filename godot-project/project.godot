@@ -14,7 +14,11 @@ config/name="heart-health-visualizer"
 config/version="1.0.0"
 run/main_scene="uid://b3fisyx6pvlq6"
 config/features=PackedStringArray("4.4", "Mobile")
-config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0, 0, 0, 1)
+boot_splash/show_image=false
+boot_splash/fullsize=false
+boot_splash/use_filter=false
+config/icon="uid://ooqjvjk5uawq"
 
 [autoload]
 
