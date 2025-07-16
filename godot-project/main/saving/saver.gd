@@ -58,8 +58,7 @@ func clear_all_data() -> void:
 	var file_name: String = dir.get_next()
 	while file_name != "":
 		var path: String = dir.get_current_dir() + "/" + file_name
-		var resource: Resource = ResourceLoader.load(path)
-		if resource is Recording:
+		if path.ends_with(".csv") or ResourceLoader.load(path) is Recording:
 			DirAccess.remove_absolute(path)
 		file_name = dir.get_next()
 	

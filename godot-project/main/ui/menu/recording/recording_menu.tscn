@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://bs54rtgxyh1qo" path="res://main/ui/menu/recording/recording_menu.gd" id="2_mbt5q"]
 [ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="3_c12f5"]
 [ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="4_xd3hm"]
-[ext_resource type="Texture2D" uid="uid://o5pd1rmdm6wd" path="res://main/ui/menu/recording/diagrams/wip_diagram.png" id="5_4hxj6"]
+[ext_resource type="Texture2D" uid="uid://8s7ppkl5docv" path="res://main/ui/menu/recording/diagrams/diagram.png" id="5_lu6mb"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bsumw"]
 bg_color = Color(0.0745098, 0.0705882, 0.0823529, 1)
@@ -90,6 +90,7 @@ theme_override_constants/margin_bottom = 128
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer"]
 layout_mode = 2
+theme_override_constants/separation = 16
 
 [node name="InstructionsContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -128,7 +129,7 @@ autowrap_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 6
-texture = ExtResource("5_4hxj6")
+texture = ExtResource("5_lu6mb")
 expand_mode = 5
 stretch_mode = 4
 

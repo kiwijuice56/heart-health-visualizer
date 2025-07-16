@@ -7,11 +7,9 @@ signal save_path_updated(path: String)
 var save_path: String
 var location_selected: bool = false
 
-func _init() -> void:
+func _ready() -> void:
 	if not DirAccess.dir_exists_absolute(default_path):
 		DirAccess.make_dir_absolute(default_path)
-
-func _ready() -> void:
 	dir_selected.connect(_on_dir_selected)
 
 func _on_dir_selected(dir: String) -> void:

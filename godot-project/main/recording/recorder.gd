@@ -35,7 +35,7 @@ func _on_camera_frame(timestamp: int, frame: ImageTexture) -> void:
 		return
 	
 	# Send image to recording progress menu
-	%RecordingProgressMenu.camera_texture_rect.texture = frame
+	# %RecordingProgressMenu.camera_texture_rect.texture = frame
 
 	if is_instance_valid(ignore_timer) and ignore_timer.time_left > 0:
 		return
@@ -57,7 +57,7 @@ func start_recording() -> void:
 	ignore_timer = get_tree().create_timer(initial_ignore_length, false)
 	
 	ppg_signal.clear()
-	camera.start_camera(256, 256, false)
+	camera.start_camera(300, 300, true)
 	
 	await get_tree().create_timer(recording_length + initial_ignore_length).timeout
 	if recording:

@@ -81,6 +81,7 @@ file_mode = 2
 access = 2
 use_native_dialog = true
 script = ExtResource("18_4hmqs")
+default_path = "/storage/emulated/0/PPG Recordings UROP/"
 
 [node name="Background" type="PanelContainer" parent="."]
 anchors_preset = 15

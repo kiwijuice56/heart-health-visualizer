@@ -35,7 +35,7 @@ func start_camera(desired_width: int, desired_height: int, flash_on: bool) -> vo
 	if not is_instance_valid(java_interface):
 		_initialize_java_interface()
 
-	java_interface.startCamera()
+	java_interface.startCamera(desired_width, desired_height, flash_on)
 
 ## Stops camera streaming.
 func stop_camera() -> void:
