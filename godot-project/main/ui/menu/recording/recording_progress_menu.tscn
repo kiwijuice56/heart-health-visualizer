@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://ebo7uyhey278"]
+[gd_scene load_steps=8 format=3 uid="uid://ebo7uyhey278"]
 
 [ext_resource type="Script" uid="uid://bh14iwm285lpv" path="res://main/ui/menu/recording/recording_progress_menu.gd" id="1_l0uq1"]
+[ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="1_ssxrg"]
 [ext_resource type="Texture2D" uid="uid://d12q1w33shd68" path="res://main/ui/icons/loading.png" id="2_n3l71"]
+[ext_resource type="PackedScene" uid="uid://bsjbwo2ih2fke" path="res://main/ui/menu/recording/chart/chart.tscn" id="3_76lal"]
 
 [sub_resource type="Animation" id="Animation_n3o0a"]
 length = 0.001
@@ -46,6 +48,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_ssxrg")
 script = ExtResource("1_l0uq1")
 
 [node name="Background" type="ColorRect" parent="."]
@@ -55,10 +58,14 @@ color = Color(0, 0, 0, 1)
 [node name="VisualContainer" type="MarginContainer" parent="."]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 64
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 64
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VisualContainer"]
 layout_mode = 2
-theme_override_constants/separation = 64
+theme_override_constants/separation = 32
 
 [node name="Label" type="Label" parent="VisualContainer/VBoxContainer"]
 layout_mode = 2
@@ -66,11 +73,17 @@ size_flags_horizontal = 4
 size_flags_vertical = 10
 text = "Recording... Please remain still."
 
+[node name="Chart" parent="VisualContainer/VBoxContainer" instance=ExtResource("3_76lal")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 256)
+layout_mode = 2
+size_flags_vertical = 4
+
 [node name="SpinnyWheel" type="Control" parent="VisualContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 size_flags_horizontal = 4
-size_flags_vertical = 0
+size_flags_vertical = 2
 
 [node name="TextureRect" type="TextureRect" parent="VisualContainer/VBoxContainer/SpinnyWheel"]
 layout_mode = 0
@@ -88,6 +101,7 @@ autoplay = "spin"
 
 [node name="CameraTexture" type="TextureRect" parent="VisualContainer/VBoxContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 2

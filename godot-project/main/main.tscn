@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://b3fisyx6pvlq6"]
+[gd_scene load_steps=27 format=3 uid="uid://b3fisyx6pvlq6"]
 
 [ext_resource type="Script" uid="uid://f41vsmlou6xj" path="res://main/main.gd" id="1_53q0u"]
 [ext_resource type="Script" uid="uid://c4qgs4v1kb05i" path="res://main/rendering/renderer.gd" id="2_n3o0a"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://ebo7uyhey278" path="res://main/ui/menu/recording/recording_progress_menu.tscn" id="13_5xyti"]
 [ext_resource type="Script" uid="uid://y5dl1u5771oi" path="res://main/ui/input_blocker.gd" id="13_na0o7"]
 [ext_resource type="PackedScene" uid="uid://eix6378l1e3u" path="res://main/ui/menu/about/about_menu.tscn" id="15_s758e"]
+[ext_resource type="PackedScene" uid="uid://bekhx2vhpfex3" path="res://main/ui/menu/inspection/inspection_menu.tscn" id="17_q0sk7"]
 [ext_resource type="Script" uid="uid://dc5bfj7u30d4c" path="res://main/folder_selection.gd" id="18_4hmqs"]
 
 [sub_resource type="Gradient" id="Gradient_67ri8"]
@@ -67,7 +68,8 @@ script = ExtResource("2_n3o0a")
 [node name="Recorder" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("8_67ri8")
-recording_length = 20
+recording_length = 30
+initial_ignore_length = 3
 
 [node name="Saver" type="Node" parent="."]
 unique_name_in_owner = true
@@ -81,7 +83,7 @@ file_mode = 2
 access = 2
 use_native_dialog = true
 script = ExtResource("18_4hmqs")
-default_path = "/storage/emulated/0/PPG Recordings UROP/"
+default_path = "user://"
 
 [node name="Background" type="PanelContainer" parent="."]
 anchors_preset = 15
@@ -175,6 +177,7 @@ layout_mode = 2
 vertical_scroll_mode = 3
 
 [node name="SavedRecordingContainer" type="GridContainer" parent="ScreenManager/MainContainer/ContentContainer/HistoryContainer/ScrollContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -276,6 +279,7 @@ text = "Data"
 
 [node name="SelectFolderButton" type="Button" parent="ScreenManager/MainContainer/ContentContainer/SettingsContainer/ScrollContainer/VBoxContainer/DataContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_vertical = 0
 focus_mode = 0
@@ -427,7 +431,6 @@ size_flags_horizontal = 4
 text = "Settings"
 
 [node name="RecordingMenuContainer" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -441,7 +444,6 @@ unique_name_in_owner = true
 layout_mode = 1
 
 [node name="AboutMenuContainer" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -465,6 +467,20 @@ theme = ExtResource("2_pjrb6")
 script = ExtResource("9_bsumw")
 
 [node name="RecordingProgressMenu" parent="RecordingProgressMenuContainer" instance=ExtResource("13_5xyti")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="InspectionMenuContainer" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("9_bsumw")
+
+[node name="InspectionMenu" parent="InspectionMenuContainer" instance=ExtResource("17_q0sk7")]
 unique_name_in_owner = true
 layout_mode = 1
 

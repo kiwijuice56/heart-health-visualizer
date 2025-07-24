@@ -23,7 +23,8 @@ public:
 	PpgAnalyzer();
 	~PpgAnalyzer();
 
-	int read_ppg_from_image(Ref<Image> camera_frame, Rect2i bounding_box);
+	// Assumes RGBA8 format
+	int read_ppg_from_image(PackedByteArray data, Rect2i bounding_box);
 
 	// All methods assume `ppg_values` is an array of the PPG values evenly sampled at `sampling_frequency` hz
 	// Note that most of these functions are unused, since they were manually coded in C++ earlier on for debugging purposes;

@@ -19,17 +19,22 @@ func _on_save_path_updated(_dir: String) -> void:
 func reload_recordings() -> void:
 	saved_recordings.clear()
 	
+	print("Reloading recordings...")
 	var dir: DirAccess = DirAccess.open(Ref.file_selector.get_save_path())
 	dir.list_dir_begin()
 	var file_name: String = dir.get_next()
 	while file_name != "":
 		var path: String = dir.get_current_dir() + "/" + file_name
+		if path.ends_with(".csv") or not path.contains(".tres"):
+			file_name = dir.get_next()
+			continue
+		
 		var resource: Resource = ResourceLoader.load(path)
 		if resource is Recording:
 			var recording: Recording = resource as Recording
 			saved_recordings.append(recording)
 		file_name = dir.get_next()
-	
+	print("Done reloading recordings.")
 	recordings_refreshed.emit(saved_recordings)
 
 ## Saved a recording to storage.
@@ -58,7 +63,7 @@ func clear_all_data() -> void:
 	var file_name: String = dir.get_next()
 	while file_name != "":
 		var path: String = dir.get_current_dir() + "/" + file_name
-		if path.ends_with(".csv") or ResourceLoader.load(path) is Recording:
+		if path.ends_with(".csv") or path.contains(".tres") and ResourceLoader.load(path) is Recording:
 			DirAccess.remove_absolute(path)
 		file_name = dir.get_next()
 	

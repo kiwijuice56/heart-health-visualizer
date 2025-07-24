@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://bsjbwo2ih2fke"]
+
+[ext_resource type="Script" uid="uid://c7l6ob1uk3g8m" path="res://main/ui/menu/recording/chart/FastChart.cs" id="1_y7h6k"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nidpn"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.0724227, 0.0724211, 0.0921221, 1)
+
+[node name="Chart" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 128)
+offset_right = 117.0
+offset_bottom = 50.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_nidpn")
+script = ExtResource("1_y7h6k")
+timeWindow = 15.0
+delay = 0.22
+lineColor = Color(1, 1, 1, 1)
+lineWidth = 1.2
+timestampThreshold = 0

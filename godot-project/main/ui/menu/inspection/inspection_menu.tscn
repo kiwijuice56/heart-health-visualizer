@@ -1,9 +1,9 @@
-[gd_scene load_steps=12 format=3 uid="uid://eix6378l1e3u"]
+[gd_scene load_steps=12 format=3 uid="uid://bekhx2vhpfex3"]
 
-[ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="1_jlx0t"]
-[ext_resource type="Script" uid="uid://jk7jl15tuvnk" path="res://main/ui/menu/menu.gd" id="2_2mv05"]
-[ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="3_e88nu"]
-[ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="4_rclhx"]
+[ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="1_mth0t"]
+[ext_resource type="Script" uid="uid://dy8u0prb4movh" path="res://main/ui/menu/inspection/inspection_menu.gd" id="2_mth0t"]
+[ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="3_kn5ta"]
+[ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="4_wyglj"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bsumw"]
 bg_color = Color(0.0745098, 0.0705882, 0.0823529, 1)
@@ -26,7 +26,7 @@ height = 128
 fill_from = Vector2(0, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_e88nu"]
-shader = ExtResource("3_e88nu")
+shader = ExtResource("3_kn5ta")
 shader_parameter/gradient = SubResource("GradientTexture2D_2mv05")
 shader_parameter/fractal_gradient = SubResource("GradientTexture2D_re7it")
 shader_parameter/speed = 0.02
@@ -41,15 +41,15 @@ bg_color = Color(1, 1, 1, 0.819608)
 border_width_bottom = 2
 border_color = Color(0, 0, 0, 1)
 
-[node name="AboutMenu" type="PanelContainer" node_paths=PackedStringArray("close_button")]
+[node name="InspectionMenu" type="PanelContainer" node_paths=PackedStringArray("close_button")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("1_jlx0t")
+theme = ExtResource("1_mth0t")
 theme_override_styles/panel = SubResource("StyleBoxFlat_bsumw")
-script = ExtResource("2_2mv05")
+script = ExtResource("2_mth0t")
 close_button = NodePath("VBoxContainer/TitleContainer/HBoxContainer/CloseButton")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
@@ -70,13 +70,13 @@ size_flags_horizontal = 0
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 48
-text = "About"
+text = "Recording Result"
 
 [node name="CloseButton" type="Button" parent="VBoxContainer/TitleContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 10
 focus_mode = 0
-icon = ExtResource("4_rclhx")
+icon = ExtResource("4_wyglj")
 flat = true
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
@@ -90,11 +90,64 @@ theme_override_constants/margin_bottom = 128
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MarginContainer"]
 layout_mode = 2
 
-[node name="Info" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Render" type="TextureRect" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 5
+
+[node name="ScoreLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "This app was created by Eric Alfaro under the guidance of Dr. Richard Ribon Fletcher as part of the Undergraduate Research Opportunity Program at MIT.
-
-No data is collected from users. All analysis is computed locally on your device."
+text = "Score:"
 autowrap_mode = 2
+
+[node name="PulseScoresLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pulse Scores:"
+autowrap_mode = 2
+
+[node name="DateLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.45098, 0.427451, 0.470588, 1)
+text = "Date:"
+autowrap_mode = 2
+
+[node name="HeartRate" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Heart Rate:"
+autowrap_mode = 2
+
+[node name="Description" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.449555, 0.4277, 0.47, 1)
+text = "Your heart health score is a heuristic based on the shape of your pulse waveform. It is not conclusive evidence of your overall heart health. Use this information with caution."
+autowrap_mode = 2
+
+[node name="AdvancedButton" type="Button" parent="VBoxContainer/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+focus_mode = 0
+text = "Show Advanced Info"

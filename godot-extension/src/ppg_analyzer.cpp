@@ -25,7 +25,7 @@ PpgAnalyzer::~PpgAnalyzer() {
 
 }
 
-int PpgAnalyzer::read_ppg_from_image(Ref<Image> camera_frame, Rect2i bounding_box) {
+int PpgAnalyzer::read_ppg_from_image(PackedByteArray data, Rect2i bounding_box) {
     const int start_y = bounding_box.get_position().y;
     const int end_y = start_y + bounding_box.get_size().y;
 
@@ -36,9 +36,8 @@ int PpgAnalyzer::read_ppg_from_image(Ref<Image> camera_frame, Rect2i bounding_bo
 
     for (int y = start_y; y < end_y; y++) {
         for (int x = start_x; x < end_x; x++) {
-            Color pixel_color = camera_frame->get_pixel(x, y);
-
-            ppg_point += pixel_color.get_r8();
+            int64_t red = data[4 * (x + y * (end_x - start_x))];
+            ppg_point += red;
         }
     }
 

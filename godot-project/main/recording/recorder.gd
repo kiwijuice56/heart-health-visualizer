@@ -20,6 +20,7 @@ var ppg_signal_timestamps: PackedInt64Array
 var ppg_signal: PackedInt32Array
 
 signal recording_completed(recording: Recording)
+signal ppg_frame_received(timestamp: int, ppg_value: int)
 
 func _ready() -> void:
 	# Initialize GDextension modules
@@ -30,20 +31,22 @@ func _ready() -> void:
 	camera.camera_frame.connect(_on_camera_frame)
 	camera.request_camera_permissions()
 
-func _on_camera_frame(timestamp: int, frame: ImageTexture) -> void:
+func _on_camera_frame(timestamp: int, data: PackedByteArray, width: int, height: int) -> void:
 	if not recording:
+		return
+	
+	# Only add to the final output after a few seconds have gone by, to reduce jitter
+	
+	if is_instance_valid(ignore_timer) and ignore_timer.time_left > 0:
 		return
 	
 	# Send image to recording progress menu
 	# %RecordingProgressMenu.camera_texture_rect.texture = frame
-
-	if is_instance_valid(ignore_timer) and ignore_timer.time_left > 0:
-		return
 	
-	# Add to signal
-	var ppg_value: int = ppg_analyzer.read_ppg_from_image(frame.get_image(), Rect2i(Vector2i(0, 0), Vector2i(frame.get_width(), frame.get_height())))
+	var ppg_value: int = ppg_analyzer.read_ppg_from_image(data, Rect2i(Vector2i(0, 0), Vector2i(width, height)))
+	ppg_frame_received.emit(timestamp, ppg_value)
+	
 	ppg_signal.append(ppg_value)
-	
 	ppg_signal_timestamps.append(timestamp)
 
 func start_recording() -> void:
@@ -57,6 +60,7 @@ func start_recording() -> void:
 	ignore_timer = get_tree().create_timer(initial_ignore_length, false)
 	
 	ppg_signal.clear()
+	ppg_signal_timestamps.clear()
 	camera.start_camera(300, 300, true)
 	
 	await get_tree().create_timer(recording_length + initial_ignore_length).timeout
@@ -71,17 +75,6 @@ func stop_recording() -> void:
 	
 	var new_recording: Recording = create_recording()
 	
-	# Final score is the median of all pulse scores
-	var scores: PackedFloat64Array = ppg_analyzer.calculate_pulse_scores(ppg_signal)
-	scores.sort()
-	
-	var median_score: float = 0
-	if len(scores) > 0:
-		@warning_ignore("integer_division")
-		median_score = scores[len(scores) / 2]
-	
-	new_recording.health_score = median_score
-	
 	recording_completed.emit(new_recording)
 
 func create_recording() -> Recording:
@@ -92,5 +85,18 @@ func create_recording() -> Recording:
 	new_recording.recording_length = recording_length
 	new_recording.raw_ppg_signal = ppg_signal.duplicate()
 	new_recording.raw_ppg_signal_timestamps = ppg_signal_timestamps.duplicate()
+	
+	# Find the pulse scores and use them to calculate the total health score
+	var scores: PackedFloat64Array = ppg_analyzer.calculate_pulse_scores(ppg_signal)
+	scores.sort()
+	new_recording.pulse_scores = scores
+	
+	
+	var median_score: float = 0
+	if len(scores) > 0:
+		@warning_ignore("integer_division")
+		median_score = scores[len(scores) / 2]
+	
+	new_recording.health_score = median_score
 	
 	return new_recording

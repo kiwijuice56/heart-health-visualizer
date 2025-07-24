@@ -11,4 +11,5 @@ class_name Recording extends Resource
 
 @export_group("Processed Data")
 @export var health_score: float
+@export var pulse_scores: PackedFloat64Array
 @export var render: ImageTexture
