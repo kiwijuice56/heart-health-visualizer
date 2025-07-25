@@ -7,7 +7,7 @@ content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
 content_margin_bottom = 8.0
-bg_color = Color(0.0724227, 0.0724211, 0.0921221, 1)
+bg_color = Color(0, 0, 0, 1)
 
 [node name="Chart" type="PanelContainer"]
 custom_minimum_size = Vector2(0, 128)
