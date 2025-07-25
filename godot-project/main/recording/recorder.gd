@@ -43,11 +43,10 @@ func _on_camera_frame(timestamp: int, data: PackedByteArray, width: int, height:
 	# Send image to recording progress menu
 	# %RecordingProgressMenu.camera_texture_rect.texture = frame
 	
-	var ppg_value: int = ppg_analyzer.read_ppg_from_image(data, Rect2i(Vector2i(0, 0), Vector2i(width, height)))
+	# Negation is necessary so that the signal isn't upside down
+	var ppg_value: int = -ppg_analyzer.read_ppg_from_image(data, Rect2i(Vector2i(0, 0), Vector2i(width, height)))
 	
-	# We preprocess everything in the MATLAB algorithm, but we need to invert the value
-	# here as well so the chart isn't flipped!
-	ppg_frame_received.emit(timestamp, -ppg_value)
+	ppg_frame_received.emit(timestamp, ppg_value)
 	
 	ppg_signal.append(ppg_value)
 	ppg_signal_timestamps.append(timestamp)

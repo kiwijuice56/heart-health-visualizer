@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3 uid="uid://bekhx2vhpfex3"]
+[gd_scene load_steps=13 format=3 uid="uid://bekhx2vhpfex3"]
 
 [ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="1_mth0t"]
 [ext_resource type="Script" uid="uid://dy8u0prb4movh" path="res://main/ui/menu/inspection/inspection_menu.gd" id="2_mth0t"]
 [ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="3_kn5ta"]
 [ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="4_wyglj"]
+[ext_resource type="PackedScene" uid="uid://bsjbwo2ih2fke" path="res://main/ui/menu/recording/chart/chart.tscn" id="5_c0lnj"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bsumw"]
 bg_color = Color(0.0745098, 0.0705882, 0.0823529, 1)
@@ -94,7 +95,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 32
+theme_override_constants/separation = 16
 
 [node name="Render" type="TextureRect" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
 unique_name_in_owner = true
@@ -112,11 +113,17 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.133333)
 
+[node name="Chart" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+
 [node name="ScoreLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 0
 text = "Score:"
 autowrap_mode = 2
 

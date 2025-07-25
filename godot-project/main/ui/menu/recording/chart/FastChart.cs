@@ -17,7 +17,8 @@ public partial class FastChart : PanelContainer {
 	public double lineWidth = 0.9;
 	[Export]
 	public long timestampThreshold = 20000;
-
+	[Export]
+	public bool live;
 
 	private List<double> stream;
 	private List<long> timestamps;
@@ -52,6 +53,15 @@ public partial class FastChart : PanelContainer {
 		// Modification here: timestamps in this program are in ms
 		long minX = (long) (1000.0 * (Time.GetUnixTimeFromSystem() - timeWindow - delay));
 		long maxX = (long) (1000.0 * (Time.GetUnixTimeFromSystem() - delay));
+		
+		if (!live) {
+			minX = Int64.MaxValue;
+			maxX = Int64.MinValue;
+			for (int i = 0; i < timestamps.Count; i++) {
+				maxX = Math.Max(maxX, timestamps[i]);
+				minX = Math.Min(minX, timestamps[i]);
+			}
+		}
 
 		for (int i = 1; i < stream.Count; i++) {
 			if (timestamps[i - 1] < minX || timestamps[i - 1] > maxX) {
@@ -109,5 +119,17 @@ public partial class FastChart : PanelContainer {
 	public void Reset() {
 		stream = new List<double>();
 		timestamps = new List<long>();
+	}
+	
+	// Pass in the stream as integers, just for ease since internally PPG values are ints
+	public void Initialize(int[] newStream, long[] newTimestamps) {
+		stream = new List<double>(newStream.Length);
+		for (int i = 0; i < newStream.Length; i++) {
+			stream.Add((double) newStream[i]);
+		}
+		timestamps = new List<long>(newTimestamps.Length);
+		for (int i = 0; i < newTimestamps.Length; i++) {
+			timestamps.Add(newTimestamps[i]);
+		}
 	}
 }

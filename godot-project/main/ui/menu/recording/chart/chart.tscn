@@ -10,7 +10,7 @@ content_margin_bottom = 8.0
 bg_color = Color(0, 0, 0, 1)
 
 [node name="Chart" type="PanelContainer"]
-custom_minimum_size = Vector2(0, 128)
+custom_minimum_size = Vector2(0, 256)
 offset_right = 117.0
 offset_bottom = 50.0
 size_flags_horizontal = 3

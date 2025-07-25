@@ -75,9 +75,9 @@ text = "Recording... Please remain still."
 
 [node name="Chart" parent="VisualContainer/VBoxContainer" instance=ExtResource("3_76lal")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 256)
 layout_mode = 2
 size_flags_vertical = 4
+live = true
 
 [node name="SpinnyWheel" type="Control" parent="VisualContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 70)
