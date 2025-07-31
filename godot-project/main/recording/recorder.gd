@@ -88,11 +88,12 @@ func create_recording() -> Recording:
 	new_recording.raw_ppg_signal = ppg_signal.duplicate()
 	new_recording.raw_ppg_signal_timestamps = ppg_signal_timestamps.duplicate()
 	
+	new_recording.processed_ppg_signal = ppg_analyzer.get_preprocessed_ppg_signal(ppg_signal, ppg_signal_timestamps)
+	
 	# Find the pulse scores and use them to calculate the total health score
-	var scores: PackedFloat64Array = ppg_analyzer.calculate_pulse_scores(ppg_signal)
+	var scores: PackedFloat64Array = ppg_analyzer.calculate_pulse_scores(new_recording.processed_ppg_signal, 10)
 	scores.sort()
 	new_recording.pulse_scores = scores
-	
 	
 	var median_score: float = 0
 	if len(scores) > 0:
@@ -100,5 +101,7 @@ func create_recording() -> Recording:
 		median_score = scores[len(scores) / 2]
 	
 	new_recording.health_score = median_score
+	new_recording.heart_rate = ppg_analyzer.calculate_heart_rate(new_recording.processed_ppg_signal, 150)
+	new_recording.heart_rate_variability = ppg_analyzer.calculate_heart_rate_variability(new_recording.processed_ppg_signal, 150)
 	
 	return new_recording

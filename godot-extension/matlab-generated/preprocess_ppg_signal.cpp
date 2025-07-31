@@ -3,15 +3,17 @@
 // course requirements at degree granting institutions only.  Not for
 // government, commercial, or other organizational use.
 //
-// score_ppg_signal.cpp
+// preprocess_ppg_signal.cpp
 //
-// Code generation for function 'score_ppg_signal'
+// Code generation for function 'preprocess_ppg_signal'
 //
 
 // Include files
-#include "score_ppg_signal.h"
+#include "preprocess_ppg_signal.h"
+#include "preprocess_ppg_signal_types.h"
 #include "rt_nonfinite.h"
 #include "coder_array.h"
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -163,8 +165,22 @@ static const double dv[129]{1.0,
                             -1.0};
 
 // Function Declarations
+static int MultiWord2sLong(const unsigned int u[]);
+
+static void MultiWordAdd(const unsigned int u1[], const unsigned int u2[],
+                         unsigned int y[]);
+
+static void MultiWordNeg(const unsigned int u1[], unsigned int y[]);
+
+static void MultiWordSetUnsignedMax(unsigned int y[]);
+
+static void MultiWordSub(const unsigned int u1[], const unsigned int u2[],
+                         unsigned int y[], int n);
+
 namespace coder {
 static void b_abs(const array<double, 2U> &x, array<double, 2U> &y);
+
+static double combineVectorElements(const array<double, 2U> &x);
 
 static void detrend(const array<double, 2U> &x, array<double, 2U> &y);
 
@@ -172,7 +188,8 @@ static void do_vectors(const array<int, 1U> &a, const array<int, 1U> &b,
                        array<int, 1U> &c, array<int, 1U> &ia,
                        array<int, 1U> &ib);
 
-static double dot(const double a[15]);
+static double dot(const double a_data[], const int a_size[2],
+                  const array<double, 2U> &b);
 
 static void filter(const array<double, 2U> &x, array<double, 2U> &y);
 
@@ -184,6 +201,8 @@ namespace blas {
 static double xnrm2(int n, const array<double, 2U> &x, int ix0);
 
 }
+static int64m_T i64ddiv(const int64m_T x);
+
 namespace lapack {
 static int xgeqp3(array<double, 2U> &A, double tau_data[], int jpvt[2]);
 
@@ -193,15 +212,71 @@ static double maximum(const array<double, 2U> &x);
 } // namespace internal
 static void interp1(const array<double, 2U> &varargin_1,
                     const array<double, 2U> &varargin_2,
+                    const array<double, 2U> &varargin_3, array<double, 2U> &Vq);
+
+static void interp1(const array<double, 2U> &varargin_1,
+                    const array<double, 2U> &varargin_2,
                     const double varargin_3[100], double Vq[100]);
+
+static void linspace(double d1, double d2, const int64m_T n,
+                     array<double, 2U> &y);
 
 static void linspace(double d2, double y[100]);
 
-static double mean(const array<double, 2U> &x);
+static void pchip(const array<double, 2U> &x, const array<double, 2U> &y,
+                  array<double, 2U> &v_breaks, array<double, 2U> &v_coefs);
+
+static double ppval(const array<double, 2U> &pp_breaks,
+                    const array<double, 2U> &pp_coefs, double x);
 
 } // namespace coder
 static void minus(coder::array<double, 1U> &in1,
                   const coder::array<double, 1U> &in2);
+
+static double sMultiWord2Double(const unsigned int u1[]);
+
+static void sMultiWord2MultiWord(const unsigned int u1[], unsigned int y[],
+                                 int n);
+
+static void sMultiWord2sMultiWordSat(const unsigned int u1[], unsigned int y[]);
+
+static int sMultiWordCmp(const unsigned int u1[], const unsigned int u2[]);
+
+static bool sMultiWordGt(const unsigned int u1[], const unsigned int u2[]);
+
+static bool sMultiWordLt(const unsigned int u1[], const unsigned int u2[]);
+
+static void sMultiWordMul(const unsigned int u1[], const unsigned int u2[],
+                          unsigned int y[]);
+
+static void uMultiWord2MultiWord(const unsigned int u1[], int n1,
+                                 unsigned int y[]);
+
+static int uMultiWordCmp(const unsigned int u1[], const unsigned int u2[]);
+
+static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
+                         unsigned int r[]);
+
+static void uMultiWordDivZero(const unsigned int u1[], const unsigned int u2[],
+                              unsigned int b_y1[], unsigned int y2[],
+                              unsigned int t1[], unsigned int t2[]);
+
+static bool uMultiWordEq(const unsigned int u1[], const unsigned int u2[]);
+
+static bool uMultiWordGe(const unsigned int u1[], const unsigned int u2[]);
+
+static bool uMultiWordGt(const unsigned int u1[], const unsigned int u2[]);
+
+static bool uMultiWordLe(const unsigned int u1[], const unsigned int u2[]);
+
+static void uMultiWordMul(const unsigned int u1[], const unsigned int u2[],
+                          unsigned int y[]);
+
+static void uMultiWordShl(const unsigned int u1[], unsigned int n2,
+                          unsigned int y[]);
+
+static void uMultiWordShr(const unsigned int u1[], unsigned int n2,
+                          unsigned int y[]);
 
 // Function Definitions
 namespace coder {
@@ -1026,6 +1101,67 @@ void FFTImplementationCallback::doHalfLengthBluestein(
 
 } // namespace fft
 } // namespace internal
+} // namespace coder
+static int MultiWord2sLong(const unsigned int u[])
+{
+  return static_cast<int>(u[0]);
+}
+
+static void MultiWordAdd(const unsigned int u1[], const unsigned int u2[],
+                         unsigned int y[])
+{
+  int carry{0};
+  for (int i{0}; i < 2; i++) {
+    unsigned int u1i;
+    unsigned int yi;
+    u1i = u1[i];
+    yi = (u1i + u2[i]) + static_cast<unsigned int>(carry);
+    y[i] = yi;
+    if (carry != 0) {
+      carry = (yi <= u1i);
+    } else {
+      carry = (yi < u1i);
+    }
+  }
+}
+
+static void MultiWordNeg(const unsigned int u1[], unsigned int y[])
+{
+  int carry{1};
+  for (int i{0}; i < 2; i++) {
+    unsigned int yi;
+    yi = ~u1[i] + static_cast<unsigned int>(carry);
+    y[i] = yi;
+    carry = (yi < static_cast<unsigned int>(carry));
+  }
+}
+
+static void MultiWordSetUnsignedMax(unsigned int y[])
+{
+  for (int i{0}; i < 2; i++) {
+    y[i] = MAX_uint32_T;
+  }
+}
+
+static void MultiWordSub(const unsigned int u1[], const unsigned int u2[],
+                         unsigned int y[], int n)
+{
+  int borrow{0};
+  for (int i{0}; i < n; i++) {
+    unsigned int u1i;
+    unsigned int yi;
+    u1i = u1[i];
+    yi = (u1i - u2[i]) - static_cast<unsigned int>(borrow);
+    y[i] = yi;
+    if (borrow != 0) {
+      borrow = (yi >= u1i);
+    } else {
+      borrow = (yi > u1i);
+    }
+  }
+}
+
+namespace coder {
 static void b_abs(const array<double, 2U> &x, array<double, 2U> &y)
 {
   int nx_tmp;
@@ -1034,6 +1170,52 @@ static void b_abs(const array<double, 2U> &x, array<double, 2U> &y)
   for (int k{0}; k < nx_tmp; k++) {
     y[k] = std::abs(x[k]);
   }
+}
+
+static double combineVectorElements(const array<double, 2U> &x)
+{
+  double y;
+  if (x.size(1) == 0) {
+    y = 0.0;
+  } else {
+    int firstBlockLength;
+    int lastBlockLength;
+    int nblocks;
+    if (x.size(1) <= 1024) {
+      firstBlockLength = x.size(1);
+      lastBlockLength = 0;
+      nblocks = 1;
+    } else {
+      firstBlockLength = 1024;
+      nblocks = static_cast<int>(static_cast<unsigned int>(x.size(1)) >> 10);
+      lastBlockLength = x.size(1) - (nblocks << 10);
+      if (lastBlockLength > 0) {
+        nblocks++;
+      } else {
+        lastBlockLength = 1024;
+      }
+    }
+    y = x[0];
+    for (int k{2}; k <= firstBlockLength; k++) {
+      y += x[k - 1];
+    }
+    for (int ib{2}; ib <= nblocks; ib++) {
+      double bsum;
+      int hi;
+      firstBlockLength = (ib - 1) << 10;
+      bsum = x[firstBlockLength];
+      if (ib == nblocks) {
+        hi = lastBlockLength;
+      } else {
+        hi = 1024;
+      }
+      for (int k{2}; k <= hi; k++) {
+        bsum += x[(firstBlockLength + k) - 1];
+      }
+      y += bsum;
+    }
+  }
+  return y;
 }
 
 static void detrend(const array<double, 2U> &x, array<double, 2U> &y)
@@ -1293,12 +1475,17 @@ static void do_vectors(const array<int, 1U> &a, const array<int, 1U> &b,
   }
 }
 
-static double dot(const double a[15])
+static double dot(const double a_data[], const int a_size[2],
+                  const array<double, 2U> &b)
 {
   double c;
   c = 0.0;
-  for (int k{0}; k < 15; k++) {
-    c += a[k] * (static_cast<double>(k) + 1.0);
+  if (a_size[1] >= 1) {
+    int i;
+    i = a_size[1];
+    for (int k{0}; k < i; k++) {
+      c += a_data[k] * b[k];
+    }
   }
   return c;
 }
@@ -1318,25 +1505,25 @@ static void filter(const array<double, 2U> &x, array<double, 2U> &y)
   for (nx_m_nb = 0; nx_m_nb < loop_ub; nx_m_nb++) {
     b_y1[nx_m_nb] = 0.0;
   }
-  if (b.size(0) >= 60) {
-    for (int k{0}; k < 30; k++) {
+  if (b.size(0) >= 80) {
+    for (int k{0}; k < 40; k++) {
       nx_m_nb = k + 1;
       for (int j{nx_m_nb}; j <= loop_ub; j++) {
-        b_y1[j - 1] = b_y1[j - 1] + 0.033333333333333333 * b[(j - k) - 1];
+        b_y1[j - 1] = b_y1[j - 1] + 0.025 * b[(j - k) - 1];
       }
     }
   } else {
     int naxpy;
     int y1_tmp;
-    if (b.size(0) > 30) {
-      nx_m_nb = b.size(0) - 31;
+    if (b.size(0) > 40) {
+      nx_m_nb = b.size(0) - 41;
     } else {
       nx_m_nb = -1;
     }
     for (int k{0}; k <= nx_m_nb; k++) {
-      for (int j{0}; j < 30; j++) {
+      for (int j{0}; j < 40; j++) {
         y1_tmp = k + j;
-        b_y1[y1_tmp] = b_y1[y1_tmp] + b[k] * 0.033333333333333333;
+        b_y1[y1_tmp] = b_y1[y1_tmp] + b[k] * 0.025;
       }
     }
     naxpy = b.size(0) - nx_m_nb;
@@ -1344,7 +1531,7 @@ static void filter(const array<double, 2U> &x, array<double, 2U> &y)
     for (int k{nx_m_nb}; k <= loop_ub; k++) {
       for (int j{0}; j <= naxpy - 2; j++) {
         y1_tmp = (k + j) - 1;
-        b_y1[y1_tmp] = b_y1[y1_tmp] + b[k - 1] * 0.033333333333333333;
+        b_y1[y1_tmp] = b_y1[y1_tmp] + b[k - 1] * 0.025;
       }
       naxpy--;
     }
@@ -1506,6 +1693,188 @@ static double xnrm2(int n, const array<double, 2U> &x, int ix0)
 }
 
 } // namespace blas
+static int64m_T i64ddiv(const int64m_T x)
+{
+  static const int64m_T r{
+      {0U, 0U} // chunks
+  };
+  static const int64m_T r13{
+      {MAX_uint32_T, 2147483647U} // chunks
+  };
+  static const int64m_T r2{
+      {0U, 2147483648U} // chunks
+  };
+  static const uint64m_T r10{
+      {MAX_uint32_T, 2147483647U} // chunks
+  };
+  static const uint64m_T r16{
+      {1U, 0U} // chunks
+  };
+  static const uint64m_T r18{
+      {MAX_uint32_T, MAX_uint32_T} // chunks
+  };
+  static const uint64m_T r3{
+      {0U, 2147483648U} // chunks
+  };
+  static const uint64m_T r5{
+      {0U, 0U} // chunks
+  };
+  static const uint64m_T r7{
+      {0U, 2048000U} // chunks
+  };
+  int64m_T r14;
+  int64m_T r4;
+  int64m_T z;
+  uint128m_T r15;
+  uint64m_T b_nk_unsgn;
+  uint64m_T nk_unsgn;
+  uint64m_T r1;
+  uint64m_T r11;
+  uint64m_T r12;
+  uint64m_T r17;
+  uint64m_T r19;
+  uint64m_T r20;
+  uint64m_T r21;
+  uint64m_T r22;
+  uint64m_T r8;
+  uint64m_T r9;
+  uint64m_T res;
+  uint64m_T t;
+  int xexp;
+  if (sMultiWordLt((const unsigned int *)&x.chunks[0U],
+                   (const unsigned int *)&r.chunks[0U])) {
+    if (sMultiWordGt((const unsigned int *)&x.chunks[0U],
+                     (const unsigned int *)&r2.chunks[0U])) {
+      MultiWordNeg((const unsigned int *)&x.chunks[0U],
+                   (unsigned int *)&r4.chunks[0U]);
+      sMultiWord2MultiWord((const unsigned int *)&r4.chunks[0U],
+                           (unsigned int *)&r1.chunks[0U], 2);
+    } else {
+      r1 = r3;
+    }
+  } else {
+    sMultiWord2MultiWord((const unsigned int *)&x.chunks[0U],
+                         (unsigned int *)&r1.chunks[0U], 2);
+  }
+  if (uMultiWordEq((const unsigned int *)&r1.chunks[0U],
+                   (const unsigned int *)&r5.chunks[0U])) {
+    res = r5;
+  } else {
+    uint64m_T r6;
+    std::frexp(1000.0, &xexp);
+    xexp = -43;
+    r6 = r7;
+    uMultiWordDivZero(
+        (const unsigned int *)&r1.chunks[0U],
+        (const unsigned int *)&r7.chunks[0U], (unsigned int *)&res.chunks[0U],
+        (unsigned int *)&nk_unsgn.chunks[0U], (unsigned int *)&r8.chunks[0U],
+        (unsigned int *)&r9.chunks[0U]);
+    uMultiWordDivZero(
+        (const unsigned int *)&r1.chunks[0U],
+        (const unsigned int *)&r7.chunks[0U],
+        (unsigned int *)&nk_unsgn.chunks[0U], (unsigned int *)&r9.chunks[0U],
+        (unsigned int *)&r11.chunks[0U], (unsigned int *)&r12.chunks[0U]);
+    uMultiWordMul((const unsigned int *)&nk_unsgn.chunks[0U],
+                  (const unsigned int *)&r7.chunks[0U],
+                  (unsigned int *)&r15.chunks[0U]);
+    uMultiWord2MultiWord((const unsigned int *)&r15.chunks[0U], 4,
+                         (unsigned int *)&r6.chunks[0U]);
+    MultiWordSub((const unsigned int *)&r1.chunks[0U],
+                 (const unsigned int *)&r6.chunks[0U],
+                 (unsigned int *)&nk_unsgn.chunks[0U], 2);
+    int exitg1;
+    do {
+      exitg1 = 0;
+      if (xexp < 0) {
+        int shiftAmount;
+        shiftAmount = -xexp;
+        if (shiftAmount > 11) {
+          shiftAmount = 11;
+        }
+        uMultiWordShr((const unsigned int *)&res.chunks[0U],
+                      static_cast<unsigned int>(64 - shiftAmount),
+                      (unsigned int *)&r9.chunks[0U]);
+        if (uMultiWordGt((const unsigned int *)&r9.chunks[0U],
+                         (const unsigned int *)&r5.chunks[0U])) {
+          res = r18;
+          exitg1 = 1;
+        } else {
+          uMultiWordShl((const unsigned int *)&res.chunks[0U],
+                        static_cast<unsigned int>(shiftAmount),
+                        (unsigned int *)&r17.chunks[0U]);
+          uMultiWordShl((const unsigned int *)&nk_unsgn.chunks[0U],
+                        static_cast<unsigned int>(shiftAmount),
+                        (unsigned int *)&b_nk_unsgn.chunks[0U]);
+          xexp += shiftAmount;
+          r8 = r7;
+          uMultiWordDivZero(
+              (const unsigned int *)&b_nk_unsgn.chunks[0U],
+              (const unsigned int *)&r7.chunks[0U],
+              (unsigned int *)&t.chunks[0U], (unsigned int *)&res.chunks[0U],
+              (unsigned int *)&r19.chunks[0U], (unsigned int *)&r20.chunks[0U]);
+          res = r18;
+          MultiWordSub((const unsigned int *)&r18.chunks[0U],
+                       (const unsigned int *)&t.chunks[0U],
+                       (unsigned int *)&r8.chunks[0U], 2);
+          if (uMultiWordLe((const unsigned int *)&r8.chunks[0U],
+                           (const unsigned int *)&r17.chunks[0U])) {
+            exitg1 = 1;
+          } else {
+            MultiWordAdd((const unsigned int *)&r17.chunks[0U],
+                         (const unsigned int *)&t.chunks[0U],
+                         (unsigned int *)&res.chunks[0U]);
+            uMultiWordDivZero((const unsigned int *)&b_nk_unsgn.chunks[0U],
+                              (const unsigned int *)&r7.chunks[0U],
+                              (unsigned int *)&r20.chunks[0U],
+                              (unsigned int *)&r1.chunks[0U],
+                              (unsigned int *)&r21.chunks[0U],
+                              (unsigned int *)&r22.chunks[0U]);
+            uMultiWordMul((const unsigned int *)&r20.chunks[0U],
+                          (const unsigned int *)&r7.chunks[0U],
+                          (unsigned int *)&r15.chunks[0U]);
+            uMultiWord2MultiWord((const unsigned int *)&r15.chunks[0U], 4,
+                                 (unsigned int *)&r19.chunks[0U]);
+            MultiWordSub((const unsigned int *)&b_nk_unsgn.chunks[0U],
+                         (const unsigned int *)&r19.chunks[0U],
+                         (unsigned int *)&r20.chunks[0U], 2);
+            nk_unsgn = r20;
+          }
+        }
+      } else {
+        uMultiWordShl((const unsigned int *)&nk_unsgn.chunks[0U], 1U,
+                      (unsigned int *)&r6.chunks[0U]);
+        if (uMultiWordGe((const unsigned int *)&r6.chunks[0U],
+                         (const unsigned int *)&r7.chunks[0U])) {
+          MultiWordAdd((const unsigned int *)&res.chunks[0U],
+                       (const unsigned int *)&r16.chunks[0U],
+                       (unsigned int *)&r11.chunks[0U]);
+          res = r11;
+        }
+        exitg1 = 1;
+      }
+    } while (exitg1 == 0);
+  }
+  if (sMultiWordLt((const unsigned int *)&x.chunks[0U],
+                   (const unsigned int *)&r.chunks[0U])) {
+    if (uMultiWordLe((const unsigned int *)&res.chunks[0U],
+                     (const unsigned int *)&r10.chunks[0U])) {
+      uMultiWord2MultiWord((const unsigned int *)&res.chunks[0U], 2,
+                           (unsigned int *)&r14.chunks[0U]);
+      MultiWordNeg((const unsigned int *)&r14.chunks[0U],
+                   (unsigned int *)&z.chunks[0U]);
+    } else {
+      z = r2;
+    }
+  } else if (uMultiWordLe((const unsigned int *)&res.chunks[0U],
+                          (const unsigned int *)&r10.chunks[0U])) {
+    uMultiWord2MultiWord((const unsigned int *)&res.chunks[0U], 2,
+                         (unsigned int *)&z.chunks[0U]);
+  } else {
+    z = r13;
+  }
+  return z;
+}
+
 namespace lapack {
 static int xgeqp3(array<double, 2U> &A, double tau_data[], int jpvt[2])
 {
@@ -1812,192 +2181,118 @@ static double maximum(const array<double, 2U> &x)
 } // namespace internal
 static void interp1(const array<double, 2U> &varargin_1,
                     const array<double, 2U> &varargin_2,
-                    const double varargin_3[100], double Vq[100])
+                    const array<double, 2U> &varargin_3, array<double, 2U> &Vq)
 {
-  array<double, 2U> del;
-  array<double, 2U> h;
+  array<double, 2U> b_y;
   array<double, 2U> pp_coefs;
-  array<double, 2U> slopes;
   array<double, 2U> x;
   array<double, 2U> y;
-  double d;
-  double d2;
-  double dzzdx;
-  double signd1;
-  double xtmp;
-  int j2;
+  int i;
   int loop_ub;
-  int low_ip1;
-  int mid_i;
   int nd2;
+  int nx;
   loop_ub = varargin_2.size(1);
   y.set_size(1, varargin_2.size(1));
-  for (mid_i = 0; mid_i < loop_ub; mid_i++) {
-    y[mid_i] = varargin_2[mid_i];
+  for (i = 0; i < loop_ub; i++) {
+    y[i] = varargin_2[i];
   }
-  loop_ub = varargin_1.size(1);
+  nd2 = varargin_1.size(1);
   x.set_size(1, varargin_1.size(1));
-  for (mid_i = 0; mid_i < loop_ub; mid_i++) {
-    x[mid_i] = varargin_1[mid_i];
+  for (i = 0; i < nd2; i++) {
+    x[i] = varargin_1[i];
   }
-  nd2 = varargin_1.size(1) - 1;
+  nx = varargin_1.size(1) - 1;
+  Vq.set_size(1, varargin_3.size(1));
+  nd2 = varargin_3.size(1);
+  for (i = 0; i < nd2; i++) {
+    Vq[i] = 0.0;
+  }
+  if (varargin_3.size(1) != 0) {
+    double xtmp;
+    if (varargin_1[1] < varargin_1[0]) {
+      i = varargin_1.size(1) >> 1;
+      for (int b_j1{0}; b_j1 < i; b_j1++) {
+        xtmp = x[b_j1];
+        nd2 = nx - b_j1;
+        x[b_j1] = x[nd2];
+        x[nd2] = xtmp;
+      }
+      nd2 = varargin_2.size(1) >> 1;
+      for (int b_j1{0}; b_j1 < nd2; b_j1++) {
+        nx = (varargin_2.size(1) - b_j1) - 1;
+        xtmp = y[b_j1];
+        y[b_j1] = y[nx];
+        y[nx] = xtmp;
+      }
+    }
+    b_y.set_size(1, varargin_2.size(1));
+    for (i = 0; i < loop_ub; i++) {
+      b_y[i] = y[i];
+    }
+    pchip(x, b_y, y, pp_coefs);
+    nd2 = varargin_3.size(1);
+    for (nx = 0; nx < nd2; nx++) {
+      xtmp = varargin_3[nx];
+      if (std::isnan(xtmp)) {
+        Vq[nx] = rtNaN;
+      } else {
+        Vq[nx] = ppval(y, pp_coefs, xtmp);
+      }
+    }
+  }
+}
+
+static void interp1(const array<double, 2U> &varargin_1,
+                    const array<double, 2U> &varargin_2,
+                    const double varargin_3[100], double Vq[100])
+{
+  array<double, 2U> b_y;
+  array<double, 2U> pp_coefs;
+  array<double, 2U> x;
+  array<double, 2U> y;
+  double xtmp;
+  int i;
+  int loop_ub;
+  int nx;
+  loop_ub = varargin_2.size(1);
+  y.set_size(1, varargin_2.size(1));
+  for (i = 0; i < loop_ub; i++) {
+    y[i] = varargin_2[i];
+  }
+  nx = varargin_1.size(1);
+  x.set_size(1, varargin_1.size(1));
+  for (i = 0; i < nx; i++) {
+    x[i] = varargin_1[i];
+  }
+  nx = varargin_1.size(1) - 1;
   if (varargin_1[1] < varargin_1[0]) {
-    mid_i = varargin_1.size(1) >> 1;
-    for (low_ip1 = 0; low_ip1 < mid_i; low_ip1++) {
-      xtmp = x[low_ip1];
-      j2 = nd2 - low_ip1;
-      x[low_ip1] = x[j2];
+    int j2;
+    i = varargin_1.size(1) >> 1;
+    for (int b_j1{0}; b_j1 < i; b_j1++) {
+      xtmp = x[b_j1];
+      j2 = nx - b_j1;
+      x[b_j1] = x[j2];
       x[j2] = xtmp;
     }
-    nd2 = varargin_2.size(1) >> 1;
-    for (low_ip1 = 0; low_ip1 < nd2; low_ip1++) {
-      j2 = (varargin_2.size(1) - low_ip1) - 1;
-      xtmp = y[low_ip1];
-      y[low_ip1] = y[j2];
+    nx = varargin_2.size(1) >> 1;
+    for (int b_j1{0}; b_j1 < nx; b_j1++) {
+      j2 = (varargin_2.size(1) - b_j1) - 1;
+      xtmp = y[b_j1];
+      y[b_j1] = y[j2];
       y[j2] = xtmp;
     }
   }
-  nd2 = x.size(1) - 2;
-  h.set_size(1, varargin_1.size(1) - 1);
-  mid_i = y.size(1) - 1;
-  del.set_size(1, y.size(1) - 1);
-  for (int k{0}; k <= nd2; k++) {
-    d2 = x[k + 1] - x[k];
-    h[k] = d2;
-    del[k] = (y[k + 1] - y[k]) / d2;
+  b_y.set_size(1, varargin_2.size(1));
+  for (i = 0; i < loop_ub; i++) {
+    b_y[i] = y[i];
   }
-  slopes.set_size(1, varargin_2.size(1));
-  if (x.size(1) == 2) {
-    slopes[0] = del[0];
-    slopes[1] = del[0];
-  } else {
-    for (int k{0}; k <= loop_ub - 3; k++) {
-      d2 = h[k + 1];
-      d = h[k];
-      xtmp = 2.0 * d2 + d;
-      signd1 = d2 + 2.0 * d;
-      slopes[k + 1] = 0.0;
-      d2 = del[k];
-      d = del[k + 1];
-      dzzdx = d2 * d;
-      if (!std::isnan(dzzdx)) {
-        if (dzzdx < 0.0) {
-          dzzdx = -1.0;
-        } else {
-          dzzdx = (dzzdx > 0.0);
-        }
-      }
-      if (dzzdx > 0.0) {
-        slopes[k + 1] = (xtmp + signd1) / (xtmp / d2 + signd1 / d);
-      }
-    }
-    dzzdx = del[0];
-    d2 = del[1];
-    xtmp = h[0];
-    signd1 = h[1];
-    xtmp = ((2.0 * xtmp + signd1) * dzzdx - xtmp * d2) / (xtmp + signd1);
-    if (std::isnan(dzzdx)) {
-      signd1 = rtNaN;
-    } else if (dzzdx < 0.0) {
-      signd1 = -1.0;
-    } else {
-      signd1 = (dzzdx > 0.0);
-    }
+  pchip(x, b_y, y, pp_coefs);
+  for (nx = 0; nx < 100; nx++) {
+    xtmp = varargin_3[nx];
     if (std::isnan(xtmp)) {
-      d = rtNaN;
-    } else if (xtmp < 0.0) {
-      d = -1.0;
+      Vq[nx] = rtNaN;
     } else {
-      d = (xtmp > 0.0);
-    }
-    if (d != signd1) {
-      xtmp = 0.0;
-    } else {
-      if (std::isnan(d2)) {
-        d = rtNaN;
-      } else if (d2 < 0.0) {
-        d = -1.0;
-      } else {
-        d = (d2 > 0.0);
-      }
-      if ((signd1 != d) && (std::abs(xtmp) > std::abs(3.0 * dzzdx))) {
-        xtmp = 3.0 * dzzdx;
-      }
-    }
-    slopes[0] = xtmp;
-    dzzdx = del[x.size(1) - 2];
-    d2 = del[x.size(1) - 3];
-    xtmp = h[x.size(1) - 2];
-    signd1 = h[x.size(1) - 3];
-    xtmp = ((2.0 * xtmp + signd1) * dzzdx - xtmp * d2) / (xtmp + signd1);
-    if (std::isnan(dzzdx)) {
-      signd1 = rtNaN;
-    } else if (dzzdx < 0.0) {
-      signd1 = -1.0;
-    } else {
-      signd1 = (dzzdx > 0.0);
-    }
-    if (std::isnan(xtmp)) {
-      d = rtNaN;
-    } else if (xtmp < 0.0) {
-      d = -1.0;
-    } else {
-      d = (xtmp > 0.0);
-    }
-    if (d != signd1) {
-      xtmp = 0.0;
-    } else {
-      if (std::isnan(d2)) {
-        d = rtNaN;
-      } else if (d2 < 0.0) {
-        d = -1.0;
-      } else {
-        d = (d2 > 0.0);
-      }
-      if ((signd1 != d) && (std::abs(xtmp) > std::abs(3.0 * dzzdx))) {
-        xtmp = 3.0 * dzzdx;
-      }
-    }
-    slopes[varargin_1.size(1) - 1] = xtmp;
-  }
-  pp_coefs.set_size(y.size(1) - 1, 4);
-  for (nd2 = 0; nd2 <= loop_ub - 2; nd2++) {
-    d2 = del[nd2];
-    d = slopes[nd2];
-    signd1 = h[nd2];
-    dzzdx = (d2 - d) / signd1;
-    xtmp = (slopes[nd2 + 1] - d2) / signd1;
-    pp_coefs[nd2] = (xtmp - dzzdx) / signd1;
-    pp_coefs[mid_i + nd2] = 2.0 * dzzdx - xtmp;
-    pp_coefs[(mid_i << 1) + nd2] = d;
-    pp_coefs[3 * mid_i + nd2] = y[nd2];
-  }
-  for (int k{0}; k < 100; k++) {
-    if (std::isnan(varargin_3[k])) {
-      Vq[k] = rtNaN;
-    } else {
-      nd2 = loop_ub;
-      j2 = 1;
-      low_ip1 = 2;
-      while (nd2 > low_ip1) {
-        mid_i = (j2 >> 1) + (nd2 >> 1);
-        if (((static_cast<unsigned int>(j2) & 1U) == 1U) &&
-            ((static_cast<unsigned int>(nd2) & 1U) == 1U)) {
-          mid_i++;
-        }
-        if (varargin_3[k] >= x[mid_i - 1]) {
-          j2 = mid_i;
-          low_ip1 = mid_i + 1;
-        } else {
-          nd2 = mid_i;
-        }
-      }
-      xtmp = varargin_3[k] - x[j2 - 1];
-      xtmp = xtmp * (xtmp * (xtmp * pp_coefs[j2 - 1] +
-                             pp_coefs[(j2 + x.size(1)) - 2]) +
-                     pp_coefs[(j2 + ((x.size(1) - 1) << 1)) - 1]) +
-             pp_coefs[(j2 + 3 * (x.size(1) - 1)) - 1];
-      Vq[k] = xtmp;
+      Vq[nx] = ppval(y, pp_coefs, xtmp);
     }
   }
 }
@@ -2013,51 +2308,219 @@ static void linspace(double d2, double y[100])
   }
 }
 
-static double mean(const array<double, 2U> &x)
+static void linspace(double d1, double d2, const int64m_T n,
+                     array<double, 2U> &y)
 {
-  double y;
-  if (x.size(1) == 0) {
-    y = 0.0;
+  static const int64m_T r{
+      {0U, 0U} // chunks
+  };
+  if (sMultiWordLt((const unsigned int *)&n.chunks[0U],
+                   (const unsigned int *)&r.chunks[0U])) {
+    y.set_size(1, 0);
   } else {
-    int firstBlockLength;
-    int lastBlockLength;
-    int nblocks;
-    if (x.size(1) <= 1024) {
-      firstBlockLength = x.size(1);
-      lastBlockLength = 0;
-      nblocks = 1;
-    } else {
-      firstBlockLength = 1024;
-      nblocks = static_cast<int>(static_cast<unsigned int>(x.size(1)) >> 10);
-      lastBlockLength = x.size(1) - (nblocks << 10);
-      if (lastBlockLength > 0) {
-        nblocks++;
-      } else {
-        lastBlockLength = 1024;
+    int i;
+    i = MultiWord2sLong((const unsigned int *)&n.chunks[0U]);
+    y.set_size(1, i);
+    if (i >= 1) {
+      y[MultiWord2sLong((const unsigned int *)&n.chunks[0U]) - 1] = d2;
+      if (y.size(1) >= 2) {
+        y[0] = d1;
+        if (y.size(1) >= 3) {
+          if (d1 == -d2) {
+            double delta1;
+            delta1 = d2 / (static_cast<double>(y.size(1)) - 1.0);
+            for (int k{2}; k < i; k++) {
+              y[k - 1] =
+                  static_cast<double>(((k << 1) - y.size(1)) - 1) * delta1;
+            }
+            if ((static_cast<unsigned int>(y.size(1)) & 1U) == 1U) {
+              y[y.size(1) >> 1] = 0.0;
+            }
+          } else {
+            double delta1;
+            delta1 = (d2 - d1) / (static_cast<double>(y.size(1)) - 1.0);
+            for (int k{0}; k <= i - 3; k++) {
+              y[k + 1] = d1 + (static_cast<double>(k) + 1.0) * delta1;
+            }
+          }
+        }
       }
-    }
-    y = x[0];
-    for (int k{2}; k <= firstBlockLength; k++) {
-      y += x[k - 1];
-    }
-    for (int ib{2}; ib <= nblocks; ib++) {
-      double bsum;
-      int hi;
-      firstBlockLength = (ib - 1) << 10;
-      bsum = x[firstBlockLength];
-      if (ib == nblocks) {
-        hi = lastBlockLength;
-      } else {
-        hi = 1024;
-      }
-      for (int k{2}; k <= hi; k++) {
-        bsum += x[(firstBlockLength + k) - 1];
-      }
-      y += bsum;
     }
   }
-  y /= static_cast<double>(x.size(1));
-  return y;
+}
+
+static void pchip(const array<double, 2U> &x, const array<double, 2U> &y,
+                  array<double, 2U> &v_breaks, array<double, 2U> &v_coefs)
+{
+  array<double, 2U> del;
+  array<double, 2U> h;
+  array<double, 2U> slopes;
+  double d;
+  double d2;
+  double dzdxdx;
+  double dzzdx;
+  double signd1;
+  int i;
+  int nxm2;
+  nxm2 = x.size(1) - 2;
+  h.set_size(1, x.size(1) - 1);
+  i = y.size(1) - 1;
+  del.set_size(1, y.size(1) - 1);
+  for (int k{0}; k <= nxm2; k++) {
+    d2 = x[k + 1] - x[k];
+    h[k] = d2;
+    del[k] = (y[k + 1] - y[k]) / d2;
+  }
+  slopes.set_size(1, y.size(1));
+  if (x.size(1) == 2) {
+    slopes[0] = del[0];
+    slopes[1] = del[0];
+  } else {
+    nxm2 = x.size(1);
+    for (int k{0}; k <= nxm2 - 3; k++) {
+      d2 = h[k + 1];
+      d = h[k];
+      signd1 = 2.0 * d2 + d;
+      dzdxdx = d2 + 2.0 * d;
+      slopes[k + 1] = 0.0;
+      d2 = del[k];
+      d = del[k + 1];
+      dzzdx = d2 * d;
+      if (!std::isnan(dzzdx)) {
+        if (dzzdx < 0.0) {
+          dzzdx = -1.0;
+        } else {
+          dzzdx = (dzzdx > 0.0);
+        }
+      }
+      if (dzzdx > 0.0) {
+        slopes[k + 1] = (signd1 + dzdxdx) / (signd1 / d2 + dzdxdx / d);
+      }
+    }
+    dzzdx = del[0];
+    d2 = del[1];
+    dzdxdx = h[0];
+    signd1 = h[1];
+    dzdxdx =
+        ((2.0 * dzdxdx + signd1) * dzzdx - dzdxdx * d2) / (dzdxdx + signd1);
+    if (std::isnan(dzzdx)) {
+      signd1 = rtNaN;
+    } else if (dzzdx < 0.0) {
+      signd1 = -1.0;
+    } else {
+      signd1 = (dzzdx > 0.0);
+    }
+    if (std::isnan(dzdxdx)) {
+      d = rtNaN;
+    } else if (dzdxdx < 0.0) {
+      d = -1.0;
+    } else {
+      d = (dzdxdx > 0.0);
+    }
+    if (d != signd1) {
+      dzdxdx = 0.0;
+    } else {
+      if (std::isnan(d2)) {
+        d = rtNaN;
+      } else if (d2 < 0.0) {
+        d = -1.0;
+      } else {
+        d = (d2 > 0.0);
+      }
+      if ((signd1 != d) && (std::abs(dzdxdx) > std::abs(3.0 * dzzdx))) {
+        dzdxdx = 3.0 * dzzdx;
+      }
+    }
+    slopes[0] = dzdxdx;
+    dzzdx = del[x.size(1) - 2];
+    d2 = del[x.size(1) - 3];
+    dzdxdx = h[x.size(1) - 2];
+    signd1 = h[x.size(1) - 3];
+    dzdxdx =
+        ((2.0 * dzdxdx + signd1) * dzzdx - dzdxdx * d2) / (dzdxdx + signd1);
+    if (std::isnan(dzzdx)) {
+      signd1 = rtNaN;
+    } else if (dzzdx < 0.0) {
+      signd1 = -1.0;
+    } else {
+      signd1 = (dzzdx > 0.0);
+    }
+    if (std::isnan(dzdxdx)) {
+      d = rtNaN;
+    } else if (dzdxdx < 0.0) {
+      d = -1.0;
+    } else {
+      d = (dzdxdx > 0.0);
+    }
+    if (d != signd1) {
+      dzdxdx = 0.0;
+    } else {
+      if (std::isnan(d2)) {
+        d = rtNaN;
+      } else if (d2 < 0.0) {
+        d = -1.0;
+      } else {
+        d = (d2 > 0.0);
+      }
+      if ((signd1 != d) && (std::abs(dzdxdx) > std::abs(3.0 * dzzdx))) {
+        dzdxdx = 3.0 * dzzdx;
+      }
+    }
+    slopes[x.size(1) - 1] = dzdxdx;
+  }
+  nxm2 = x.size(1);
+  v_breaks.set_size(1, x.size(1));
+  for (int k{0}; k < nxm2; k++) {
+    v_breaks[k] = x[k];
+  }
+  v_coefs.set_size(y.size(1) - 1, 4);
+  for (int k{0}; k <= nxm2 - 2; k++) {
+    d2 = del[k];
+    d = slopes[k];
+    signd1 = h[k];
+    dzzdx = (d2 - d) / signd1;
+    dzdxdx = (slopes[k + 1] - d2) / signd1;
+    v_coefs[k] = (dzdxdx - dzzdx) / signd1;
+    v_coefs[i + k] = 2.0 * dzzdx - dzdxdx;
+    v_coefs[(i << 1) + k] = d;
+    v_coefs[3 * i + k] = y[k];
+  }
+}
+
+static double ppval(const array<double, 2U> &pp_breaks,
+                    const array<double, 2U> &pp_coefs, double x)
+{
+  double v;
+  if (std::isnan(x)) {
+    v = rtNaN;
+  } else {
+    int high_i;
+    int low_i;
+    int low_ip1;
+    high_i = pp_breaks.size(1);
+    low_i = 1;
+    low_ip1 = 2;
+    while (high_i > low_ip1) {
+      int mid_i;
+      mid_i = (low_i >> 1) + (high_i >> 1);
+      if (((static_cast<unsigned int>(low_i) & 1U) == 1U) &&
+          ((static_cast<unsigned int>(high_i) & 1U) == 1U)) {
+        mid_i++;
+      }
+      if (x >= pp_breaks[mid_i - 1]) {
+        low_i = mid_i;
+        low_ip1 = mid_i + 1;
+      } else {
+        high_i = mid_i;
+      }
+    }
+    v = x - pp_breaks[low_i - 1];
+    v = v * (v * (v * pp_coefs[low_i - 1] +
+                  pp_coefs[(low_i + pp_breaks.size(1)) - 2]) +
+             pp_coefs[(low_i + ((pp_breaks.size(1) - 1) << 1)) - 1]) +
+        pp_coefs[(low_i + 3 * (pp_breaks.size(1) - 1)) - 1];
+  }
+  return v;
 }
 
 } // namespace coder
@@ -2085,7 +2548,798 @@ static void minus(coder::array<double, 1U> &in1,
   }
 }
 
-void score_ppg_signal(const coder::array<double, 2U> &ppg_signal,
+static double sMultiWord2Double(const unsigned int u1[])
+{
+  double y;
+  int b_exp;
+  y = 0.0;
+  b_exp = 0;
+  if ((u1[1] & 2147483648U) != 0U) {
+    int cb;
+    cb = 1;
+    for (int i{0}; i < 2; i++) {
+      unsigned int u1i;
+      unsigned int yi;
+      u1i = ~u1[i];
+      yi = u1i + static_cast<unsigned int>(cb);
+      y -= std::ldexp(static_cast<double>(yi), b_exp);
+      cb = (yi < u1i);
+      b_exp += 32;
+    }
+  } else {
+    for (int i{0}; i < 2; i++) {
+      y += std::ldexp(static_cast<double>(u1[i]), b_exp);
+      b_exp += 32;
+    }
+  }
+  return y;
+}
+
+static void sMultiWord2MultiWord(const unsigned int u1[], unsigned int y[],
+                                 int n)
+{
+  int nm;
+  if (n >= 2) {
+    nm = 2;
+  } else {
+    nm = n;
+  }
+  if (nm - 1 >= 0) {
+    std::copy(&u1[0], &u1[nm], &y[0]);
+  }
+  if (n > 2) {
+    unsigned int u1i;
+    if ((u1[1] & 2147483648U) != 0U) {
+      u1i = MAX_uint32_T;
+    } else {
+      u1i = 0U;
+    }
+    for (int i{nm}; i < n; i++) {
+      y[i] = u1i;
+    }
+  }
+}
+
+static void sMultiWord2sMultiWordSat(const unsigned int u1[], unsigned int y[])
+{
+  int i;
+  unsigned int ys;
+  bool doSaturation{false};
+  if ((u1[2] & 2147483648U) != 0U) {
+    ys = MAX_uint32_T;
+  } else {
+    ys = 0U;
+  }
+  doSaturation = (((u1[1] ^ u1[2]) & 2147483648U) != 0U);
+  i = 2;
+  while ((!doSaturation) && (i >= 2)) {
+    doSaturation = (u1[2] != ys);
+    i = 1;
+  }
+  if (doSaturation) {
+    ys = ~ys;
+    y[0] = ys;
+    y[1] = ys ^ 2147483648U;
+  } else {
+    for (i = 0; i < 2; i++) {
+      y[i] = u1[i];
+    }
+    while (i < 2) {
+      y[i] = ys;
+      i++;
+    }
+  }
+}
+
+static int sMultiWordCmp(const unsigned int u1[], const unsigned int u2[])
+{
+  unsigned int su1;
+  int y;
+  su1 = u1[1] & 2147483648U;
+  if (su1 != (u2[1] & 2147483648U)) {
+    if (su1 != 0U) {
+      y = -1;
+    } else {
+      y = 1;
+    }
+  } else {
+    int i;
+    y = 0;
+    i = 2;
+    while ((y == 0) && (i > 0)) {
+      unsigned int u2i;
+      i--;
+      su1 = u1[i];
+      u2i = u2[i];
+      if (su1 != u2i) {
+        if (su1 > u2i) {
+          y = 1;
+        } else {
+          y = -1;
+        }
+      }
+    }
+  }
+  return y;
+}
+
+static bool sMultiWordGt(const unsigned int u1[], const unsigned int u2[])
+{
+  return sMultiWordCmp(u1, u2) > 0;
+}
+
+static bool sMultiWordLt(const unsigned int u1[], const unsigned int u2[])
+{
+  return sMultiWordCmp(u1, u2) < 0;
+}
+
+static void sMultiWordMul(const unsigned int u1[], const unsigned int u2[],
+                          unsigned int y[])
+{
+  unsigned int cb;
+  int cb1;
+  int k;
+  unsigned int yk;
+  bool isNegative1;
+  bool isNegative2;
+  isNegative1 = ((u1[1] & 2147483648U) != 0U);
+  isNegative2 = ((u2[1] & 2147483648U) != 0U);
+  cb1 = 1;
+  // Initialize output to zero
+  for (k = 0; k < 3; k++) {
+    y[k] = 0U;
+  }
+  for (int i{0}; i < 2; i++) {
+    int a0;
+    int a1;
+    int cb2;
+    unsigned int u1i;
+    cb = 0U;
+    u1i = u1[i];
+    if (isNegative1) {
+      u1i = ~u1i + static_cast<unsigned int>(cb1);
+      cb1 = (u1i < static_cast<unsigned int>(cb1));
+    }
+    a1 = static_cast<int>(u1i >> 16U);
+    a0 = static_cast<int>(u1i & 65535U);
+    cb2 = 1;
+    k = i;
+    for (int j{0}; j < 2; j++) {
+      int b0;
+      int b1;
+      unsigned int t;
+      unsigned int w01;
+      u1i = u2[j];
+      if (isNegative2) {
+        u1i = ~u1i + static_cast<unsigned int>(cb2);
+        cb2 = (u1i < static_cast<unsigned int>(cb2));
+      }
+      b1 = static_cast<int>(u1i >> 16U);
+      b0 = static_cast<int>(u1i & 65535U);
+      u1i = static_cast<unsigned int>(a1) * static_cast<unsigned int>(b0);
+      w01 = static_cast<unsigned int>(a0) * static_cast<unsigned int>(b1);
+      yk = y[k] + cb;
+      cb = (yk < cb);
+      t = static_cast<unsigned int>(a0) * static_cast<unsigned int>(b0);
+      yk += t;
+      cb += (yk < t);
+      t = u1i << 16U;
+      yk += t;
+      cb += (yk < t);
+      t = w01 << 16U;
+      yk += t;
+      cb += (yk < t);
+      y[k] = yk;
+      cb += u1i >> 16U;
+      cb += w01 >> 16U;
+      cb += static_cast<unsigned int>(a1) * static_cast<unsigned int>(b1);
+      k++;
+    }
+    if (k < 3) {
+      y[k] = cb;
+    }
+  }
+  // Apply sign
+  if (isNegative1 != isNegative2) {
+    cb = 1U;
+    for (k = 0; k < 3; k++) {
+      yk = ~y[k] + cb;
+      y[k] = yk;
+      cb = (yk < cb);
+    }
+  }
+}
+
+static void uMultiWord2MultiWord(const unsigned int u1[], int n1,
+                                 unsigned int y[])
+{
+  int nm;
+  if (n1 <= 2) {
+    nm = n1;
+  } else {
+    nm = 2;
+  }
+  if (nm - 1 >= 0) {
+    std::copy(&u1[0], &u1[nm], &y[0]);
+  }
+  if (n1 < 2) {
+    for (int i{nm}; i < 2; i++) {
+      y[i] = 0U;
+    }
+  }
+}
+
+static int uMultiWordCmp(const unsigned int u1[], const unsigned int u2[])
+{
+  int i;
+  int y;
+  y = 0;
+  i = 2;
+  while ((y == 0) && (i > 0)) {
+    unsigned int u1i;
+    unsigned int u2i;
+    i--;
+    u1i = u1[i];
+    u2i = u2[i];
+    if (u1i != u2i) {
+      if (u1i > u2i) {
+        y = 1;
+      } else {
+        y = -1;
+      }
+    }
+  }
+  return y;
+}
+
+static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
+                         unsigned int r[])
+{
+  int nzb;
+  int tpi;
+  int y;
+  nzb = 2;
+  tpi = 1;
+  while ((nzb > 0) && (b[tpi] == 0U)) {
+    nzb--;
+    tpi--;
+  }
+  if (nzb > 0) {
+    int nza;
+    nza = 2;
+    for (tpi = 0; tpi < 2; tpi++) {
+      q[tpi] = 0U;
+    }
+    tpi = 1;
+    while ((nza > 0) && (a[tpi] == 0U)) {
+      nza--;
+      tpi--;
+    }
+    if ((nza > 0) && (nza >= nzb)) {
+      int kr;
+      int na1;
+      int nb1;
+      nb1 = nzb - 1;
+      na1 = nza - 1;
+      for (kr = 0; kr < 2; kr++) {
+        r[kr] = 0U;
+      }
+      // Quick return if dividend and divisor fit into single word.
+      if (nza == 1) {
+        unsigned int ak;
+        unsigned int bk;
+        unsigned int u;
+        ak = a[0];
+        bk = b[0];
+        u = ak / bk;
+        q[0] = u;
+        r[0] = ak - u * bk;
+        y = 7;
+      } else {
+        unsigned int kba;
+        unsigned int kbb;
+        unsigned int t;
+        // Remove leading zeros from both, dividend and divisor.
+        kbb = 1U;
+        t = b[nzb - 1] >> 1U;
+        while (t != 0U) {
+          kbb++;
+          t >>= 1U;
+        }
+        kba = 1U;
+        t = a[1] >> 1U;
+        while (t != 0U) {
+          kba++;
+          t >>= 1U;
+        }
+        // Quick return if quotient is zero.
+        if ((nzb < 2) || (kba >= kbb)) {
+          unsigned int ak;
+          unsigned int bk;
+          int ka;
+          unsigned int mask;
+          unsigned int nba;
+          unsigned int nbb;
+          unsigned int tnb;
+          unsigned int u;
+          nba = kba + 32U;
+          nbb = static_cast<unsigned int>(nzb - 1) * 32U + kbb;
+          // Normalize b.
+          if (kbb != 32U) {
+            bk = b[nzb - 1];
+            kr = nzb - 1;
+            while (kr > 0) {
+              t = bk << (32U - kbb);
+              bk = b[0];
+              t |= bk >> kbb;
+              b[1] = t;
+              kr = 0;
+            }
+            b[0] = bk << (32U - kbb);
+            mask = ~((1U << (32U - kbb)) - 1U);
+          } else {
+            mask = MAX_uint32_T;
+          }
+          // Initialize quotient to zero.
+          tnb = 0U;
+          y = 0;
+          // Until exit conditions have been met, do
+          do {
+            // Normalize a
+            if (kba != 32U) {
+              tnb = (tnb - kba) + 32U;
+              ak = a[na1];
+              ka = na1;
+              while (ka > 0) {
+                t = ak << (32U - kba);
+                ak = a[0];
+                t |= ak >> kba;
+                a[1] = t;
+                ka = 0;
+              }
+              a[0] = ak << (32U - kba);
+            }
+            // Compare b against the a.
+            ak = a[na1];
+            bk = b[nzb - 1];
+            if (nzb - 1 == 0) {
+              u = mask;
+            } else {
+              u = MAX_uint32_T;
+            }
+            if ((ak & u) == bk) {
+              tpi = 0;
+              ka = na1;
+              kr = nzb - 1;
+              while ((tpi == 0) && (kr > 0)) {
+                ka--;
+                ak = a[ka];
+                kr = 0;
+                bk = b[0];
+                if ((ak & mask) != bk) {
+                  if (ak > bk) {
+                    tpi = 1;
+                  } else {
+                    tpi = -1;
+                  }
+                }
+              }
+            } else if (ak > bk) {
+              tpi = 1;
+            } else {
+              tpi = -1;
+            }
+            // If the remainder in a is still greater or equal to b, subtract
+            // normalized divisor from a.
+            if ((tpi >= 0) || (nba > nbb)) {
+              u = nba - nbb;
+              // If the remainder and the divisor are equal, set remainder to
+              // zero.
+              if (tpi == 0) {
+                ka = na1;
+                kr = nzb - 1;
+                while (kr > 0) {
+                  a[ka] = 0U;
+                  ka--;
+                  kr = 0;
+                }
+                a[ka] -= b[0];
+              } else {
+                // Otherwise, subtract the divisor from the remainder
+                if (tpi < 0) {
+                  ak = a[na1];
+                  kba = 31U;
+                  ka = na1;
+                  while (ka > 0) {
+                    t = ak << 1U;
+                    ak = a[0];
+                    t |= ak >> 31U;
+                    a[1] = t;
+                    ka = 0;
+                  }
+                  a[0] = ak << 1U;
+                  tnb++;
+                  u--;
+                }
+                tpi = 0;
+                ka = (na1 - nzb) + 1;
+                for (kr = 0; kr < nzb; kr++) {
+                  t = a[ka];
+                  ak = (t - b[kr]) - static_cast<unsigned int>(tpi);
+                  if (tpi != 0) {
+                    tpi = (ak >= t);
+                  } else {
+                    tpi = (ak > t);
+                  }
+                  a[ka] = ak;
+                  ka++;
+                }
+              }
+              // Update the quotient.
+              tpi = static_cast<int>(u) / 32;
+              q[tpi] |= 1U << (u - static_cast<unsigned int>(tpi) * 32U);
+              // Remove leading zeros from the remainder and check whether the
+              // exit conditions have been met.
+              tpi = na1;
+              while ((nza > 0) && (a[tpi] == 0U)) {
+                nza--;
+                tpi--;
+              }
+              if (nza >= nzb) {
+                na1 = nza - 1;
+                kba = 1U;
+                t = a[nza - 1] >> 1U;
+                while (t != 0U) {
+                  kba++;
+                  t >>= 1U;
+                }
+                nba = (static_cast<unsigned int>(nza - 1) * 32U + kba) - tnb;
+                if (nba < nbb) {
+                  y = 2;
+                }
+              } else if (nza == 0) {
+                y = 1;
+              } else {
+                na1 = 0;
+                y = 4;
+              }
+            } else {
+              y = 3;
+            }
+          } while (y == 0);
+          // Return the remainder.
+          if (y == 1) {
+            r[0] = a[0];
+          } else {
+            tpi = static_cast<int>(tnb) / 32;
+            u = tnb - static_cast<unsigned int>(tpi) * 32U;
+            if (u == 0U) {
+              ka = tpi;
+              for (kr = 0; kr <= nb1; kr++) {
+                r[kr] = a[ka];
+                ka++;
+              }
+            } else {
+              ak = a[tpi];
+              kr = 0;
+              for (ka = tpi + 1; ka <= na1; ka++) {
+                t = ak >> u;
+                ak = a[ka];
+                t |= ak << (32U - u);
+                r[kr] = t;
+                kr++;
+              }
+              r[kr] = ak >> u;
+            }
+          }
+          // Restore b.
+          if (kbb != 32U) {
+            bk = b[0];
+            for (kr = 0; kr < nb1; kr++) {
+              t = bk >> (32U - kbb);
+              bk = b[1];
+              t |= bk << kbb;
+              b[0] = t;
+            }
+            b[kr] = bk >> (32U - kbb);
+          }
+        } else {
+          for (kr = 0; kr < 2; kr++) {
+            r[kr] = a[kr];
+          }
+          y = 6;
+        }
+      }
+    } else {
+      for (int kr{0}; kr < 2; kr++) {
+        r[kr] = a[kr];
+      }
+      y = 5;
+    }
+  } else {
+    y = -1;
+  }
+  return y;
+}
+
+static void uMultiWordDivZero(const unsigned int u1[], const unsigned int u2[],
+                              unsigned int b_y1[], unsigned int y2[],
+                              unsigned int t1[], unsigned int t2[])
+{
+  uMultiWord2MultiWord(u1, 2, t1);
+  uMultiWord2MultiWord(u2, 2, t2);
+  if (uMultiWordDiv(t1, t2, b_y1, y2) < 0) {
+    MultiWordSetUnsignedMax(b_y1);
+  }
+}
+
+static bool uMultiWordEq(const unsigned int u1[], const unsigned int u2[])
+{
+  return uMultiWordCmp(u1, u2) == 0;
+}
+
+static bool uMultiWordGe(const unsigned int u1[], const unsigned int u2[])
+{
+  return uMultiWordCmp(u1, u2) >= 0;
+}
+
+static bool uMultiWordGt(const unsigned int u1[], const unsigned int u2[])
+{
+  return uMultiWordCmp(u1, u2) > 0;
+}
+
+static bool uMultiWordLe(const unsigned int u1[], const unsigned int u2[])
+{
+  return uMultiWordCmp(u1, u2) <= 0;
+}
+
+static void uMultiWordMul(const unsigned int u1[], const unsigned int u2[],
+                          unsigned int y[])
+{
+  int k;
+  // Initialize output to zero
+  for (k = 0; k < 4; k++) {
+    y[k] = 0U;
+  }
+  for (int i{0}; i < 2; i++) {
+    int a0;
+    int a1;
+    unsigned int cb;
+    unsigned int u1i;
+    cb = 0U;
+    u1i = u1[i];
+    a1 = static_cast<int>(u1i >> 16U);
+    a0 = static_cast<int>(u1i & 65535U);
+    k = i;
+    for (int j{0}; j < 2; j++) {
+      int b0;
+      int b1;
+      unsigned int t;
+      unsigned int w01;
+      unsigned int yk;
+      u1i = u2[j];
+      b1 = static_cast<int>(u1i >> 16U);
+      b0 = static_cast<int>(u1i & 65535U);
+      u1i = static_cast<unsigned int>(a1) * static_cast<unsigned int>(b0);
+      w01 = static_cast<unsigned int>(a0) * static_cast<unsigned int>(b1);
+      yk = y[k] + cb;
+      cb = (yk < cb);
+      t = static_cast<unsigned int>(a0) * static_cast<unsigned int>(b0);
+      yk += t;
+      cb += (yk < t);
+      t = u1i << 16U;
+      yk += t;
+      cb += (yk < t);
+      t = w01 << 16U;
+      yk += t;
+      cb += (yk < t);
+      y[k] = yk;
+      cb += u1i >> 16U;
+      cb += w01 >> 16U;
+      cb += static_cast<unsigned int>(a1) * static_cast<unsigned int>(b1);
+      k++;
+    }
+    if (k < 4) {
+      y[k] = cb;
+    }
+  }
+}
+
+static void uMultiWordShl(const unsigned int u1[], unsigned int n2,
+                          unsigned int y[])
+{
+  int i;
+  int nb;
+  int nc;
+  unsigned int u1i;
+  unsigned int ys;
+  nb = static_cast<int>(n2) / 32;
+  if ((u1[1] & 2147483648U) != 0U) {
+    ys = MAX_uint32_T;
+  } else {
+    ys = 0U;
+  }
+  if (nb > 2) {
+    nc = 2;
+  } else {
+    nc = nb;
+  }
+  u1i = 0U;
+  if (nc - 1 >= 0) {
+    std::memset(&y[0], 0, static_cast<unsigned int>(nc) * sizeof(unsigned int));
+  }
+  for (i = 0; i < nc; i++) {
+  }
+  if (nb < 2) {
+    unsigned int nl;
+    nl = n2 - static_cast<unsigned int>(nb) * 32U;
+    nc = nb + 2;
+    if (nb + 2 > 2) {
+      nc = 2;
+    }
+    nc -= i;
+    if (nl > 0U) {
+      for (nb = 0; nb < nc; nb++) {
+        unsigned int yi;
+        yi = u1i >> (32U - nl);
+        u1i = u1[nb];
+        y[i] = yi | u1i << nl;
+        i++;
+      }
+      if (i < 2) {
+        y[i] = u1i >> (32U - nl) | ys << nl;
+        i++;
+      }
+    } else {
+      for (nb = 0; nb < nc; nb++) {
+        y[i] = u1[nb];
+        i++;
+      }
+    }
+  }
+  while (i < 2) {
+    y[i] = ys;
+    i++;
+  }
+}
+
+static void uMultiWordShr(const unsigned int u1[], unsigned int n2,
+                          unsigned int y[])
+{
+  int i;
+  int nb;
+  nb = static_cast<int>(n2) / 32;
+  i = 0;
+  if (nb < 2) {
+    int nc;
+    unsigned int nr;
+    nc = nb + 2;
+    if (nb + 2 > 2) {
+      nc = 2;
+    }
+    nr = n2 - static_cast<unsigned int>(nb) * 32U;
+    if (nr > 0U) {
+      unsigned int u1i;
+      unsigned int yi;
+      u1i = u1[nb];
+      for (int i1{nb + 1}; i1 < nc; i1++) {
+        yi = u1i >> nr;
+        u1i = u1[i1];
+        y[i] = yi | u1i << (32U - nr);
+        i++;
+      }
+      yi = u1i >> nr;
+      if (nc < 2) {
+        yi |= u1[nc] << (32U - nr);
+      }
+      y[i] = yi;
+      i++;
+    } else {
+      for (int i1{nb}; i1 < nc; i1++) {
+        y[i] = u1[i1];
+        i++;
+      }
+    }
+  }
+  while (i < 2) {
+    y[i] = 0U;
+    i++;
+  }
+}
+
+void preprocess_ppg_signal(const coder::array<double, 2U> &ppg_signal,
+                           const coder::array<int64m_T, 2U> &timestamps,
+                           coder::array<double, 2U> &processed_ppg_signal)
+{
+  static const int64m_T r2{
+      {150U, 0U} // chunks
+  };
+  coder::array<double, 2U> b_processed_ppg_signal;
+  coder::array<double, 2U> b_timestamps;
+  coder::array<double, 2U> r;
+  int96m_T r3;
+  int96m_T r5;
+  int96m_T r6;
+  int96m_T r7;
+  double y;
+  int loop_ub;
+  // PREPROCESS_PPG_SIGNAL Returns a processed copy of a raw PPG signal (red
+  // channel values of a camera recording at the given timestamps,
+  // in milliseconds). Assumes raw PPG signal has the correct orientation.
+  //  Normalize and rescale to [0, 1] range
+  y = coder::combineVectorElements(ppg_signal) /
+      static_cast<double>(ppg_signal.size(1));
+  loop_ub = ppg_signal.size(1);
+  processed_ppg_signal.set_size(1, ppg_signal.size(1));
+  for (int i{0}; i < loop_ub; i++) {
+    processed_ppg_signal[i] = ppg_signal[i] - y;
+  }
+  coder::b_abs(processed_ppg_signal, r);
+  y = coder::internal::maximum(r);
+  processed_ppg_signal.set_size(1, processed_ppg_signal.size(1));
+  loop_ub = processed_ppg_signal.size(1) - 1;
+  for (int i{0}; i <= loop_ub; i++) {
+    processed_ppg_signal[i] = processed_ppg_signal[i] / y;
+  }
+  //  Interpolate using cubic interpolation
+  //  Hz
+  //  Milliseconds -> Seconds
+  loop_ub = timestamps.size(1);
+  b_timestamps.set_size(1, timestamps.size(1));
+  for (int i{0}; i < loop_ub; i++) {
+    b_timestamps[i] =
+        sMultiWord2Double((const unsigned int *)&timestamps[i].chunks[0U]);
+  }
+  int64m_T r1;
+  int64m_T r4;
+  r1 = r2;
+  sMultiWord2MultiWord(
+      (const unsigned int *)&timestamps[timestamps.size(1) - 1].chunks[0U],
+      (unsigned int *)&r3.chunks[0U], 3);
+  r4 = timestamps[0];
+  sMultiWord2MultiWord((const unsigned int *)&timestamps[0].chunks[0U],
+                       (unsigned int *)&r5.chunks[0U], 3);
+  MultiWordSub((const unsigned int *)&r3.chunks[0U],
+               (const unsigned int *)&r5.chunks[0U],
+               (unsigned int *)&r6.chunks[0U], 3);
+  sMultiWord2sMultiWordSat((const unsigned int *)&r6.chunks[0U],
+                           (unsigned int *)&r4.chunks[0U]);
+  r4 = coder::internal::i64ddiv(r4);
+  sMultiWordMul((const unsigned int *)&r2.chunks[0U],
+                (const unsigned int *)&r4.chunks[0U],
+                (unsigned int *)&r7.chunks[0U]);
+  sMultiWord2sMultiWordSat((const unsigned int *)&r7.chunks[0U],
+                           (unsigned int *)&r1.chunks[0U]);
+  coder::linspace(
+      sMultiWord2Double((const unsigned int *)&timestamps[0].chunks[0U]),
+      sMultiWord2Double(
+          (const unsigned int *)&timestamps[timestamps.size(1) - 1].chunks[0U]),
+      r1, r);
+  b_processed_ppg_signal.set_size(1, processed_ppg_signal.size(1));
+  loop_ub = processed_ppg_signal.size(0) * processed_ppg_signal.size(1) - 1;
+  for (int i{0}; i <= loop_ub; i++) {
+    b_processed_ppg_signal[i] = processed_ppg_signal[i];
+  }
+  coder::interp1(b_timestamps, b_processed_ppg_signal, r, processed_ppg_signal);
+  //  Detrend
+  b_processed_ppg_signal.set_size(1, processed_ppg_signal.size(1));
+  loop_ub = processed_ppg_signal.size(0) * processed_ppg_signal.size(1) - 1;
+  for (int i{0}; i <= loop_ub; i++) {
+    b_processed_ppg_signal[i] = processed_ppg_signal[i];
+  }
+  coder::detrend(b_processed_ppg_signal, processed_ppg_signal);
+}
+
+void preprocess_ppg_signal_initialize()
+{
+}
+
+void preprocess_ppg_signal_terminate()
+{
+}
+
+void score_ppg_signal(const coder::array<double, 2U> &processed_ppg_signal,
+                      const int64m_T coefficient_count,
                       coder::array<double, 1U> &scores)
 {
   static const creal_T wwc[99]{{
@@ -2613,83 +3867,88 @@ void score_ppg_signal(const coder::array<double, 2U> &ppg_signal,
                                      0.049067674327418015,
                                      0.024541228522912288,
                                      0.0};
-  coder::array<double, 2U> a__1;
   coder::array<double, 2U> b_smoothed_ppg_signal;
+  coder::array<double, 2U> c_combined_coef_data;
+  coder::array<double, 2U> d_combined_coef_data;
   coder::array<double, 2U> indices;
+  coder::array<double, 2U> pulse;
   coder::array<double, 2U> smoothed_ppg_signal;
+  double b_combined_coef_data[100];
+  int combined_coef_size[2];
   int i;
   int loop_ub;
   int loop_ub_tmp;
-  // SCORE_PPG_SIGNAL Returns the scores of all pulses in a PPG signal
-  //    See
-  //    https://drive.google.com/file/u/3/d/1pe0JXUnOhZpmCMGCEVop8Zxzz9kD3FCD/view
+  // SCORE_PPG_SIGNAL Returns the health scores of all pulses in a preprocessed
+  //  PPG signal (via preprocess_ppg_signal(raw, timestamps)). See
+  //  https://drive.google.com/file/u/3/d/1pe0JXUnOhZpmCMGCEVop8Zxzz9kD3FCD/view
+  //  for complete details on algorithm, developed by Shreya.
+  //  Preprocess signal and split it into pulses
   // SPLIT_PPG_SIGNAL Returns an array of indices such that each pair of
-  // adjacent indices forms a pulse in the ppg signal
-  //  Detrend the ppg signal
+  // adjacent indices forms a pulse in the ppg signal. Also returns smoothed
+  // PPG signal, but this is only for debugging
   //  Smooth the ppg signal aggressively using a moving average
-  coder::detrend(ppg_signal, smoothed_ppg_signal);
-  coder::filter(smoothed_ppg_signal, b_smoothed_ppg_signal);
+  coder::filter(processed_ppg_signal, smoothed_ppg_signal);
   //  Fix the delay caused by the filter before finding the peaks
-  if (b_smoothed_ppg_signal.size(1) - 14 < 14) {
+  if (smoothed_ppg_signal.size(1) - 19 < 19) {
     i = 0;
     loop_ub_tmp = 0;
   } else {
-    i = 13;
-    loop_ub_tmp = b_smoothed_ppg_signal.size(1) - 14;
+    i = 18;
+    loop_ub_tmp = smoothed_ppg_signal.size(1) - 19;
   }
   loop_ub = loop_ub_tmp - i;
-  smoothed_ppg_signal.set_size(1, loop_ub);
+  b_smoothed_ppg_signal.set_size(1, loop_ub);
   for (loop_ub_tmp = 0; loop_ub_tmp < loop_ub; loop_ub_tmp++) {
-    smoothed_ppg_signal[loop_ub_tmp] = -b_smoothed_ppg_signal[i + loop_ub_tmp];
+    b_smoothed_ppg_signal[loop_ub_tmp] = -smoothed_ppg_signal[i + loop_ub_tmp];
   }
-  coder::findpeaks(smoothed_ppg_signal, a__1, indices);
+  coder::findpeaks(b_smoothed_ppg_signal, pulse, indices);
+  //  Calculate scores of all pulses
   scores.set_size(indices.size(1) - 1);
   loop_ub = indices.size(1);
   for (int b_i{0}; b_i <= loop_ub - 2; b_i++) {
     creal_T yCol[100];
-    double b_dv[100];
-    double dv1[100];
-    double cos_coef[15];
+    double combined_coef_data[100];
     double d;
-    double maxval;
+    double y;
     int b_loop_ub;
     scores[b_i] = 0.0;
     d = indices[b_i];
-    maxval = indices[b_i + 1];
-    if (d > maxval) {
+    y = indices[b_i + 1];
+    if (d > y) {
       i = 0;
       loop_ub_tmp = 0;
     } else {
       i = static_cast<int>(d) - 1;
-      loop_ub_tmp = static_cast<int>(maxval);
-    }
-    b_loop_ub = loop_ub_tmp - i;
-    a__1.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      a__1[loop_ub_tmp] = ppg_signal[i + loop_ub_tmp];
+      loop_ub_tmp = static_cast<int>(y);
     }
     // PREPROCESS_PPG_PULSE Returns a processed copy of a PPG pulse
     //  Normalize and rescale to [0, 1] range
-    d = coder::mean(a__1);
-    b_smoothed_ppg_signal.set_size(1, b_loop_ub);
+    b_loop_ub = loop_ub_tmp - i;
+    smoothed_ppg_signal.set_size(1, b_loop_ub);
     for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      b_smoothed_ppg_signal[loop_ub_tmp] = ppg_signal[i + loop_ub_tmp] - d;
+      smoothed_ppg_signal[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp];
     }
-    coder::b_abs(b_smoothed_ppg_signal, smoothed_ppg_signal);
-    maxval = coder::internal::maximum(smoothed_ppg_signal);
-    b_smoothed_ppg_signal.set_size(1, b_smoothed_ppg_signal.size(1));
-    loop_ub_tmp = b_smoothed_ppg_signal.size(1) - 1;
+    y = coder::combineVectorElements(smoothed_ppg_signal) /
+        static_cast<double>(b_loop_ub);
+    pulse.set_size(1, b_loop_ub);
+    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
+      pulse[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp] - y;
+    }
+    coder::b_abs(pulse, smoothed_ppg_signal);
+    y = coder::internal::maximum(smoothed_ppg_signal);
+    pulse.set_size(1, pulse.size(1));
+    loop_ub_tmp = pulse.size(1) - 1;
     for (i = 0; i <= loop_ub_tmp; i++) {
-      b_smoothed_ppg_signal[i] = b_smoothed_ppg_signal[i] / maxval;
+      pulse[i] = pulse[i] / y;
     }
     //  Interpolate using cubic interpolation
     //  We want a fixed amount of samples for all pulses
-    if (b_smoothed_ppg_signal.size(1) < 1) {
-      a__1.set_size(1, 0);
+    if (pulse.size(1) < 1) {
+      smoothed_ppg_signal.set_size(1, 0);
     } else {
-      a__1.set_size(1, b_loop_ub);
+      smoothed_ppg_signal.set_size(1, b_loop_ub);
       for (i = 0; i <= loop_ub_tmp; i++) {
-        a__1[i] = static_cast<double>(i) + 1.0;
+        smoothed_ppg_signal[i] = static_cast<double>(i) + 1.0;
       }
     }
     // CALCULATE_FOURIER_COEFFICIENTS Returns the real fourier coefficients of a
@@ -2697,42 +3956,78 @@ void score_ppg_signal(const coder::array<double, 2U> &ppg_signal,
     //  FFT returns the coefficients in complex form, but we can convert that
     //  into the real form (sin/cos) using Euler's identity
     //  https://en.wikipedia.org/wiki/Sine_and_cosine_transforms#Relation_with_complex_exponentials
-    coder::linspace(static_cast<double>(b_smoothed_ppg_signal.size(1)), b_dv);
-    coder::interp1(a__1, b_smoothed_ppg_signal, b_dv, dv1);
+    coder::linspace(static_cast<double>(pulse.size(1)), combined_coef_data);
+    coder::interp1(smoothed_ppg_signal, pulse, combined_coef_data,
+                   b_combined_coef_data);
     coder::internal::fft::FFTImplementationCallback::doHalfLengthBluestein(
-        dv1, yCol, wwc, dv, sintabinv);
-    for (i = 0; i < 15; i++) {
-      cos_coef[i] = yCol[i].re;
+        b_combined_coef_data, yCol, wwc, dv, sintabinv);
+    if (sMultiWord2Double((const unsigned int *)&coefficient_count.chunks[0U]) <
+        1.0) {
+      loop_ub_tmp = 0;
+    } else {
+      loop_ub_tmp = static_cast<int>(sMultiWord2Double(
+          (const unsigned int *)&coefficient_count.chunks[0U]));
     }
-    maxval = cos_coef[0];
-    for (loop_ub_tmp = 0; loop_ub_tmp < 14; loop_ub_tmp++) {
-      maxval += cos_coef[loop_ub_tmp + 1];
+    for (i = 0; i < loop_ub_tmp; i++) {
+      b_combined_coef_data[i] = yCol[i].re;
     }
-    for (i = 0; i < 15; i++) {
-      cos_coef[i] /= maxval;
+    d = sMultiWord2Double((const unsigned int *)&coefficient_count.chunks[0U]);
+    if (d < 1.0) {
+      smoothed_ppg_signal.set_size(1, 0);
+    } else {
+      b_loop_ub = static_cast<int>(d - 1.0);
+      smoothed_ppg_signal.set_size(1, static_cast<int>(d - 1.0) + 1);
+      for (i = 0; i <= b_loop_ub; i++) {
+        smoothed_ppg_signal[i] = static_cast<double>(i) + 1.0;
+      }
     }
-    d = coder::dot(cos_coef);
-    for (i = 0; i < 15; i++) {
-      cos_coef[i] = -yCol[i].im;
+    c_combined_coef_data.set(&b_combined_coef_data[0], 1, loop_ub_tmp);
+    y = coder::combineVectorElements(c_combined_coef_data);
+    combined_coef_size[0] = 1;
+    combined_coef_size[1] = loop_ub_tmp;
+    for (i = 0; i < loop_ub_tmp; i++) {
+      combined_coef_data[i] = b_combined_coef_data[i] / y;
     }
-    maxval = cos_coef[0];
-    for (loop_ub_tmp = 0; loop_ub_tmp < 14; loop_ub_tmp++) {
-      maxval += cos_coef[loop_ub_tmp + 1];
+    scores[b_i] =
+        coder::dot(combined_coef_data, combined_coef_size, smoothed_ppg_signal);
+    if (sMultiWord2Double((const unsigned int *)&coefficient_count.chunks[0U]) <
+        1.0) {
+      loop_ub_tmp = 0;
+    } else {
+      loop_ub_tmp = static_cast<int>(sMultiWord2Double(
+          (const unsigned int *)&coefficient_count.chunks[0U]));
     }
-    for (i = 0; i < 15; i++) {
-      cos_coef[i] /= maxval;
+    for (i = 0; i < loop_ub_tmp; i++) {
+      b_combined_coef_data[i] = -yCol[i].im;
     }
-    d += coder::dot(cos_coef);
-    scores[b_i] = d;
+    if (d < 1.0) {
+      smoothed_ppg_signal.set_size(1, 0);
+    } else {
+      smoothed_ppg_signal.set_size(
+          1, static_cast<int>(
+                 sMultiWord2Double(
+                     (const unsigned int *)&coefficient_count.chunks[0U]) -
+                 1.0) +
+                 1);
+      b_loop_ub = static_cast<int>(
+          sMultiWord2Double(
+              (const unsigned int *)&coefficient_count.chunks[0U]) -
+          1.0);
+      for (i = 0; i <= b_loop_ub; i++) {
+        smoothed_ppg_signal[i] = static_cast<double>(i) + 1.0;
+      }
+    }
+    d_combined_coef_data.set(&b_combined_coef_data[0], 1, loop_ub_tmp);
+    y = coder::combineVectorElements(d_combined_coef_data);
+    combined_coef_size[0] = 1;
+    combined_coef_size[1] = loop_ub_tmp;
+    for (i = 0; i < loop_ub_tmp; i++) {
+      combined_coef_data[i] = b_combined_coef_data[i] / y;
+    }
+    scores[b_i] =
+        scores[b_i] +
+        coder::dot(combined_coef_data, combined_coef_size, smoothed_ppg_signal);
   }
 }
 
-void score_ppg_signal_initialize()
-{
-}
-
-void score_ppg_signal_terminate()
-{
-}
-
-// End of code generation (score_ppg_signal.cpp)
+// End of code generation (preprocess_ppg_signal.cpp)

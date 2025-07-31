@@ -1,6 +1,6 @@
 #include "../include/ppg_analyzer.hpp"
 
-#include "../matlab-generated/score_ppg_signal.h"
+#include "../matlab-generated/preprocess_ppg_signal.h"
 #include "../matlab-generated/coder_array.h"
 
 #include <godot_cpp/core/class_db.hpp>
@@ -14,7 +14,8 @@ void PpgAnalyzer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("peak_finder", "ppg_values"), &PpgAnalyzer::peak_finder);
     ClassDB::bind_method(D_METHOD("calculate_heart_rate", "ppg_values", "sampling_frequency"), &PpgAnalyzer::calculate_heart_rate);
     ClassDB::bind_method(D_METHOD("calculate_heart_rate_variability", "ppg_values", "sampling_frequency"), &PpgAnalyzer::calculate_heart_rate_variability);
-    ClassDB::bind_method(D_METHOD("calculate_pulse_scores"), &PpgAnalyzer::calculate_pulse_scores);
+    ClassDB::bind_method(D_METHOD("calculate_pulse_scores", "preprocessed_ppg_signal", "coefficient_count"), &PpgAnalyzer::calculate_pulse_scores);
+    ClassDB::bind_method(D_METHOD("get_preprocessed_ppg_signal", "ppg_values", "timestamps"), &PpgAnalyzer::get_preprocessed_ppg_signal);
 }
 
 PpgAnalyzer::PpgAnalyzer() {
@@ -44,29 +45,29 @@ int PpgAnalyzer::read_ppg_from_image(PackedByteArray data, Rect2i bounding_box) 
     return ppg_point;
 }
 
-PackedInt32Array PpgAnalyzer::smoothed_ppg_signal(PackedInt32Array ppg_values, int window_size) {
-    PackedInt32Array smoothed_signal;
-    smoothed_signal.resize(ppg_values.size());
+PackedFloat64Array PpgAnalyzer::smoothed_ppg_signal(PackedFloat64Array preprocessed_ppg_signal, int window_size) {
+    PackedFloat64Array smoothed_signal;
+    smoothed_signal.resize(preprocessed_ppg_signal.size());
 
-    int64_t window_sum = 0;
-    for (int i = 0; i < ppg_values.size(); i++) {
-        window_sum += ppg_values[i];
+    double window_sum = 0;
+    for (int i = 0; i < preprocessed_ppg_signal.size(); i++) {
+        window_sum += preprocessed_ppg_signal[i];
 
-        smoothed_signal[i] = (int) (window_sum / window_size);
+        smoothed_signal[i] = window_sum / window_size;
 
         if (i >= window_size) {
-            window_sum -= ppg_values[i - window_size];
+            window_sum -= preprocessed_ppg_signal[i - window_size];
         }
     }
 
     return smoothed_signal;
 }
 
-PackedInt32Array PpgAnalyzer::peak_finder(PackedInt32Array ppg_values) {
+PackedInt32Array PpgAnalyzer::peak_finder(PackedFloat64Array smoothed_signal) {
     PackedInt32Array peak_indices;
 
-    for (int i = 1; i < ppg_values.size() - 1; i++) {
-        if (ppg_values[i - 1] < ppg_values[i] && ppg_values[i] > ppg_values[i + 1]) {
+    for (int i = 1; i < smoothed_signal.size() - 1; i++) {
+        if (smoothed_signal[i] - smoothed_signal[i - 1] > PEAK_THRESHOLD && smoothed_signal[i] - smoothed_signal[i + 1] > PEAK_THRESHOLD) {
             peak_indices.append(i);
         }
     }
@@ -74,11 +75,11 @@ PackedInt32Array PpgAnalyzer::peak_finder(PackedInt32Array ppg_values) {
     return peak_indices;
 }
 
-float PpgAnalyzer::calculate_heart_rate(PackedInt32Array ppg_values, float sampling_frequency) {
+float PpgAnalyzer::calculate_heart_rate(PackedFloat64Array preprocessed_ppg_signal, float sampling_frequency) {
     // Since we only care about peaks, we want to smooth away the dicrotic notch
     // and any noise with a heavy smoothing filter
-    PackedInt32Array smoothed_signal = smoothed_ppg_signal(ppg_values, HEART_SMOOTHING_SIZE);
-    PackedInt32Array peak_indices = peak_finder(smoothed_signal);
+    const PackedFloat64Array smoothed_signal = smoothed_ppg_signal(smoothed_ppg_signal(preprocessed_ppg_signal, HEART_SMOOTHING_SIZE_1), HEART_SMOOTHING_SIZE_2);
+    const PackedInt32Array peak_indices = peak_finder(smoothed_signal);
 
     if (peak_indices.size() <= 1) {
         return 0.0;
@@ -92,11 +93,11 @@ float PpgAnalyzer::calculate_heart_rate(PackedInt32Array ppg_values, float sampl
 
     double average_beat_length = interbeat_interval_sum / (peak_indices.size() - 1);
 
-    return sampling_frequency / average_beat_length;
+    return 60.0 / average_beat_length;
 }
 
-float PpgAnalyzer::calculate_heart_rate_variability(PackedInt32Array ppg_values, float sampling_frequency) {
-    const PackedInt32Array smoothed_signal = smoothed_ppg_signal(ppg_values, HEART_SMOOTHING_SIZE);
+float PpgAnalyzer::calculate_heart_rate_variability(PackedFloat64Array preprocessed_ppg_signal, float sampling_frequency) {
+    const PackedFloat64Array smoothed_signal = smoothed_ppg_signal(smoothed_ppg_signal(preprocessed_ppg_signal, HEART_SMOOTHING_SIZE_1), HEART_SMOOTHING_SIZE_2);
     const PackedInt32Array peak_indices = peak_finder(smoothed_signal);
 
     if (peak_indices.size() <= 1) {
@@ -122,32 +123,66 @@ float PpgAnalyzer::calculate_heart_rate_variability(PackedInt32Array ppg_values,
     }
 
     // s to ms
-    return 1000 * UtilityFunctions::sqrt(variance / (peak_indices.size() - 1));
+    return 1000.0 * UtilityFunctions::sqrt(variance / (peak_indices.size() - 1));
 }
 
 // This function is a wrapper around the MATlAB autogenerated C++ code
 // See README for link to the MATLAB repository
-PackedFloat64Array PpgAnalyzer::calculate_pulse_scores(PackedInt32Array ppg_values) {
+PackedFloat64Array PpgAnalyzer::get_preprocessed_ppg_signal(PackedInt32Array ppg_values, PackedInt64Array timestamps) {
     // Copy data into MATLAB format
-    coder::array<double, 2U> ppg_signal;
-    ppg_signal.set_size(1, ppg_values.size());
+    coder::array<double, 2U> matlab_ppg_values;
+    coder::array<int64m_T, 2U> matlab_timestamps;
+    matlab_ppg_values.set_size(1, ppg_values.size());
+    matlab_timestamps.set_size(1, timestamps.size());
 
     for (int i = 0; i < ppg_values.size(); i++) {
-        ppg_signal[i] = (double) ppg_values[i];
+        matlab_ppg_values[i] = (double) ppg_values[i];
+    }
+
+    for (int i = 0; i < timestamps.size(); i++) {
+        matlab_timestamps[i].chunks[0] = (uint32_t) (timestamps[i] & 0xFFFFFFFF);
+        matlab_timestamps[i].chunks[1] = (uint32_t) ((timestamps[i] >> 32) & 0xFFFFFFFF);
     }
 
     // Call main function
-    coder::array<double, 1U> scores;
-    score_ppg_signal(ppg_signal, scores);
+    coder::array<double, 2U> matlab_processed_ppg_signal;
+    preprocess_ppg_signal(matlab_ppg_values, matlab_timestamps, matlab_processed_ppg_signal);
+
+    // Copy data into Godot format
+    PackedFloat64Array output_signal;
+    output_signal.resize(matlab_processed_ppg_signal.size(1));
+
+    for (int i = 0; i < matlab_processed_ppg_signal.size(1); i++) {
+        output_signal[i] = matlab_processed_ppg_signal[i];
+    }
+
+    return output_signal;
+}
+
+// This function is a wrapper around the MATlAB autogenerated C++ code
+// See README for link to the MATLAB repository
+PackedFloat64Array PpgAnalyzer::calculate_pulse_scores(PackedFloat64Array preprocessed_ppg_signal, int coefficient_count) {
+    // Copy data into MATLAB format
+    coder::array<double, 2U> matlab_ppg_signal;
+    matlab_ppg_signal.set_size(1, preprocessed_ppg_signal.size());
+
+    for (int i = 0; i < preprocessed_ppg_signal.size(); i++) {
+        matlab_ppg_signal[i] = preprocessed_ppg_signal[i];
+    }
+
+    // Call main function
+    coder::array<double, 1U> matlab_scores;
+    int64m_T matlab_coefficient_count;
+    matlab_coefficient_count.chunks[0] = (uint32_t) (coefficient_count & 0xFFFFFFFF);
+    matlab_coefficient_count.chunks[1] = (uint32_t) 0; // Upper 32 bits are always 0
+    score_ppg_signal(matlab_ppg_signal, matlab_coefficient_count, matlab_scores);
 
     // Copy data into Godot format
     PackedFloat64Array output_scores;
-    output_scores.resize(scores.size(0));
+    output_scores.resize(matlab_scores.size(0));
 
-    UtilityFunctions::print("Number of pulses: ", scores.size(0));
-
-    for (int i = 0; i < scores.size(0); i++) {
-        output_scores[i] = scores[i];
+    for (int i = 0; i < matlab_scores.size(0); i++) {
+        output_scores[i] = matlab_scores[i];
     }
 
     return output_scores;

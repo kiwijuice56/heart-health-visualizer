@@ -51,6 +51,7 @@ grow_vertical = 2
 theme = ExtResource("1_mth0t")
 theme_override_styles/panel = SubResource("StyleBoxFlat_bsumw")
 script = ExtResource("2_mth0t")
+y = 10
 close_button = NodePath("VBoxContainer/TitleContainer/HBoxContainer/CloseButton")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
@@ -118,6 +119,12 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 
+[node name="ProcessedChart" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+peakColor = Color(0.98, 0, 0.277667, 1)
+
 [node name="ScoreLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 0)
@@ -125,6 +132,22 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 text = "Score:"
+autowrap_mode = 2
+
+[node name="HeartRateLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Heart Rate:"
+autowrap_mode = 2
+
+[node name="HeartRateVariabilityLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Heart Rate Variability:"
 autowrap_mode = 2
 
 [node name="PulseScoresLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
@@ -142,15 +165,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.45098, 0.427451, 0.470588, 1)
 text = "Date:"
-autowrap_mode = 2
-
-[node name="HeartRate" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Heart Rate:"
 autowrap_mode = 2
 
 [node name="Description" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]

@@ -5,7 +5,7 @@
 //
 // rtGetNaN.cpp
 //
-// Code generation for function 'score_ppg_signal'
+// Code generation for function 'preprocess_ppg_signal'
 //
 
 // Abstract:

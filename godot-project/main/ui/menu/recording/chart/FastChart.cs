@@ -12,6 +12,8 @@ public partial class FastChart : PanelContainer {
 	[Export]
 	public Color lineColor;
 	[Export]
+	public Color peakColor;
+	[Export]
 	public double padding = 0.2;
 	[Export]
 	public double lineWidth = 0.9;
@@ -22,6 +24,7 @@ public partial class FastChart : PanelContainer {
 
 	private List<double> stream;
 	private List<long> timestamps;
+	private List<int> peakIndices;
 
 	public override void _Ready() {
 		Reset();
@@ -63,6 +66,7 @@ public partial class FastChart : PanelContainer {
 			}
 		}
 
+		int peakCounter = 0;
 		for (int i = 1; i < stream.Count; i++) {
 			if (timestamps[i - 1] < minX || timestamps[i - 1] > maxX) {
 				continue;
@@ -79,7 +83,15 @@ public partial class FastChart : PanelContainer {
 			);
 			to.Y = (float) (to.Y * (1.0 - padding) + Size.Y * padding / 2.0);
 			to.X = Mathf.Min(Size.X, to.X);
-			DrawLine(from, to, lineColor, (float) lineWidth, true);
+			if (peakCounter < peakIndices.Count && (peakIndices[peakCounter] - i) <= 8) {
+				DrawLine(from, to, peakColor, (float) lineWidth, true);
+				if (i == peakIndices[peakCounter]) {
+					peakCounter += 1;
+				}
+			} else {
+				DrawLine(from, to, lineColor, (float) lineWidth, true);
+			}
+			
 		}
 
 	}
@@ -119,6 +131,7 @@ public partial class FastChart : PanelContainer {
 	public void Reset() {
 		stream = new List<double>();
 		timestamps = new List<long>();
+		peakIndices = new List<int>();
 	}
 	
 	// Pass in the stream as integers, just for ease since internally PPG values are ints
@@ -130,6 +143,22 @@ public partial class FastChart : PanelContainer {
 		timestamps = new List<long>(newTimestamps.Length);
 		for (int i = 0; i < newTimestamps.Length; i++) {
 			timestamps.Add(newTimestamps[i]);
+		}
+		peakIndices = new List<int>();
+	}
+	
+	public void InitializeDebug(double[] newStream, long[] newTimestamps, int[] newPeakIndices) {
+		stream = new List<double>(newStream.Length);
+		for (int i = 0; i < newStream.Length; i++) {
+			stream.Add(newStream[i]);
+		}
+		timestamps = new List<long>(newTimestamps.Length);
+		for (int i = 0; i < newTimestamps.Length; i++) {
+			timestamps.Add(newTimestamps[i]);
+		}
+		peakIndices = new List<int>(newPeakIndices.Length);
+		for (int i = 0; i < newPeakIndices.Length; i++) {
+			peakIndices.Add(newPeakIndices[i]);
 		}
 	}
 }

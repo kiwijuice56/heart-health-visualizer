@@ -10,6 +10,9 @@ class_name Recording extends Resource
 @export_range(10, 120, 1, "suffix:seconds") var recording_length: int = 15
 
 @export_group("Processed Data")
+@export var processed_ppg_signal: PackedFloat64Array # Evenly spaced 150 Hz signal
 @export var health_score: float
+@export var heart_rate: float
+@export var heart_rate_variability: float
 @export var pulse_scores: PackedFloat64Array
 @export var render: ImageTexture
