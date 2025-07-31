@@ -100,6 +100,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_pjrb6")
 script = ExtResource("3_67ri8")
+tab_titles = Array[String](["Record", "History", "Settings"])
 gradient = SubResource("Gradient_67ri8")
 tab_colors_1 = Array[Color]([Color(0.34, 0.1802, 0.302713, 1), Color(0.373517, 0.182213, 0.138931, 1), Color(0.237042, 0.202299, 0.436531, 1)])
 tab_colors_2 = Array[Color]([Color(0.164193, 0.219748, 0.237662, 1), Color(0.124431, 0.238785, 0.160219, 1), Color(0.207048, 0.196786, 0.281527, 1)])
@@ -161,7 +162,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 8
 focus_mode = 0
-text = "Create Recording
+text = "Create New Recording
 "
 
 [node name="HistoryContainer" type="MarginContainer" parent="ScreenManager/MainContainer/ContentContainer"]

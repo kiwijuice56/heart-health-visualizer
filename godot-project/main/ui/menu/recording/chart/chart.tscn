@@ -7,7 +7,7 @@ content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
 content_margin_bottom = 8.0
-bg_color = Color(0, 0, 0, 1)
+bg_color = Color(0, 0, 0, 0.133333)
 
 [node name="Chart" type="PanelContainer"]
 custom_minimum_size = Vector2(0, 256)
@@ -15,6 +15,7 @@ offset_right = 117.0
 offset_bottom = 50.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_nidpn")
 script = ExtResource("1_y7h6k")
 timeWindow = 15.0

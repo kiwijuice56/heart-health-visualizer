@@ -56,7 +56,7 @@ close_button = NodePath("VBoxContainer/TitleContainer/HBoxContainer/CloseButton"
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 32
+theme_override_constants/separation = 0
 
 [node name="TitleContainer" type="PanelContainer" parent="VBoxContainer"]
 material = SubResource("ShaderMaterial_e88nu")
@@ -81,84 +81,42 @@ focus_mode = 0
 icon = ExtResource("4_wyglj")
 flat = true
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/margin_left = 128
-theme_override_constants/margin_top = 96
-theme_override_constants/margin_right = 128
-theme_override_constants/margin_bottom = 128
+mouse_filter = 2
+theme_override_constants/separation = 0
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MarginContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer/ScrollContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 128
+theme_override_constants/margin_right = 128
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="Render" type="TextureRect" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
-unique_name_in_owner = true
+[node name="Spacing" type="Control" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-size_flags_horizontal = 3
-expand_mode = 5
 
-[node name="ColorRect" type="ColorRect" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Render"]
-show_behind_parent = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.133333)
-
-[node name="Chart" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-
-[node name="ProcessedChart" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-peakColor = Color(0.98, 0, 0.277667, 1)
-
-[node name="ScoreLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-text = "Score:"
-autowrap_mode = 2
-
-[node name="HeartRateLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Heart Rate:"
-autowrap_mode = 2
-
-[node name="HeartRateVariabilityLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Heart Rate Variability:"
-autowrap_mode = 2
-
-[node name="PulseScoresLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Pulse Scores:"
-autowrap_mode = 2
-
-[node name="DateLabel" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="DateLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
@@ -167,16 +125,90 @@ theme_override_colors/font_color = Color(0.45098, 0.427451, 0.470588, 1)
 text = "Date:"
 autowrap_mode = 2
 
-[node name="Description" type="Label" parent="VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="Render" type="TextureRect" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+expand_mode = 5
+
+[node name="ColorRect" type="ColorRect" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer/Render"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.133333)
+
+[node name="Chart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="ProcessedChart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+peakColor = Color(0.98, 0, 0.277667, 1)
+
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer/ProcessedChart"]
+modulate = Color(1, 1, 1, 0.372549)
+layout_mode = 2
+size_flags_vertical = 0
+text = "(resampled and smoothened signal)"
+
+[node name="ScoreLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+text = "Score:"
+autowrap_mode = 2
+
+[node name="HeartRateLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Heart Rate:"
+autowrap_mode = 2
+
+[node name="HeartRateVariabilityLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Heart Rate Variability:"
+autowrap_mode = 2
+
+[node name="PulseScoresLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pulse Scores:"
+autowrap_mode = 2
+
+[node name="Description" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.449555, 0.4277, 0.47, 1)
-text = "Your heart health score is a heuristic based on the shape of your pulse waveform. It is not conclusive evidence of your overall heart health. Use this information with caution."
+text = "Your heart health score is a heuristic based on the shape of your pulse waveform. It is not conclusive evidence of your overall heart health. Use this information with caution and consult with a health care professional if you are concerned about your results."
 autowrap_mode = 2
 
-[node name="AdvancedButton" type="Button" parent="VBoxContainer/MarginContainer"]
+[node name="AdvancedButtonContainer" type="MarginContainer" parent="VBoxContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="AdvancedButton" type="Button" parent="VBoxContainer/VBoxContainer/MarginContainer/AdvancedButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8

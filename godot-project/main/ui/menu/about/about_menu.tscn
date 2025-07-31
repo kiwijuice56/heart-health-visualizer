@@ -17,7 +17,7 @@ fill_from = Vector2(0, 1)
 
 [sub_resource type="Gradient" id="Gradient_jlx0t"]
 interpolation_color_space = 2
-colors = PackedColorArray(0.124431, 0.238785, 0.160219, 1, 0.373517, 0.182213, 0.138931, 1)
+colors = PackedColorArray(0.207048, 0.196786, 0.281527, 1, 0.237042, 0.202299, 0.436531, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_2mv05"]
 gradient = SubResource("Gradient_jlx0t")

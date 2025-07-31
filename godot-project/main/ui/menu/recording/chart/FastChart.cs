@@ -16,7 +16,11 @@ public partial class FastChart : PanelContainer {
 	[Export]
 	public double padding = 0.2;
 	[Export]
+	public int peakLength = 4;
+	[Export]
 	public double lineWidth = 0.9;
+	[Export]
+	public double peakLineWidth = 3.5;
 	[Export]
 	public long timestampThreshold = 20000;
 	[Export]
@@ -83,8 +87,8 @@ public partial class FastChart : PanelContainer {
 			);
 			to.Y = (float) (to.Y * (1.0 - padding) + Size.Y * padding / 2.0);
 			to.X = Mathf.Min(Size.X, to.X);
-			if (peakCounter < peakIndices.Count && (peakIndices[peakCounter] - i) <= 8) {
-				DrawLine(from, to, peakColor, (float) lineWidth, true);
+			if (peakCounter < peakIndices.Count && (peakIndices[peakCounter] - i) <= peakLength) {
+				DrawLine(from, to, peakColor, (float) peakLineWidth, true);
 				if (i == peakIndices[peakCounter]) {
 					peakCounter += 1;
 				}

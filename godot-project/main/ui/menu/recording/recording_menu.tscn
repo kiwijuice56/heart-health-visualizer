@@ -71,7 +71,7 @@ size_flags_horizontal = 0
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 48
-text = "Recording"
+text = "New Recording"
 
 [node name="CloseButton" type="Button" parent="VBoxContainer/TitleContainer/HBoxContainer"]
 layout_mode = 2
