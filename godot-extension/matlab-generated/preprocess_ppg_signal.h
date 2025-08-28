@@ -29,9 +29,21 @@ extern void preprocess_ppg_signal_initialize();
 extern void preprocess_ppg_signal_terminate();
 
 extern void
-score_ppg_signal(const coder::array<double, 2U> &processed_ppg_signal,
-                 const int64m_T coefficient_count,
-                 coder::array<double, 1U> &scores);
+score_ppg_signal_fourier(const coder::array<double, 2U> &processed_ppg_signal,
+                         const int64m_T coefficient_count,
+                         coder::array<double, 1U> &scores);
+
+extern void score_ppg_signal_linear_slope(
+    const coder::array<double, 2U> &processed_ppg_signal,
+    coder::array<double, 1U> &scores);
+
+extern void score_ppg_signal_peak_detection(
+    const coder::array<double, 2U> &processed_ppg_signal,
+    coder::array<double, 1U> &scores);
+
+extern void score_ppg_signal_rising_edge_area(
+    const coder::array<double, 2U> &processed_ppg_signal,
+    coder::array<double, 1U> &scores);
 
 #endif
 // End of code generation (preprocess_ppg_signal.h)

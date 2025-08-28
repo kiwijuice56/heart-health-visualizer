@@ -21,7 +21,12 @@ func initialize_information(recording: Recording) -> void:
 	%ScoreLabel.text = "Score: " + str(int(10 * recording.health_score))
 	%HeartRateLabel.text = "Heart Rate: %.2f bpm" % recording.heart_rate
 	%HeartRateVariabilityLabel.text = "Heart Rate Variability: %.2f ms" % recording.heart_rate_variability
-	%PulseScoresLabel.text = "Pulse Scores: " + str(recording.pulse_scores)
+	
+	%FourierPulseScoresLabel.text = "Fourier Pulse Scores (%0.3f): %s" % [recording.overall_score_fourier, str(recording.pulse_scores_fourier)]
+	%LinearSlopePulseScoresLabel.text = "Linear Slope Pulse Scores (%0.3f): %s" % [recording.overall_score_linear_slope, str(recording.pulse_scores_linear_slope)]
+	%RisingEdgeAreaPulseScoresLabel.text = "Rising Edge Area Pulse Scores (%0.3f): %s" % [recording.overall_score_rising_edge_area, str(recording.pulse_scores_rising_edge_area)]
+	%PeakDetectionPulseScoresLabel.text = "Peak Detection Pulse Scores (%0.3f): %s" % [recording.overall_score_peak_detection, str(recording.pulse_scores_peak_detection)]
+	
 	%Chart.timeWindow = Ref.recorder.recording_length
 	%Chart.Initialize(recording.raw_ppg_signal, recording.raw_ppg_signal_timestamps)
 	
@@ -39,5 +44,9 @@ func initialize_information(recording: Recording) -> void:
 
 func handle_advanced_info() -> void:
 	%ProcessedChart.visible = show_advanced_info
-	%PulseScoresLabel.visible = show_advanced_info
+	%FourierPulseScoresLabel.visible = show_advanced_info
+	%LinearSlopePulseScoresLabel.visible = show_advanced_info
+	%RisingEdgeAreaPulseScoresLabel.visible = show_advanced_info
+	%PeakDetectionPulseScoresLabel.visible = show_advanced_info
+	
 	%AdvancedButton.text = "Hide Advanced Info" if show_advanced_info else "Show Advanced Info"

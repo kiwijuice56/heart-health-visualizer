@@ -13,3 +13,5 @@ godot-project/android/
 *.so
 *.os
 *.aar
+*.apk
+*.pdb

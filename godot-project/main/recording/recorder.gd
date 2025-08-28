@@ -80,6 +80,18 @@ func stop_recording() -> void:
 	recording_completed.emit(new_recording)
 
 func create_recording() -> Recording:
+	# These were observed experimentally and are used to normalize the scores into roughly the same scale
+	# because the original units are arbitrary -- these can be updated to weigh certain scores more than others
+	const median_fourier: float = 2.0
+	const median_linear_slope: float = 10E-3
+	const median_rising_edge_area: float = 7E-4
+	const median_peak_detection: float = 0.5
+	
+	const iqr_fourier: float = 0.6
+	const iqr_linear_slope: float = 3E-3
+	const iqr_rising_edge_area: float = 5E-4
+	const iqr_peak_detection: float = 0.5
+	
 	var new_recording: Recording = Recording.new()
 	
 	new_recording.version = ProjectSettings.get_setting("application/config/version")
@@ -90,18 +102,53 @@ func create_recording() -> Recording:
 	
 	new_recording.processed_ppg_signal = ppg_analyzer.get_preprocessed_ppg_signal(ppg_signal, ppg_signal_timestamps)
 	
-	# Find the pulse scores and use them to calculate the total health score
-	var scores: PackedFloat64Array = ppg_analyzer.calculate_pulse_scores(new_recording.processed_ppg_signal, 10)
-	scores.sort()
-	new_recording.pulse_scores = scores
-	
-	var median_score: float = 0
-	if len(scores) > 0:
-		@warning_ignore("integer_division")
-		median_score = scores[len(scores) / 2]
-	
-	new_recording.health_score = median_score
+	# Calculate HR and HRV using algorithms implemented in C++
 	new_recording.heart_rate = ppg_analyzer.calculate_heart_rate(new_recording.processed_ppg_signal, 150)
 	new_recording.heart_rate_variability = ppg_analyzer.calculate_heart_rate_variability(new_recording.processed_ppg_signal, 150)
 	
+	# Find the pulse scores and use them to calculate the total health score using algorithms implemented in MATLAB
+	new_recording.pulse_scores_fourier = ppg_analyzer.calculate_pulse_scores_fourier(new_recording.processed_ppg_signal, 20)
+	new_recording.pulse_scores_linear_slope = ppg_analyzer.calculate_pulse_scores_linear_slope(new_recording.processed_ppg_signal)
+	new_recording.pulse_scores_rising_edge_area = ppg_analyzer.calculate_pulse_scores_rising_edge_area(new_recording.processed_ppg_signal)
+	new_recording.pulse_scores_peak_detection = ppg_analyzer.calculate_pulse_scores_peak_detection(new_recording.processed_ppg_signal)
+	
+	var sorted_pulse_scores_fourier: PackedFloat64Array = new_recording.pulse_scores_fourier.duplicate()
+	var sorted_pulse_scores_linear_slope: PackedFloat64Array = new_recording.pulse_scores_linear_slope.duplicate()
+	var sorted_pulse_scores_rising_edge_area: PackedFloat64Array = new_recording.pulse_scores_rising_edge_area.duplicate()
+	var sorted_pulse_scores_peak_detection: PackedFloat64Array = new_recording.pulse_scores_peak_detection.duplicate()
+	
+	sorted_pulse_scores_fourier.sort()
+	sorted_pulse_scores_linear_slope.sort()
+	sorted_pulse_scores_rising_edge_area.sort()
+	sorted_pulse_scores_peak_detection.sort()
+	
+	new_recording.overall_score_fourier = 0.0
+	if len(sorted_pulse_scores_fourier) > 0:
+		@warning_ignore("integer_division")
+		new_recording.overall_score_fourier = sorted_pulse_scores_fourier[len(sorted_pulse_scores_fourier) / 2]
+		new_recording.overall_score_fourier = normalize_score(new_recording.overall_score_fourier, median_fourier, iqr_fourier)
+	
+	new_recording.overall_score_linear_slope = 0.0
+	if len(sorted_pulse_scores_linear_slope) > 0:
+		@warning_ignore("integer_division")
+		new_recording.overall_score_linear_slope = sorted_pulse_scores_linear_slope[len(sorted_pulse_scores_linear_slope) / 2]
+		new_recording.overall_score_linear_slope = normalize_score(new_recording.overall_score_linear_slope, median_linear_slope, iqr_linear_slope)
+	
+	new_recording.overall_score_rising_edge_area = 0.0
+	if len(sorted_pulse_scores_rising_edge_area) > 0:
+		@warning_ignore("integer_division")
+		new_recording.overall_score_rising_edge_area = sorted_pulse_scores_rising_edge_area[len(sorted_pulse_scores_rising_edge_area) / 2]
+		new_recording.overall_score_rising_edge_area = normalize_score(new_recording.overall_score_rising_edge_area, median_rising_edge_area, iqr_rising_edge_area)
+	
+	new_recording.overall_score_peak_detection = 0.0
+	if len(sorted_pulse_scores_peak_detection) > 0:
+		@warning_ignore("integer_division")
+		new_recording.overall_score_peak_detection = sorted_pulse_scores_peak_detection[len(sorted_pulse_scores_peak_detection) / 2]
+		new_recording.overall_score_peak_detection = normalize_score(new_recording.overall_score_peak_detection, median_peak_detection, iqr_peak_detection)
+	
+	new_recording.health_score = (new_recording.overall_score_fourier + new_recording.overall_score_linear_slope + new_recording.overall_score_peak_detection + new_recording.overall_score_peak_detection) / 4.0
+	
 	return new_recording
+
+func normalize_score(score: float, median: float, iqr: float) -> float:
+	return (score - median) / (0.5 * iqr)

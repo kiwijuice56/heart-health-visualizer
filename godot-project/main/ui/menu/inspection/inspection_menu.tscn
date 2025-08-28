@@ -112,7 +112,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="Spacing" type="Control" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="TopSpacing" type="Control" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 
@@ -152,7 +152,9 @@ size_flags_vertical = 0
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-peakColor = Color(0.98, 0, 0.277667, 1)
+peakColor = Color(0.281833, 0.89, 0, 1)
+peakLength = 0
+peakLineWidth = 16.0
 
 [node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer/ProcessedChart"]
 modulate = Color(1, 1, 1, 0.372549)
@@ -185,7 +187,31 @@ size_flags_horizontal = 3
 text = "Heart Rate Variability:"
 autowrap_mode = 2
 
-[node name="PulseScoresLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="FourierPulseScoresLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pulse Scores:"
+autowrap_mode = 2
+
+[node name="LinearSlopePulseScoresLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pulse Scores:"
+autowrap_mode = 2
+
+[node name="RisingEdgeAreaPulseScoresLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pulse Scores:"
+autowrap_mode = 2
+
+[node name="PeakDetectionPulseScoresLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
@@ -201,6 +227,10 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.449555, 0.4277, 0.47, 1)
 text = "Your heart health score is a heuristic based on the shape of your pulse waveform. It is not conclusive evidence of your overall heart health. Use this information with caution and consult with a health care professional if you are concerned about your results."
 autowrap_mode = 2
+
+[node name="BottomgSpacing" type="Control" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
 
 [node name="AdvancedButtonContainer" type="MarginContainer" parent="VBoxContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2

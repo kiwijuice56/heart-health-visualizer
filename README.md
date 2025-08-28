@@ -3,7 +3,7 @@ The PPG scoring algorithm is developed in MATLAB in a [separate repository](http
 
 Use the following settings when converting the MATLAB code into C++:
 ```
-- Entry Function: score_ppg_signal, with one parameter of type double (1 x :Inf)
+- Entry functions: All four scoring functions and `preprocess_ppg_signal`
 - Language: C++
 - Code Appearance: Generate all functions into a single file
 - Hardware: None - Select device below -> ARM compatible -> ARM 10

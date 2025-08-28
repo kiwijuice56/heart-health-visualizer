@@ -4,6 +4,8 @@
 #include <godot_cpp/classes/image.hpp>
 
 #include "../matlab-generated/rtwtypes.h"
+#include "../matlab-generated/coder_array.h"
+
 #include <cstddef>
 #include <cstdlib>
 
@@ -33,8 +35,16 @@ public:
 	// Returns a resampled and preprocessed PPG signal at 150 Hz
 	PackedFloat64Array get_preprocessed_ppg_signal(PackedInt32Array ppg_values, PackedInt64Array timestamps);
 
-	// Returns the cardiovascular health scores of all pulses in a *preprocessed* PPG signal, sampled at 150 Hz
-	PackedFloat64Array calculate_pulse_scores(PackedFloat64Array preprocessed_ppg_signal, int coefficient_count);
+	// All 4 functions below return the cardiovascular health scores of all pulses in a *preprocessed* PPG signal, sampled at 150 Hz;
+	// Each use a different algorithm with differently scaled scores, which are combined in the app into a final score
+	PackedFloat64Array calculate_pulse_scores_fourier(PackedFloat64Array preprocessed_ppg_signal, int coefficient_count);
+	PackedFloat64Array calculate_pulse_scores_linear_slope(PackedFloat64Array preprocessed_ppg_signal);
+	PackedFloat64Array calculate_pulse_scores_rising_edge_area(PackedFloat64Array preprocessed_ppg_signal);
+	PackedFloat64Array calculate_pulse_scores_peak_detection(PackedFloat64Array preprocessed_ppg_signal);
+
+	// Helper functions to convert data to and from Godot
+	PackedFloat64Array matlab_scores_to_godot_scores(coder::array<double, 1U> matlab_scores);
+	coder::array<double, 2U> godot_signal_to_matlab_signal(PackedFloat64Array godot_signal);
 
 	// Manual functions:
 

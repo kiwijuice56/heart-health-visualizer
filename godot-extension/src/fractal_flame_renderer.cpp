@@ -2,8 +2,6 @@
 
 #include <godot_cpp/core/class_db.hpp>
 
-# define PI 3.14159265358979323846
-
 using namespace godot;
 
 void FractalFlameRenderer::_bind_methods() {
@@ -49,14 +47,13 @@ Ref<ImageTexture> FractalFlameRenderer::render(Vector2i image_size, double initi
 
     // Sample random points and iterate over fractal functions
     for (int i = 0; i < sample_count; i++) {
-        Vector2 point = Vector2(initial_radius * UtilityFunctions::randf(), 0).rotated(UtilityFunctions::randf() * 2 * PI);
+        Vector2 point = Vector2(initial_radius * UtilityFunctions::randf(), 0).rotated(UtilityFunctions::randf() * 2 * Math_PI);
         Color point_color = Color(UtilityFunctions::randf(), UtilityFunctions::randf(), UtilityFunctions::randf());
 
         for (int j = 0; j < iteration_count; j++) {
             const double point_distance = point.length();
 
             // Iterate over random functions
-            // TODO: modularize this
 
             const double random_key = UtilityFunctions::randf() * fractal_parameters[0];
             const int function_count = 4;
@@ -80,8 +77,8 @@ Ref<ImageTexture> FractalFlameRenderer::render(Vector2i image_size, double initi
                 // Cosine function
 
                 point = point_distance * Vector2(
-                    UtilityFunctions::cos(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * PI * point.x / initial_radius),
-                    UtilityFunctions::cos(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * PI * point.y / initial_radius)
+                    UtilityFunctions::cos(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * Math_PI * point.x / initial_radius),
+                    UtilityFunctions::cos(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * Math_PI * point.y / initial_radius)
                 );
 
                 point_color = (point_color + Color(0.4, 1.0, 0.4)) / 2;
@@ -89,8 +86,8 @@ Ref<ImageTexture> FractalFlameRenderer::render(Vector2i image_size, double initi
                 // Sine function
 
                 point = point_distance * Vector2(
-                    UtilityFunctions::sin(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * PI * point.x / initial_radius),
-                    UtilityFunctions::sin(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * PI * point.y / initial_radius)
+                    UtilityFunctions::sin(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * Math_PI * point.x / initial_radius),
+                    UtilityFunctions::sin(8 * fractal_parameters[2] + fractal_parameters[1] * 8 * Math_PI * point.y / initial_radius)
                 );
 
                 point_color = (point_color + Color(0.8, 0.2, 0.8)) / 2;
