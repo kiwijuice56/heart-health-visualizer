@@ -44,7 +44,10 @@ func _on_camera_frame(timestamp: int, data: PackedByteArray, width: int, height:
 	# %RecordingProgressMenu.camera_texture_rect.texture = frame
 	
 	# Negation is necessary so that the signal isn't upside down
-	var ppg_value: int = -ppg_analyzer.read_ppg_from_image(data, Rect2i(Vector2i(0, 0), Vector2i(width, height)))
+	const padding_amount: float = 0.2
+	var padding_x: int = int(width * padding_amount)
+	var padding_y: int = int(height * padding_amount)
+	var ppg_value: int = -ppg_analyzer.read_ppg_from_image(data, Rect2i(Vector2i(padding_x, padding_y), Vector2i(max(0, width - padding_x), max(0, height - padding_y))))
 	
 	ppg_frame_received.emit(timestamp, ppg_value)
 	
@@ -82,14 +85,14 @@ func stop_recording() -> void:
 func create_recording() -> Recording:
 	# These were observed experimentally and are used to normalize the scores into roughly the same scale
 	# because the original units are arbitrary -- these can be updated to weigh certain scores more than others
-	const median_fourier: float = 2.0
-	const median_linear_slope: float = 10E-3
-	const median_rising_edge_area: float = 7E-4
+	const median_fourier: float = 1.98
+	const median_linear_slope: float = 0.01
+	const median_rising_edge_area: float = 0.0005
 	const median_peak_detection: float = 0.5
 	
-	const iqr_fourier: float = 0.6
-	const iqr_linear_slope: float = 3E-3
-	const iqr_rising_edge_area: float = 5E-4
+	const iqr_fourier: float = 0.35
+	const iqr_linear_slope: float = 0.003
+	const iqr_rising_edge_area: float = 0.0005
 	const iqr_peak_detection: float = 0.5
 	
 	var new_recording: Recording = Recording.new()
@@ -151,4 +154,5 @@ func create_recording() -> Recording:
 	return new_recording
 
 func normalize_score(score: float, median: float, iqr: float) -> float:
-	return (score - median) / (0.5 * iqr)
+	var normalized_score: float = (score - median) / (0.5 * iqr) # ~[-1, 1]
+	return (normalized_score + 1.0) / 2.0 # ~[0, 1]

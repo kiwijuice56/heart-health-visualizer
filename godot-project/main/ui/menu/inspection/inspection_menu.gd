@@ -18,14 +18,14 @@ func initialize_information(recording: Recording) -> void:
 	
 	%Render.texture = recording.render
 	%DateLabel.text = "%s/%s/%s" % [recording.time.year, recording.time.month, recording.time.day]
-	%ScoreLabel.text = "Score: " + str(int(10 * recording.health_score))
+	%ScoreLabel.text = "Score: " + str(int(100 * recording.health_score))
 	%HeartRateLabel.text = "Heart Rate: %.2f bpm" % recording.heart_rate
 	%HeartRateVariabilityLabel.text = "Heart Rate Variability: %.2f ms" % recording.heart_rate_variability
 	
-	%FourierPulseScoresLabel.text = "Fourier Pulse Scores (%0.3f): %s" % [recording.overall_score_fourier, str(recording.pulse_scores_fourier)]
-	%LinearSlopePulseScoresLabel.text = "Linear Slope Pulse Scores (%0.3f): %s" % [recording.overall_score_linear_slope, str(recording.pulse_scores_linear_slope)]
-	%RisingEdgeAreaPulseScoresLabel.text = "Rising Edge Area Pulse Scores (%0.3f): %s" % [recording.overall_score_rising_edge_area, str(recording.pulse_scores_rising_edge_area)]
-	%PeakDetectionPulseScoresLabel.text = "Peak Detection Pulse Scores (%0.3f): %s" % [recording.overall_score_peak_detection, str(recording.pulse_scores_peak_detection)]
+	%FourierPulseScoresLabel.text = "Fourier Pulse Scores (%0.3f): %s" % [recording.overall_score_fourier, array_to_string_trimmed(recording.pulse_scores_fourier)]
+	%LinearSlopePulseScoresLabel.text = "Linear Slope Pulse Scores (%0.3f): %s" % [recording.overall_score_linear_slope, array_to_string_trimmed(recording.pulse_scores_linear_slope)]
+	%RisingEdgeAreaPulseScoresLabel.text = "Rising Edge Area Pulse Scores (%0.3f): %s" % [recording.overall_score_rising_edge_area, array_to_string_trimmed(recording.pulse_scores_rising_edge_area)]
+	%PeakDetectionPulseScoresLabel.text = "Peak Detection Pulse Scores (%0.3f): %s" % [recording.overall_score_peak_detection, array_to_string_trimmed(recording.pulse_scores_peak_detection)]
 	
 	%Chart.timeWindow = Ref.recorder.recording_length
 	%Chart.Initialize(recording.raw_ppg_signal, recording.raw_ppg_signal_timestamps)
@@ -50,3 +50,13 @@ func handle_advanced_info() -> void:
 	%PeakDetectionPulseScoresLabel.visible = show_advanced_info
 	
 	%AdvancedButton.text = "Hide Advanced Info" if show_advanced_info else "Show Advanced Info"
+
+func array_to_string_trimmed(array: PackedFloat64Array) -> String:
+	if len(array) == 0:
+		return "[]"
+	
+	var output: String = "["
+	for value in array:
+		output += "%.5f" % value + ", "
+	output = output.substr(0, len(output) - 2) + "]" # Trim the trailing comma
+	return output
