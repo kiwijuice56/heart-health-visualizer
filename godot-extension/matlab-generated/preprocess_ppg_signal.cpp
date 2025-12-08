@@ -214,6 +214,8 @@ static void MultiWordNeg(const unsigned int u1[], unsigned int y[]);
 static void MultiWordSetUnsignedMax(unsigned int y[]);
 static void MultiWordSub(const unsigned int u1[], const unsigned int u2[],
   unsigned int y[], int n);
+static void binary_expand_op(coder::array<double, 1U> &in1, const coder::array<
+  double, 2U> &in2, const double in3[2]);
 namespace coder
 {
   static void b_abs(const array<double, 2U> &x, array<double, 2U> &y);
@@ -225,8 +227,8 @@ namespace coder
     int, 1U> &c, array<int, 1U> &ia, array<int, 1U> &ib);
   static double dot(const double a_data[], const int a_size[2], const array<
                     double, 2U> &b);
-  static void filter(const array<double, 2U> &x, array<double, 2U> &y);
   static void filter(const double x[500], double y[500]);
+  static void filter(const array<double, 2U> &x, array<double, 2U> &y);
   static void findpeaks(const double Yin[426], double Ypk_data[], int Ypk_size[2],
                         double Xpk_data[], int Xpk_size[2]);
   static void findpeaks(const array<double, 2U> &Yin, array<double, 2U> &Ypk,
@@ -254,13 +256,13 @@ namespace coder
   }
 
   static void interp1(const array<double, 2U> &varargin_1, const array<double,
-                      2U> &varargin_2, const double varargin_3[500], double Vq
-                      [500]);
-  static void interp1(const array<double, 2U> &varargin_1, const array<double,
                       2U> &varargin_2, const array<double, 2U> &varargin_3,
                       array<double, 2U> &Vq);
+  static void interp1(const array<double, 2U> &varargin_1, const array<double,
+                      2U> &varargin_2, const double varargin_3[500], double Vq
+                      [500]);
   static void linspace(double d2, double y[500]);
-  static void linspace(double d1, double d2, const int64m_T n, array<double, 2U>
+  static void linspace(double d1, double d2, const int64m_T N, array<double, 2U>
                        &y);
   static void pchip(const array<double, 2U> &x, const array<double, 2U> &y,
                     array<double, 2U> &v_breaks, array<double, 2U> &v_coefs);
@@ -270,8 +272,6 @@ namespace coder
 
 static double find_pulse_points(const double processed_pulse[500], double
   &diastolic_peak, double &dicrotic_notch);
-static void minus(coder::array<double, 1U> &in1, const coder::array<double, 1U>
-                  &in2);
 static double sMultiWord2Double(const unsigned int u1[]);
 static void sMultiWord2MultiWord(const unsigned int u1[], unsigned int y[], int
   n);
@@ -1515,22 +1515,24 @@ namespace coder
         double hcostabinv[256];
         double hsintab[256];
         double hsintabinv[256];
-        double b_temp_re_tmp;
+        double im;
+        double re;
         double temp_im;
         double temp_re;
+        double temp_re_tmp;
         double twid_im;
         double twid_re;
-        double ytmp_re_tmp;
-        int i;
+        int b_i;
+        int b_temp_re_tmp;
+        int iDelta;
+        int iDelta2;
         int iheight;
         int ihi;
-        int istart;
         int iy;
         int ju;
         int k;
-        int temp_re_tmp;
         bool tst;
-        for (i = 0; i < 256; i++) {
+        for (int i{0}; i < 256; i++) {
           iy = ((i + 1) << 1) - 2;
           hcostab[i] = dv[iy];
           hsintab[i] = b_dv[iy];
@@ -1538,20 +1540,21 @@ namespace coder
           hsintabinv[i] = sintabinv[iy];
         }
 
-        for (iy = 0; iy < 250; iy++) {
-          temp_re_tmp = iy << 1;
-          temp_re = x[temp_re_tmp];
-          temp_im = x[temp_re_tmp + 1];
-          ytmp_re_tmp = wwc[iy + 249].re;
-          twid_re = wwc[iy + 249].im;
-          ytmp[iy].re = ytmp_re_tmp * temp_re + twid_re * temp_im;
-          ytmp[iy].im = ytmp_re_tmp * temp_im - twid_re * temp_re;
+        for (int i{0}; i < 250; i++) {
+          iy = i << 1;
+          temp_re = x[iy];
+          temp_im = x[iy + 1];
+          temp_re_tmp = wwc[i + 249].re;
+          re = wwc[i + 249].im;
+          ytmp[i].re = temp_re_tmp * temp_re + re * temp_im;
+          ytmp[i].im = temp_re_tmp * temp_im - re * temp_re;
         }
 
+        std::memset(&fv[0], 0, 512U * sizeof(creal_T));
         std::memset(&fy[0], 0, 512U * sizeof(creal_T));
         iy = 0;
         ju = 0;
-        for (i = 0; i < 249; i++) {
+        for (int i{0}; i < 249; i++) {
           fy[iy] = ytmp[i];
           iy = 512;
           tst = true;
@@ -1565,66 +1568,66 @@ namespace coder
         }
 
         fy[iy] = ytmp[249];
-        for (i = 0; i <= 510; i += 2) {
-          b_temp_re_tmp = fy[i + 1].re;
-          ytmp_re_tmp = fy[i + 1].im;
-          temp_im = ytmp_re_tmp;
-          temp_re = fy[i].re;
-          twid_im = fy[i].im;
-          fy[i + 1].re = temp_re - b_temp_re_tmp;
-          ytmp_re_tmp = twid_im - ytmp_re_tmp;
-          fy[i + 1].im = ytmp_re_tmp;
-          fy[i].re = temp_re + b_temp_re_tmp;
-          fy[i].im = twid_im + temp_im;
+        for (int i{0}; i <= 510; i += 2) {
+          temp_re = fy[i + 1].re;
+          temp_re_tmp = fy[i + 1].im;
+          temp_im = temp_re_tmp;
+          re = fy[i].re;
+          im = fy[i].im;
+          fy[i + 1].re = re - temp_re;
+          temp_re_tmp = im - temp_re_tmp;
+          fy[i + 1].im = temp_re_tmp;
+          re += temp_re;
+          fy[i].re = re;
+          fy[i].im = im + temp_im;
         }
 
-        iy = 2;
-        ju = 4;
+        iDelta = 2;
+        iDelta2 = 4;
         k = 128;
         iheight = 509;
         while (k > 0) {
-          for (i = 0; i < iheight; i += ju) {
-            temp_re_tmp = i + iy;
-            temp_re = fy[temp_re_tmp].re;
-            temp_im = fy[temp_re_tmp].im;
-            fy[temp_re_tmp].re = fy[i].re - temp_re;
-            fy[temp_re_tmp].im = fy[i].im - temp_im;
-            fy[i].re += temp_re;
-            fy[i].im += temp_im;
+          for (b_i = 0; b_i < iheight; b_i += iDelta2) {
+            iy = b_i + iDelta;
+            temp_re = fy[iy].re;
+            temp_im = fy[iy].im;
+            fy[iy].re = fy[b_i].re - temp_re;
+            fy[iy].im = fy[b_i].im - temp_im;
+            fy[b_i].re += temp_re;
+            fy[b_i].im += temp_im;
           }
 
-          istart = 1;
-          for (int j{k}; j < 256; j += k) {
-            twid_re = hcostab[j];
-            twid_im = hsintab[j];
-            i = istart;
-            ihi = istart + iheight;
-            while (i < ihi) {
-              temp_re_tmp = i + iy;
-              b_temp_re_tmp = fy[temp_re_tmp].im;
-              temp_im = fy[temp_re_tmp].re;
-              temp_re = twid_re * temp_im - twid_im * b_temp_re_tmp;
-              temp_im = twid_re * b_temp_re_tmp + twid_im * temp_im;
-              fy[temp_re_tmp].re = fy[i].re - temp_re;
-              fy[temp_re_tmp].im = fy[i].im - temp_im;
-              fy[i].re += temp_re;
-              fy[i].im += temp_im;
-              i += ju;
+          iy = 1;
+          for (ju = k; ju < 256; ju += k) {
+            twid_re = hcostab[ju];
+            twid_im = hsintab[ju];
+            b_i = iy;
+            ihi = iy + iheight;
+            while (b_i < ihi) {
+              b_temp_re_tmp = b_i + iDelta;
+              temp_re_tmp = fy[b_temp_re_tmp].im;
+              temp_im = fy[b_temp_re_tmp].re;
+              temp_re = twid_re * temp_im - twid_im * temp_re_tmp;
+              temp_im = twid_re * temp_re_tmp + twid_im * temp_im;
+              fy[b_temp_re_tmp].re = fy[b_i].re - temp_re;
+              fy[b_temp_re_tmp].im = fy[b_i].im - temp_im;
+              fy[b_i].re += temp_re;
+              fy[b_i].im += temp_im;
+              b_i += iDelta2;
             }
 
-            istart++;
+            iy++;
           }
 
-          k /= 2;
-          iy = ju;
-          ju += ju;
-          iheight -= iy;
+          k >>= 1;
+          iDelta = iDelta2;
+          iDelta2 += iDelta2;
+          iheight -= iDelta;
         }
 
-        std::memset(&fv[0], 0, 512U * sizeof(creal_T));
         iy = 0;
         ju = 0;
-        for (i = 0; i < 498; i++) {
+        for (int i{0}; i < 498; i++) {
           fv[iy] = wwc[i];
           iy = 512;
           tst = true;
@@ -1638,74 +1641,75 @@ namespace coder
         }
 
         fv[iy] = wwc[498];
-        for (i = 0; i <= 510; i += 2) {
-          b_temp_re_tmp = fv[i + 1].re;
-          ytmp_re_tmp = fv[i + 1].im;
-          temp_im = ytmp_re_tmp;
-          temp_re = fv[i].re;
-          twid_im = fv[i].im;
-          fv[i + 1].re = temp_re - b_temp_re_tmp;
-          ytmp_re_tmp = twid_im - ytmp_re_tmp;
-          fv[i + 1].im = ytmp_re_tmp;
-          fv[i].re = temp_re + b_temp_re_tmp;
-          fv[i].im = twid_im + temp_im;
+        for (int i{0}; i <= 510; i += 2) {
+          temp_re = fv[i + 1].re;
+          re = fv[i + 1].im;
+          temp_im = re;
+          im = fv[i].re;
+          temp_re_tmp = fv[i].im;
+          fv[i + 1].re = im - temp_re;
+          re = temp_re_tmp - re;
+          fv[i + 1].im = re;
+          im += temp_re;
+          fv[i].re = im;
+          fv[i].im = temp_re_tmp + temp_im;
         }
 
-        iy = 2;
-        ju = 4;
+        iDelta = 2;
+        iDelta2 = 4;
         k = 128;
         iheight = 509;
         while (k > 0) {
-          for (i = 0; i < iheight; i += ju) {
-            temp_re_tmp = i + iy;
-            temp_re = fv[temp_re_tmp].re;
-            temp_im = fv[temp_re_tmp].im;
-            fv[temp_re_tmp].re = fv[i].re - temp_re;
-            fv[temp_re_tmp].im = fv[i].im - temp_im;
-            fv[i].re += temp_re;
-            fv[i].im += temp_im;
+          for (b_i = 0; b_i < iheight; b_i += iDelta2) {
+            iy = b_i + iDelta;
+            temp_re = fv[iy].re;
+            temp_im = fv[iy].im;
+            fv[iy].re = fv[b_i].re - temp_re;
+            fv[iy].im = fv[b_i].im - temp_im;
+            fv[b_i].re += temp_re;
+            fv[b_i].im += temp_im;
           }
 
-          istart = 1;
-          for (int j{k}; j < 256; j += k) {
-            twid_re = hcostab[j];
-            twid_im = hsintab[j];
-            i = istart;
-            ihi = istart + iheight;
-            while (i < ihi) {
-              temp_re_tmp = i + iy;
-              b_temp_re_tmp = fv[temp_re_tmp].im;
-              temp_im = fv[temp_re_tmp].re;
-              temp_re = twid_re * temp_im - twid_im * b_temp_re_tmp;
-              temp_im = twid_re * b_temp_re_tmp + twid_im * temp_im;
-              fv[temp_re_tmp].re = fv[i].re - temp_re;
-              fv[temp_re_tmp].im = fv[i].im - temp_im;
-              fv[i].re += temp_re;
-              fv[i].im += temp_im;
-              i += ju;
+          iy = 1;
+          for (ju = k; ju < 256; ju += k) {
+            twid_re = hcostab[ju];
+            twid_im = hsintab[ju];
+            b_i = iy;
+            ihi = iy + iheight;
+            while (b_i < ihi) {
+              b_temp_re_tmp = b_i + iDelta;
+              re = fv[b_temp_re_tmp].im;
+              im = fv[b_temp_re_tmp].re;
+              temp_re = twid_re * im - twid_im * re;
+              temp_im = twid_re * re + twid_im * im;
+              fv[b_temp_re_tmp].re = fv[b_i].re - temp_re;
+              fv[b_temp_re_tmp].im = fv[b_i].im - temp_im;
+              fv[b_i].re += temp_re;
+              fv[b_i].im += temp_im;
+              b_i += iDelta2;
             }
 
-            istart++;
+            iy++;
           }
 
-          k /= 2;
-          iy = ju;
-          ju += ju;
-          iheight -= iy;
+          k >>= 1;
+          iDelta = iDelta2;
+          iDelta2 += iDelta2;
+          iheight -= iDelta;
         }
 
-        for (iy = 0; iy < 512; iy++) {
-          temp_re = fy[iy].re;
-          twid_im = fv[iy].im;
-          temp_im = fy[iy].im;
-          twid_re = fv[iy].re;
-          fy[iy].re = temp_re * twid_re - temp_im * twid_im;
-          fy[iy].im = temp_re * twid_im + temp_im * twid_re;
+        for (int i{0}; i < 512; i++) {
+          temp_re_tmp = fy[i].re;
+          re = fv[i].im;
+          im = fy[i].im;
+          temp_im = fv[i].re;
+          fy[i].re = temp_re_tmp * temp_im - im * re;
+          fy[i].im = temp_re_tmp * re + im * temp_im;
         }
 
         iy = 0;
         ju = 0;
-        for (i = 0; i < 511; i++) {
+        for (int i{0}; i < 511; i++) {
           fv[iy] = fy[i];
           iy = 512;
           tst = true;
@@ -1719,98 +1723,96 @@ namespace coder
         }
 
         fv[iy] = fy[511];
-        for (i = 0; i <= 510; i += 2) {
-          b_temp_re_tmp = fv[i + 1].re;
-          ytmp_re_tmp = fv[i + 1].im;
-          temp_im = ytmp_re_tmp;
-          temp_re = fv[i].re;
-          twid_im = fv[i].im;
-          fv[i + 1].re = temp_re - b_temp_re_tmp;
-          ytmp_re_tmp = twid_im - ytmp_re_tmp;
-          fv[i + 1].im = ytmp_re_tmp;
-          fv[i].re = temp_re + b_temp_re_tmp;
-          fv[i].im = twid_im + temp_im;
+        for (int i{0}; i <= 510; i += 2) {
+          temp_re = fv[i + 1].re;
+          re = fv[i + 1].im;
+          temp_im = re;
+          im = fv[i].re;
+          temp_re_tmp = fv[i].im;
+          fv[i + 1].re = im - temp_re;
+          re = temp_re_tmp - re;
+          fv[i + 1].im = re;
+          im += temp_re;
+          fv[i].re = im;
+          fv[i].im = temp_re_tmp + temp_im;
         }
 
-        iy = 2;
-        ju = 4;
+        iDelta = 2;
+        iDelta2 = 4;
         k = 128;
         iheight = 509;
         while (k > 0) {
-          for (i = 0; i < iheight; i += ju) {
-            temp_re_tmp = i + iy;
-            temp_re = fv[temp_re_tmp].re;
-            temp_im = fv[temp_re_tmp].im;
-            fv[temp_re_tmp].re = fv[i].re - temp_re;
-            fv[temp_re_tmp].im = fv[i].im - temp_im;
-            fv[i].re += temp_re;
-            fv[i].im += temp_im;
+          for (b_i = 0; b_i < iheight; b_i += iDelta2) {
+            iy = b_i + iDelta;
+            temp_re = fv[iy].re;
+            temp_im = fv[iy].im;
+            fv[iy].re = fv[b_i].re - temp_re;
+            fv[iy].im = fv[b_i].im - temp_im;
+            fv[b_i].re += temp_re;
+            fv[b_i].im += temp_im;
           }
 
-          istart = 1;
-          for (int j{k}; j < 256; j += k) {
-            twid_re = hcostabinv[j];
-            twid_im = hsintabinv[j];
-            i = istart;
-            ihi = istart + iheight;
-            while (i < ihi) {
-              temp_re_tmp = i + iy;
-              b_temp_re_tmp = fv[temp_re_tmp].im;
-              temp_im = fv[temp_re_tmp].re;
-              temp_re = twid_re * temp_im - twid_im * b_temp_re_tmp;
-              temp_im = twid_re * b_temp_re_tmp + twid_im * temp_im;
-              fv[temp_re_tmp].re = fv[i].re - temp_re;
-              fv[temp_re_tmp].im = fv[i].im - temp_im;
-              fv[i].re += temp_re;
-              fv[i].im += temp_im;
-              i += ju;
+          iy = 1;
+          for (ju = k; ju < 256; ju += k) {
+            twid_re = hcostabinv[ju];
+            twid_im = hsintabinv[ju];
+            b_i = iy;
+            ihi = iy + iheight;
+            while (b_i < ihi) {
+              b_temp_re_tmp = b_i + iDelta;
+              re = fv[b_temp_re_tmp].im;
+              im = fv[b_temp_re_tmp].re;
+              temp_re = twid_re * im - twid_im * re;
+              temp_im = twid_re * re + twid_im * im;
+              fv[b_temp_re_tmp].re = fv[b_i].re - temp_re;
+              fv[b_temp_re_tmp].im = fv[b_i].im - temp_im;
+              fv[b_i].re += temp_re;
+              fv[b_i].im += temp_im;
+              b_i += iDelta2;
             }
 
-            istart++;
+            iy++;
           }
 
-          k /= 2;
-          iy = ju;
-          ju += ju;
-          iheight -= iy;
+          k >>= 1;
+          iDelta = iDelta2;
+          iDelta2 += iDelta2;
+          iheight -= iDelta;
         }
 
-        for (iy = 0; iy < 512; iy++) {
-          fv[iy].re *= 0.001953125;
-          fv[iy].im *= 0.001953125;
+        for (int i{0}; i < 512; i++) {
+          fv[i].re *= 0.001953125;
+          fv[i].im *= 0.001953125;
         }
 
-        for (k = 0; k < 250; k++) {
-          ytmp_re_tmp = wwc[k + 249].re;
-          twid_re = fv[k + 249].im;
-          twid_im = wwc[k + 249].im;
-          temp_im = fv[k + 249].re;
-          ytmp[k].re = ytmp_re_tmp * temp_im + twid_im * twid_re;
-          ytmp[k].im = ytmp_re_tmp * twid_re - twid_im * temp_im;
+        for (int i{0}; i < 250; i++) {
+          temp_re_tmp = wwc[i + 249].re;
+          re = fv[i + 249].im;
+          im = wwc[i + 249].im;
+          temp_im = fv[i + 249].re;
+          ytmp[i].re = temp_re_tmp * temp_im + im * re;
+          ytmp[i].im = temp_re_tmp * re - im * temp_im;
         }
 
-        for (i = 0; i < 250; i++) {
-          double b_ytmp_re_tmp;
-          double c_ytmp_re_tmp;
-          temp_im = ytmp[i].re;
-          twid_re = reconVar1[i].im;
-          twid_im = ytmp[i].im;
-          temp_re = reconVar1[i].re;
+        for (int i{0}; i < 250; i++) {
+          double ytmp_re_tmp;
+          re = ytmp[i].re;
+          im = reconVar1[i].im;
+          temp_re_tmp = ytmp[i].im;
+          temp_im = reconVar1[i].re;
           iy = uv[i] - 1;
-          ytmp_re_tmp = ytmp[iy].re;
-          b_temp_re_tmp = -ytmp[iy].im;
-          b_ytmp_re_tmp = reconVar2[i].im;
-          c_ytmp_re_tmp = reconVar2[i].re;
-          y[i].re = 0.5 * ((temp_im * temp_re - twid_im * twid_re) +
-                           (ytmp_re_tmp * c_ytmp_re_tmp - b_temp_re_tmp *
-                            b_ytmp_re_tmp));
-          y[i].im = 0.5 * ((temp_im * twid_re + twid_im * temp_re) +
-                           (ytmp_re_tmp * b_ytmp_re_tmp + b_temp_re_tmp *
-                            c_ytmp_re_tmp));
-          y[i + 250].re = 0.5 * ((temp_im * c_ytmp_re_tmp - twid_im *
-            b_ytmp_re_tmp) + (ytmp_re_tmp * temp_re - b_temp_re_tmp * twid_re));
-          y[i + 250].im = 0.5 * ((temp_im * b_ytmp_re_tmp + twid_im *
-            c_ytmp_re_tmp) + (ytmp_re_tmp * twid_re + b_temp_re_tmp * temp_re));
+          twid_re = ytmp[iy].re;
+          twid_im = -ytmp[iy].im;
+          temp_re = reconVar2[i].im;
+          ytmp_re_tmp = reconVar2[i].re;
+          y[i].re = 0.5 * ((re * temp_im - temp_re_tmp * im) + (twid_re *
+            ytmp_re_tmp - twid_im * temp_re));
+          y[i].im = 0.5 * ((re * im + temp_re_tmp * temp_im) + (twid_re *
+            temp_re + twid_im * ytmp_re_tmp));
+          y[i + 250].re = 0.5 * ((re * ytmp_re_tmp - temp_re_tmp * temp_re) +
+            (twid_re * temp_im - twid_im * im));
+          y[i + 250].im = 0.5 * ((re * temp_re + temp_re_tmp * ytmp_re_tmp) +
+            (twid_re * im + twid_im * temp_im));
         }
       }
     }
@@ -1825,15 +1827,15 @@ static int MultiWord2sLong(const unsigned int u[])
 static void MultiWordAdd(const unsigned int u1[], const unsigned int u2[],
   unsigned int y[])
 {
-  int carry{ 0 };
+  unsigned int carry{ 0U };
 
   for (int i{0}; i < 2; i++) {
     unsigned int u1i;
     unsigned int yi;
     u1i = u1[i];
-    yi = (u1i + u2[i]) + static_cast<unsigned int>(carry);
+    yi = (u1i + u2[i]) + carry;
     y[i] = yi;
-    if (carry != 0) {
+    if (carry != 0U) {
       carry = (yi <= u1i);
     } else {
       carry = (yi < u1i);
@@ -1843,13 +1845,13 @@ static void MultiWordAdd(const unsigned int u1[], const unsigned int u2[],
 
 static void MultiWordNeg(const unsigned int u1[], unsigned int y[])
 {
-  int carry{ 1 };
+  unsigned int carry{ 1U };
 
   for (int i{0}; i < 2; i++) {
     unsigned int yi;
-    yi = ~u1[i] + static_cast<unsigned int>(carry);
+    yi = ~u1[i] + carry;
     y[i] = yi;
-    carry = (yi < static_cast<unsigned int>(carry));
+    carry = (yi < carry);
   }
 }
 
@@ -1863,15 +1865,15 @@ static void MultiWordSetUnsignedMax(unsigned int y[])
 static void MultiWordSub(const unsigned int u1[], const unsigned int u2[],
   unsigned int y[], int n)
 {
-  int borrow{ 0 };
+  unsigned int borrow{ 0U };
 
   for (int i{0}; i < n; i++) {
     unsigned int u1i;
     unsigned int yi;
     u1i = u1[i];
-    yi = (u1i - u2[i]) - static_cast<unsigned int>(borrow);
+    yi = (u1i - u2[i]) - borrow;
     y[i] = yi;
-    if (borrow != 0) {
+    if (borrow != 0U) {
       borrow = (yi >= u1i);
     } else {
       borrow = (yi > u1i);
@@ -1879,14 +1881,56 @@ static void MultiWordSub(const unsigned int u1[], const unsigned int u2[],
   }
 }
 
+static void binary_expand_op(coder::array<double, 1U> &in1, const coder::array<
+  double, 2U> &in2, const double in3[2])
+{
+  coder::array<double, 1U> b_in1;
+  coder::array<double, 1U> b_in2;
+  int loop_ub;
+  int stride_0_0;
+  int stride_1_0;
+  stride_0_0 = in2.size(0);
+  b_in2.set_size(stride_0_0);
+  if (stride_0_0 - 1 >= 0) {
+    std::memset(&b_in2[0], 0, static_cast<unsigned int>(stride_0_0) * sizeof
+                (double));
+  }
+
+  for (int i{0}; i < 2; i++) {
+    double d;
+    d = in3[i];
+    for (int i1{0}; i1 < stride_0_0; i1++) {
+      b_in2[i1] = b_in2[i1] + in2[i1 + in2.size(0) * i] * d;
+    }
+  }
+
+  if (b_in2.size(0) == 1) {
+    loop_ub = in1.size(0);
+  } else {
+    loop_ub = b_in2.size(0);
+  }
+
+  b_in1.set_size(loop_ub);
+  stride_0_0 = (in1.size(0) != 1);
+  stride_1_0 = (b_in2.size(0) != 1);
+  for (int i{0}; i < loop_ub; i++) {
+    b_in1[i] = in1[i * stride_0_0] - b_in2[i * stride_1_0];
+  }
+
+  in1.set_size(loop_ub);
+  for (int i{0}; i < loop_ub; i++) {
+    in1[i] = b_in1[i];
+  }
+}
+
 namespace coder
 {
   static void b_abs(const array<double, 2U> &x, array<double, 2U> &y)
   {
-    int nx_tmp;
-    nx_tmp = x.size(1);
+    int nx;
+    nx = x.size(1);
     y.set_size(1, x.size(1));
-    for (int k{0}; k < nx_tmp; k++) {
+    for (int k{0}; k < nx; k++) {
       y[k] = std::abs(x[k]);
     }
   }
@@ -1904,7 +1948,6 @@ namespace coder
     int idx_data[1000];
     int fPk_data[500];
     int iInfinite_data[500];
-    int i;
     int kfirst;
     int nInf;
     int nPk;
@@ -1914,7 +1957,7 @@ namespace coder
     nPk = -1;
     nInf = -1;
     dir = 'n';
-    kfirst = -1;
+    kfirst = 0;
     ykfirst = rtInf;
     isinfykfirst = true;
     for (int k{0}; k < 500; k++) {
@@ -1941,82 +1984,76 @@ namespace coder
           dir = 'd';
           if (previousdir == 'i') {
             nPk++;
-            iFinite_data[nPk] = static_cast<short>(kfirst + 1);
+            iFinite_data[nPk] = static_cast<short>(kfirst);
           }
         } else {
           dir = 'i';
         }
 
         ykfirst = yk;
-        kfirst = k;
+        kfirst = k + 1;
         isinfykfirst = isinfyk;
       }
     }
 
+    kfirst = 0;
     if (nPk + 1 < 1) {
       nPk = -1;
     }
 
-    i = nPk + 1;
+    nPk++;
+    for (int k{0}; k < nPk; k++) {
+      short i;
+      i = iFinite_data[k];
+      ykfirst = Yin[i - 1];
+      if ((ykfirst > rtMinusInf) && (ykfirst - std::fmax(Yin[i - 2], Yin[i]) >=
+           0.0)) {
+        kfirst++;
+        fPk_data[kfirst - 1] = i;
+      }
+    }
+
+    if (kfirst < 1) {
+      kfirst = 0;
+    }
+
+    b_fPk_data.set(&fPk_data[0], kfirst);
     if (nInf + 1 < 1) {
       nInf = -1;
     }
 
-    nInf++;
-    nPk = 0;
-    for (int k{0}; k < i; k++) {
-      short i1;
-      i1 = iFinite_data[k];
-      ykfirst = Yin[i1 - 1];
-      if ((ykfirst > rtMinusInf) && (ykfirst - std::fmax(Yin[i1 - 2], Yin[i1]) >=
-           0.0)) {
-        nPk++;
-        fPk_data[nPk - 1] = i1;
-      }
-    }
-
-    if (nPk < 1) {
-      kfirst = 0;
-    } else {
-      kfirst = nPk;
-    }
-
-    b_fPk_data.set(&fPk_data[0], kfirst);
-    b_iInfinite_data.set(&iInfinite_data[0], nInf);
+    b_iInfinite_data.set(&iInfinite_data[0], nInf + 1);
     do_vectors(b_fPk_data, b_iInfinite_data, c, ia, ib);
-    nInf = c.size(0);
+    kfirst = c.size(0);
     y.set_size(1, c.size(0));
     if (c.size(0) > 0) {
       y[0] = 1;
-      kfirst = 1;
-      for (int k{2}; k <= nInf; k++) {
-        kfirst++;
-        y[k - 1] = kfirst;
+      nPk = 1;
+      for (int k{2}; k <= kfirst; k++) {
+        nPk++;
+        y[k - 1] = nPk;
       }
     }
 
-    kfirst = c.size(0);
-    for (i = 0; i < nInf; i++) {
-      idx_data[i] = y[i];
+    if (kfirst - 1 >= 0) {
+      std::copy(&y[0], &y[kfirst], &idx_data[0]);
     }
 
-    if (kfirst > 500) {
+    if (c.size(0) > 500) {
       kfirst = 500;
-    } else {
-      kfirst = c.size(0);
     }
 
-    for (i = 0; i < kfirst; i++) {
-      fPk_data[i] = c[idx_data[i] - 1];
+    for (int k{0}; k < kfirst; k++) {
+      fPk_data[k] = c[idx_data[k] - 1];
     }
 
     Ypk_size[0] = 1;
     Ypk_size[1] = kfirst;
     Xpk_size[0] = 1;
     Xpk_size[1] = kfirst;
-    for (i = 0; i < kfirst; i++) {
-      Ypk_data[i] = Yin[fPk_data[i] - 1];
-      Xpk_data[i] = static_cast<short>(static_cast<short>(fPk_data[i] - 1) + 1);
+    for (int k{0}; k < kfirst; k++) {
+      Ypk_data[k] = Yin[fPk_data[k] - 1];
+      Xpk_data[k] = static_cast<short>(static_cast<short>(fPk_data[k] - 1) + 1);
     }
   }
 
@@ -2049,19 +2086,19 @@ namespace coder
         y += x[k - 1];
       }
 
-      for (int ib{2}; ib <= nblocks; ib++) {
+      for (int k{2}; k <= nblocks; k++) {
         double bsum;
         int hi;
-        firstBlockLength = (ib - 1) << 10;
+        firstBlockLength = (k - 1) << 10;
         bsum = x[firstBlockLength];
-        if (ib == nblocks) {
+        if (k == nblocks) {
           hi = lastBlockLength;
         } else {
           hi = 1024;
         }
 
-        for (int k{2}; k <= hi; k++) {
-          bsum += x[(firstBlockLength + k) - 1];
+        for (int b_k{2}; b_k <= hi; b_k++) {
+          bsum += x[(firstBlockLength + b_k) - 1];
         }
 
         y += bsum;
@@ -2080,36 +2117,34 @@ namespace coder
     array<double, 1U> sOriginalType;
     array<int, 2U> b_y;
     double tau_data[2];
-    int i;
-    int loop_ub;
-    int maxmn;
-    int n_tmp;
+    int m;
+    int n;
     int yk;
-    loop_ub = x.size(1);
+    m = x.size(1);
     b_y1.set_size(x.size(1));
-    for (i = 0; i < loop_ub; i++) {
-      b_y1[i] = x[i];
+    for (int k{0}; k < m; k++) {
+      b_y1[k] = x[k];
     }
 
     if (b_y1.size(0) - 1 < 0) {
-      n_tmp = 0;
+      n = 0;
     } else {
-      n_tmp = b_y1.size(0);
+      n = b_y1.size(0);
     }
 
-    b_y.set_size(1, n_tmp);
-    if (n_tmp > 0) {
+    b_y.set_size(1, n);
+    if (n > 0) {
       b_y[0] = 0;
       yk = 0;
-      for (maxmn = 2; maxmn <= n_tmp; maxmn++) {
+      for (int k{2}; k <= n; k++) {
         yk++;
-        b_y[maxmn - 1] = yk;
+        b_y[k - 1] = yk;
       }
     }
 
-    sOriginalType.set_size(n_tmp);
-    for (i = 0; i < n_tmp; i++) {
-      sOriginalType[i] = b_y[i];
+    sOriginalType.set_size(n);
+    for (int k{0}; k < n; k++) {
+      sOriginalType[k] = b_y[k];
     }
 
     if (b_y1.size(0) != 0) {
@@ -2119,29 +2154,27 @@ namespace coder
         double p[2];
         double tol;
         int jpvt[2];
+        int maxmn;
         int rr;
-        a.set_size(n_tmp);
-        for (int b_i{0}; b_i < n_tmp; b_i++) {
-          a[b_i] = sOriginalType[b_i] - sOriginalType[0];
+        a.set_size(n);
+        for (int k{0}; k < n; k++) {
+          a[k] = sOriginalType[k] - sOriginalType[0];
+          a[k] = a[k] / sOriginalType[sOriginalType.size(0) - 1];
         }
 
-        for (i = 0; i < n_tmp; i++) {
-          a[i] = a[i] / sOriginalType[sOriginalType.size(0) - 1];
-        }
-
-        W.set_size(n_tmp, 2);
-        for (int b_i{0}; b_i < n_tmp; b_i++) {
-          tol = a[b_i];
+        W.set_size(n, 2);
+        for (int k{0}; k < n; k++) {
+          tol = a[k];
           tol = std::fmax(tol, 0.0);
-          a[b_i] = tol;
-          W[b_i] = tol;
-          W[b_i + W.size(0)] = 1.0;
+          a[k] = tol;
+          W[k] = tol;
+          W[k + W.size(0)] = 1.0;
         }
 
-        A.set_size(n_tmp, 2);
+        A.set_size(n, 2);
         yk = W.size(0) << 1;
-        for (i = 0; i < yk; i++) {
-          A[i] = W[i];
+        if (yk - 1 >= 0) {
+          std::copy(&W[0], &W[yk], &A[0]);
         }
 
         internal::lapack::xgeqp3(A, tau_data, jpvt);
@@ -2163,68 +2196,63 @@ namespace coder
         }
 
         sOriginalType.set_size(x.size(1));
-        for (i = 0; i < loop_ub; i++) {
-          sOriginalType[i] = b_y1[i];
-        }
-
+        std::copy(&b_y1[0], &b_y1[m], &sOriginalType[0]);
         p[0] = 0.0;
         p[1] = 0.0;
-        yk = A.size(0);
-        if (yk > 2) {
-          yk = 2;
+        maxmn = A.size(0);
+        if (maxmn > 2) {
+          maxmn = 2;
         }
 
-        for (int j{0}; j < yk; j++) {
-          maxmn = A.size(0);
+        for (int j{0}; j < maxmn; j++) {
+          m = A.size(0);
           if (tau_data[j] != 0.0) {
             tol = sOriginalType[j];
-            i = j + 2;
-            for (int b_i{i}; b_i <= maxmn; b_i++) {
-              tol += A[(b_i + A.size(0) * j) - 1] * sOriginalType[b_i - 1];
+            yk = j + 2;
+            for (int k{yk}; k <= m; k++) {
+              tol += A[(k + A.size(0) * j) - 1] * sOriginalType[k - 1];
             }
 
             tol *= tau_data[j];
             if (tol != 0.0) {
               sOriginalType[j] = sOriginalType[j] - tol;
-              for (int b_i{i}; b_i <= maxmn; b_i++) {
-                sOriginalType[b_i - 1] = sOriginalType[b_i - 1] - A[(b_i +
-                  A.size(0) * j) - 1] * tol;
+              yk = j + 2;
+              for (int k{yk}; k <= m; k++) {
+                sOriginalType[k - 1] = sOriginalType[k - 1] - A[(k + A.size(0) *
+                  j) - 1] * tol;
               }
             }
           }
         }
 
-        for (int b_i{0}; b_i < rr; b_i++) {
-          p[jpvt[b_i] - 1] = sOriginalType[b_i];
+        for (int k{0}; k < rr; k++) {
+          p[jpvt[k] - 1] = sOriginalType[k];
         }
 
-        for (int j{rr}; j >= 1; j--) {
-          yk = jpvt[j - 1] - 1;
-          p[yk] /= A[(j + A.size(0) * (j - 1)) - 1];
-          for (int b_i{0}; b_i <= j - 2; b_i++) {
-            p[jpvt[0] - 1] -= p[yk] * A[A.size(0) * (j - 1)];
+        for (int k{rr}; k >= 1; k--) {
+          yk = jpvt[k - 1] - 1;
+          maxmn = A.size(0) * (k - 1);
+          p[yk] /= A[(k + maxmn) - 1];
+          for (int j{0}; j <= k - 2; j++) {
+            p[jpvt[0] - 1] -= p[yk] * A[maxmn];
           }
         }
 
-        sOriginalType.set_size(n_tmp);
-        for (int b_i{0}; b_i < n_tmp; b_i++) {
-          sOriginalType[b_i] = W[b_i] * p[0] + W[W.size(0) + b_i] * p[1];
-        }
-
-        if (b_y1.size(0) == sOriginalType.size(0)) {
-          for (i = 0; i < loop_ub; i++) {
-            b_y1[i] = b_y1[i] - sOriginalType[i];
+        if (b_y1.size(0) == W.size(0)) {
+          b_y1.set_size(n);
+          for (int k{0}; k < n; k++) {
+            b_y1[k] = b_y1[k] - (W[k] * p[0] + W[k + W.size(0)] * p[1]);
           }
         } else {
-          minus(b_y1, sOriginalType);
+          binary_expand_op(b_y1, W, p);
         }
       }
     }
 
-    loop_ub = b_y1.size(0);
+    yk = b_y1.size(0);
     y.set_size(1, b_y1.size(0));
-    for (i = 0; i < loop_ub; i++) {
-      y[i] = b_y1[i];
+    for (int k{0}; k < yk; k++) {
+      y[k] = b_y1[k];
     }
   }
 
@@ -2232,19 +2260,18 @@ namespace coder
     int, 1U> &c, array<int, 1U> &ia, array<int, 1U> &ib)
   {
     int b_ialast;
-    int b_iblast;
-    int i;
     int iafirst;
     int ialast;
     int ibfirst;
     int iblast;
-    int nb_tmp;
+    int na;
+    int nb;
     int nc;
     int ncmax;
     int nia;
     int nib;
-    i = a.size(0);
-    nb_tmp = b.size(0);
+    na = a.size(0);
+    nb = b.size(0);
     ncmax = a.size(0) + b.size(0);
     c.set_size(ncmax);
     ia.set_size(a.size(0));
@@ -2256,8 +2283,9 @@ namespace coder
     ialast = 0;
     ibfirst = 0;
     iblast = 0;
-    while ((ialast + 1 <= i) && (iblast + 1 <= nb_tmp)) {
+    while ((ialast + 1 <= na) && (iblast + 1 <= nb)) {
       int ak;
+      int b_iblast;
       int bk;
       b_ialast = ialast + 1;
       ak = a[ialast];
@@ -2299,7 +2327,7 @@ namespace coder
       }
     }
 
-    while (ialast + 1 <= i) {
+    while (ialast + 1 <= na) {
       b_ialast = ialast + 1;
       while ((b_ialast < a.size(0)) && (a[b_ialast] == a[ialast])) {
         b_ialast++;
@@ -2313,28 +2341,28 @@ namespace coder
       iafirst = b_ialast + 1;
     }
 
-    while (iblast + 1 <= nb_tmp) {
-      b_iblast = iblast + 1;
-      while ((b_iblast < b.size(0)) && (b[b_iblast] == b[iblast])) {
-        b_iblast++;
+    while (iblast + 1 <= nb) {
+      b_ialast = iblast + 1;
+      while ((b_ialast < b.size(0)) && (b[b_ialast] == b[iblast])) {
+        b_ialast++;
       }
 
       nc++;
       nib++;
       c[nc] = b[iblast];
       ib[nib - 1] = ibfirst + 1;
-      iblast = b_iblast;
-      ibfirst = b_iblast;
+      iblast = b_ialast;
+      ibfirst = b_ialast;
     }
 
     if (a.size(0) > 0) {
       if (nia + 1 < 1) {
-        i = 0;
+        b_ialast = 0;
       } else {
-        i = nia + 1;
+        b_ialast = nia + 1;
       }
 
-      ia.set_size(i);
+      ia.set_size(b_ialast);
     }
 
     if (b.size(0) > 0) {
@@ -2347,12 +2375,12 @@ namespace coder
 
     if (ncmax > 0) {
       if (nc + 1 < 1) {
-        i = 0;
+        b_ialast = 0;
       } else {
-        i = nc + 1;
+        b_ialast = nc + 1;
       }
 
-      c.set_size(i);
+      c.set_size(b_ialast);
     }
   }
 
@@ -2372,6 +2400,66 @@ namespace coder
     return c;
   }
 
+  static void filter(const array<double, 2U> &x, array<double, 2U> &y)
+  {
+    array<double, 1U> b;
+    array<double, 1U> b_y1;
+    int loop_ub;
+    loop_ub = x.size(1);
+    b.set_size(x.size(1));
+    for (int k{0}; k < loop_ub; k++) {
+      b[k] = x[k];
+    }
+
+    b_y1.set_size(x.size(1));
+    if (loop_ub - 1 >= 0) {
+      std::memset(&b_y1[0], 0, static_cast<unsigned int>(loop_ub) * sizeof
+                  (double));
+    }
+
+    if (b.size(0) >= 80) {
+      for (int k{0}; k < 40; k++) {
+        int b_k;
+        b_k = k + 1;
+        for (int j{b_k}; j <= loop_ub; j++) {
+          b_y1[j - 1] = b_y1[j - 1] + 0.025 * b[(j - k) - 1];
+        }
+      }
+    } else {
+      int b_k;
+      int naxpy;
+      int nx_m_nb;
+      if (b.size(0) > 40) {
+        nx_m_nb = b.size(0) - 41;
+      } else {
+        nx_m_nb = -1;
+      }
+
+      for (int k{0}; k <= nx_m_nb; k++) {
+        for (int j{0}; j < 40; j++) {
+          b_k = k + j;
+          b_y1[b_k] = b_y1[b_k] + b[k] * 0.025;
+        }
+      }
+
+      naxpy = b.size(0) - nx_m_nb;
+      b_k = nx_m_nb + 2;
+      for (int k{b_k}; k <= loop_ub; k++) {
+        for (int j{0}; j <= naxpy - 2; j++) {
+          nx_m_nb = (k + j) - 1;
+          b_y1[nx_m_nb] = b_y1[nx_m_nb] + b[k - 1] * 0.025;
+        }
+
+        naxpy--;
+      }
+    }
+
+    y.set_size(1, x.size(1));
+    for (int k{0}; k < loop_ub; k++) {
+      y[k] = b_y1[k];
+    }
+  }
+
   static void filter(const double x[500], double y[500])
   {
     std::memset(&y[0], 0, 500U * sizeof(double));
@@ -2384,61 +2472,128 @@ namespace coder
     }
   }
 
-  static void filter(const array<double, 2U> &x, array<double, 2U> &y)
+  static void findpeaks(const array<double, 2U> &Yin, array<double, 2U> &Ypk,
+                        array<double, 2U> &Xpk)
   {
-    array<double, 1U> b;
-    array<double, 1U> b_y1;
-    int loop_ub;
-    int nx_m_nb;
-    loop_ub = x.size(1);
-    b.set_size(x.size(1));
-    for (nx_m_nb = 0; nx_m_nb < loop_ub; nx_m_nb++) {
-      b[nx_m_nb] = x[nx_m_nb];
-    }
-
-    b_y1.set_size(x.size(1));
-    for (nx_m_nb = 0; nx_m_nb < loop_ub; nx_m_nb++) {
-      b_y1[nx_m_nb] = 0.0;
-    }
-
-    if (b.size(0) >= 80) {
-      for (int k{0}; k < 40; k++) {
-        nx_m_nb = k + 1;
-        for (int j{nx_m_nb}; j <= loop_ub; j++) {
-          b_y1[j - 1] = b_y1[j - 1] + 0.025 * b[(j - k) - 1];
-        }
-      }
-    } else {
-      int naxpy;
-      int y1_tmp;
-      if (b.size(0) > 40) {
-        nx_m_nb = b.size(0) - 41;
+    array<int, 2U> y;
+    array<int, 1U> c;
+    array<int, 1U> fPk;
+    array<int, 1U> iInfinite;
+    array<int, 1U> iPk;
+    array<int, 1U> idx;
+    double ykfirst;
+    int kfirst;
+    int nInf;
+    int nPk;
+    int yk;
+    char dir;
+    bool isinfykfirst;
+    yk = Yin.size(1);
+    fPk.set_size(Yin.size(1));
+    iInfinite.set_size(Yin.size(1));
+    nPk = 0;
+    nInf = 0;
+    dir = 'n';
+    kfirst = 0;
+    ykfirst = rtInf;
+    isinfykfirst = true;
+    for (int k{1}; k <= yk; k++) {
+      double b_yk;
+      bool isinfyk;
+      b_yk = Yin[k - 1];
+      if (std::isnan(b_yk)) {
+        b_yk = rtInf;
+        isinfyk = true;
+      } else if (std::isinf(b_yk) && (b_yk > 0.0)) {
+        isinfyk = true;
+        nInf++;
+        iInfinite[nInf - 1] = k;
       } else {
-        nx_m_nb = -1;
+        isinfyk = false;
       }
 
-      for (int k{0}; k <= nx_m_nb; k++) {
-        for (int j{0}; j < 40; j++) {
-          y1_tmp = k + j;
-          b_y1[y1_tmp] = b_y1[y1_tmp] + b[k] * 0.025;
+      if (b_yk != ykfirst) {
+        char previousdir;
+        previousdir = dir;
+        if (isinfyk || isinfykfirst) {
+          dir = 'n';
+        } else if (b_yk < ykfirst) {
+          dir = 'd';
+          if (previousdir == 'i') {
+            nPk++;
+            fPk[nPk - 1] = kfirst;
+          }
+        } else {
+          dir = 'i';
         }
-      }
 
-      naxpy = b.size(0) - nx_m_nb;
-      nx_m_nb += 2;
-      for (int k{nx_m_nb}; k <= loop_ub; k++) {
-        for (int j{0}; j <= naxpy - 2; j++) {
-          y1_tmp = (k + j) - 1;
-          b_y1[y1_tmp] = b_y1[y1_tmp] + b[k - 1] * 0.025;
-        }
-
-        naxpy--;
+        ykfirst = b_yk;
+        kfirst = k;
+        isinfykfirst = isinfyk;
       }
     }
 
-    y.set_size(1, x.size(1));
-    for (nx_m_nb = 0; nx_m_nb < loop_ub; nx_m_nb++) {
-      y[nx_m_nb] = b_y1[nx_m_nb];
+    if (nPk < 1) {
+      nPk = 0;
+    }
+
+    fPk.set_size(nPk);
+    if (nInf < 1) {
+      nInf = 0;
+    }
+
+    iInfinite.set_size(nInf);
+    iPk.set_size(nPk);
+    nInf = 0;
+    for (int k{0}; k < nPk; k++) {
+      ykfirst = Yin[fPk[k] - 1];
+      if ((ykfirst > rtMinusInf) && (ykfirst - std::fmax(Yin[fPk[k] - 2],
+            Yin[fPk[k]]) >= 0.0)) {
+        nInf++;
+        iPk[nInf - 1] = fPk[k];
+      }
+    }
+
+    if (nInf < 1) {
+      nInf = 0;
+    }
+
+    iPk.set_size(nInf);
+    do_vectors(iPk, iInfinite, c, idx, fPk);
+    nInf = c.size(0);
+    y.set_size(1, c.size(0));
+    if (c.size(0) > 0) {
+      y[0] = 1;
+      yk = 1;
+      for (int k{2}; k <= nInf; k++) {
+        yk++;
+        y[k - 1] = yk;
+      }
+    }
+
+    idx.set_size(c.size(0));
+    if (nInf - 1 >= 0) {
+      std::copy(&y[0], &y[nInf], &idx[0]);
+    }
+
+    if (idx.size(0) > Yin.size(1)) {
+      fPk.set_size(Yin.size(1));
+      idx.set_size(Yin.size(1));
+    } else {
+      fPk.set_size(c.size(0));
+    }
+
+    nInf = fPk.size(0);
+    fPk.set_size(fPk.size(0));
+    for (int k{0}; k < nInf; k++) {
+      fPk[k] = c[idx[k] - 1];
+    }
+
+    Ypk.set_size(1, nInf);
+    Xpk.set_size(1, nInf);
+    for (int k{0}; k < nInf; k++) {
+      Ypk[k] = Yin[fPk[k] - 1];
+      Xpk[k] = static_cast<unsigned int>(fPk[k]);
     }
   }
 
@@ -2455,7 +2610,6 @@ namespace coder
     int idx_data[852];
     int fPk_data[426];
     int iInfinite_data[426];
-    int i;
     int kfirst;
     int nInf;
     int nPk;
@@ -2465,7 +2619,7 @@ namespace coder
     nPk = -1;
     nInf = -1;
     dir = 'n';
-    kfirst = -1;
+    kfirst = 0;
     ykfirst = rtInf;
     isinfykfirst = true;
     for (int k{0}; k < 426; k++) {
@@ -2492,209 +2646,76 @@ namespace coder
           dir = 'd';
           if (previousdir == 'i') {
             nPk++;
-            iFinite_data[nPk] = static_cast<short>(kfirst + 1);
+            iFinite_data[nPk] = static_cast<short>(kfirst);
           }
         } else {
           dir = 'i';
         }
 
         ykfirst = yk;
-        kfirst = k;
+        kfirst = k + 1;
         isinfykfirst = isinfyk;
       }
     }
 
+    kfirst = 0;
     if (nPk + 1 < 1) {
       nPk = -1;
     }
 
-    i = nPk + 1;
+    nPk++;
+    for (int k{0}; k < nPk; k++) {
+      short i;
+      i = iFinite_data[k];
+      ykfirst = Yin[i - 1];
+      if ((ykfirst > rtMinusInf) && (ykfirst - std::fmax(Yin[i - 2], Yin[i]) >=
+           0.0)) {
+        kfirst++;
+        fPk_data[kfirst - 1] = i;
+      }
+    }
+
+    if (kfirst < 1) {
+      kfirst = 0;
+    }
+
+    b_fPk_data.set(&fPk_data[0], kfirst);
     if (nInf + 1 < 1) {
       nInf = -1;
     }
 
-    nInf++;
-    nPk = 0;
-    for (int k{0}; k < i; k++) {
-      short i1;
-      i1 = iFinite_data[k];
-      ykfirst = Yin[i1 - 1];
-      if ((ykfirst > rtMinusInf) && (ykfirst - std::fmax(Yin[i1 - 2], Yin[i1]) >=
-           0.0)) {
-        nPk++;
-        fPk_data[nPk - 1] = i1;
-      }
-    }
-
-    if (nPk < 1) {
-      kfirst = 0;
-    } else {
-      kfirst = nPk;
-    }
-
-    b_fPk_data.set(&fPk_data[0], kfirst);
-    b_iInfinite_data.set(&iInfinite_data[0], nInf);
+    b_iInfinite_data.set(&iInfinite_data[0], nInf + 1);
     do_vectors(b_fPk_data, b_iInfinite_data, c, ia, ib);
-    nInf = c.size(0);
+    kfirst = c.size(0);
     y.set_size(1, c.size(0));
     if (c.size(0) > 0) {
       y[0] = 1;
-      kfirst = 1;
-      for (int k{2}; k <= nInf; k++) {
-        kfirst++;
-        y[k - 1] = kfirst;
+      nPk = 1;
+      for (int k{2}; k <= kfirst; k++) {
+        nPk++;
+        y[k - 1] = nPk;
       }
     }
 
-    kfirst = c.size(0);
-    for (i = 0; i < nInf; i++) {
-      idx_data[i] = y[i];
+    if (kfirst - 1 >= 0) {
+      std::copy(&y[0], &y[kfirst], &idx_data[0]);
     }
 
-    if (kfirst > 426) {
+    if (c.size(0) > 426) {
       kfirst = 426;
-    } else {
-      kfirst = c.size(0);
     }
 
-    for (i = 0; i < kfirst; i++) {
-      fPk_data[i] = c[idx_data[i] - 1];
+    for (int k{0}; k < kfirst; k++) {
+      fPk_data[k] = c[idx_data[k] - 1];
     }
 
     Ypk_size[0] = 1;
     Ypk_size[1] = kfirst;
     Xpk_size[0] = 1;
     Xpk_size[1] = kfirst;
-    for (i = 0; i < kfirst; i++) {
-      Ypk_data[i] = Yin[fPk_data[i] - 1];
-      Xpk_data[i] = static_cast<short>(static_cast<short>(fPk_data[i] - 1) + 1);
-    }
-  }
-
-  static void findpeaks(const array<double, 2U> &Yin, array<double, 2U> &Ypk,
-                        array<double, 2U> &Xpk)
-  {
-    array<int, 2U> y;
-    array<int, 1U> c;
-    array<int, 1U> fPk;
-    array<int, 1U> iInfinite;
-    array<int, 1U> iPk;
-    array<int, 1U> idx;
-    double ykfirst;
-    int i;
-    int kfirst;
-    int nInf;
-    int nPk;
-    char dir;
-    bool isinfykfirst;
-    i = Yin.size(1);
-    fPk.set_size(Yin.size(1));
-    iInfinite.set_size(Yin.size(1));
-    nPk = 0;
-    nInf = 0;
-    dir = 'n';
-    kfirst = 0;
-    ykfirst = rtInf;
-    isinfykfirst = true;
-    for (int k{1}; k <= i; k++) {
-      double yk;
-      bool isinfyk;
-      yk = Yin[k - 1];
-      if (std::isnan(yk)) {
-        yk = rtInf;
-        isinfyk = true;
-      } else if (std::isinf(yk) && (yk > 0.0)) {
-        isinfyk = true;
-        nInf++;
-        iInfinite[nInf - 1] = k;
-      } else {
-        isinfyk = false;
-      }
-
-      if (yk != ykfirst) {
-        char previousdir;
-        previousdir = dir;
-        if (isinfyk || isinfykfirst) {
-          dir = 'n';
-        } else if (yk < ykfirst) {
-          dir = 'd';
-          if (previousdir == 'i') {
-            nPk++;
-            fPk[nPk - 1] = kfirst;
-          }
-        } else {
-          dir = 'i';
-        }
-
-        ykfirst = yk;
-        kfirst = k;
-        isinfykfirst = isinfyk;
-      }
-    }
-
-    if (nPk < 1) {
-      i = 0;
-    } else {
-      i = nPk;
-    }
-
-    fPk.set_size(i);
-    if (nInf < 1) {
-      nInf = 0;
-    }
-
-    iInfinite.set_size(nInf);
-    iPk.set_size(i);
-    nPk = 0;
-    for (int k{0}; k < i; k++) {
-      ykfirst = Yin[fPk[k] - 1];
-      if ((ykfirst > rtMinusInf) && (ykfirst - std::fmax(Yin[fPk[k] - 2],
-            Yin[fPk[k]]) >= 0.0)) {
-        nPk++;
-        iPk[nPk - 1] = fPk[k];
-      }
-    }
-
-    if (nPk < 1) {
-      nPk = 0;
-    }
-
-    iPk.set_size(nPk);
-    do_vectors(iPk, iInfinite, c, idx, fPk);
-    nInf = c.size(0);
-    y.set_size(1, c.size(0));
-    if (c.size(0) > 0) {
-      y[0] = 1;
-      nPk = 1;
-      for (int k{2}; k <= nInf; k++) {
-        nPk++;
-        y[k - 1] = nPk;
-      }
-    }
-
-    idx.set_size(c.size(0));
-    for (i = 0; i < nInf; i++) {
-      idx[i] = y[i];
-    }
-
-    if (idx.size(0) > Yin.size(1)) {
-      fPk.set_size(Yin.size(1));
-      idx.set_size(Yin.size(1));
-    } else {
-      fPk.set_size(c.size(0));
-    }
-
-    nPk = fPk.size(0);
-    fPk.set_size(nPk);
-    for (i = 0; i < nPk; i++) {
-      fPk[i] = c[idx[i] - 1];
-    }
-
-    Ypk.set_size(1, nPk);
-    Xpk.set_size(1, nPk);
-    for (i = 0; i < nPk; i++) {
-      Ypk[i] = Yin[fPk[i] - 1];
-      Xpk[i] = static_cast<unsigned int>(fPk[i]);
+    for (int k{0}; k < kfirst; k++) {
+      Ypk_data[k] = Yin[fPk_data[k] - 1];
+      Xpk_data[k] = static_cast<short>(static_cast<short>(fPk_data[k] - 1) + 1);
     }
   }
 
@@ -2725,8 +2746,8 @@ namespace coder
       }
     } else {
       int loop_ub;
-      varargout_1_size[0] = 1;
       loop_ub = x_size[1];
+      varargout_1_size[0] = 1;
       varargout_1_size[1] = x_size[1];
       varargout_1_data[0] = x_data[1] - x_data[0];
       for (int j{2}; j < loop_ub; j++) {
@@ -2782,87 +2803,87 @@ namespace coder
       static const int64m_T r{ { 0U, 0U }// chunks
       };
 
-      static const int64m_T r13{ { MAX_uint32_T, 2147483647U }// chunks
+      static const int64m_T r1{ { 0U, 2147483648U }// chunks
       };
 
-      static const int64m_T r2{ { 0U, 2147483648U }// chunks
+      static const int64m_T r12{ { MAX_uint32_T, 2147483647U }// chunks
       };
 
-      static const uint64m_T r10{ { MAX_uint32_T, 2147483647U }// chunks
+      static const uint64m_T r15{ { 1U, 0U }// chunks
       };
 
-      static const uint64m_T r16{ { 1U, 0U }// chunks
+      static const uint64m_T r17{ { MAX_uint32_T, MAX_uint32_T }// chunks
       };
 
-      static const uint64m_T r18{ { MAX_uint32_T, MAX_uint32_T }// chunks
+      static const uint64m_T r2{ { 0U, 2147483648U }// chunks
       };
 
-      static const uint64m_T r3{ { 0U, 2147483648U }// chunks
+      static const uint64m_T r4{ { 0U, 0U }// chunks
       };
 
-      static const uint64m_T r5{ { 0U, 0U }// chunks
+      static const uint64m_T r6{ { 0U, 2048000U }// chunks
       };
 
-      static const uint64m_T r7{ { 0U, 2048000U }// chunks
+      static const uint64m_T r9{ { MAX_uint32_T, 2147483647U }// chunks
       };
 
-      int64m_T r14;
-      int64m_T r4;
+      int64m_T r13;
+      int64m_T r3;
       int64m_T z;
-      uint128m_T r15;
+      uint128m_T r14;
       uint64m_T b_nk_unsgn;
+      uint64m_T c_nk_unsgn;
       uint64m_T nk_unsgn;
-      uint64m_T r1;
+      uint64m_T r10;
       uint64m_T r11;
-      uint64m_T r12;
-      uint64m_T r17;
+      uint64m_T r16;
+      uint64m_T r18;
       uint64m_T r19;
       uint64m_T r20;
       uint64m_T r21;
-      uint64m_T r22;
+      uint64m_T r7;
       uint64m_T r8;
-      uint64m_T r9;
       uint64m_T res;
       uint64m_T t;
       int xexp;
       if (sMultiWordLt((const unsigned int *)&x.chunks[0U], (const unsigned int *)
                        &r.chunks[0U])) {
         if (sMultiWordGt((const unsigned int *)&x.chunks[0U], (const unsigned
-              int *)&r2.chunks[0U])) {
+              int *)&r1.chunks[0U])) {
           MultiWordNeg((const unsigned int *)&x.chunks[0U], (unsigned int *)
-                       &r4.chunks[0U]);
-          sMultiWord2MultiWord((const unsigned int *)&r4.chunks[0U], (unsigned
-            int *)&r1.chunks[0U], 2);
+                       &r3.chunks[0U]);
+          sMultiWord2MultiWord((const unsigned int *)&r3.chunks[0U], (unsigned
+            int *)&nk_unsgn.chunks[0U], 2);
         } else {
-          r1 = r3;
+          nk_unsgn = r2;
         }
       } else {
         sMultiWord2MultiWord((const unsigned int *)&x.chunks[0U], (unsigned int *)
-                             &r1.chunks[0U], 2);
+                             &nk_unsgn.chunks[0U], 2);
       }
 
-      if (uMultiWordEq((const unsigned int *)&r1.chunks[0U], (const unsigned int
-            *)&r5.chunks[0U])) {
-        res = r5;
+      if (uMultiWordEq((const unsigned int *)&nk_unsgn.chunks[0U], (const
+            unsigned int *)&r4.chunks[0U])) {
+        res = r4;
       } else {
-        uint64m_T r6;
+        uint64m_T r5;
         std::frexp(1000.0, &xexp);
         xexp = -43;
-        r6 = r7;
-        uMultiWordDivZero((const unsigned int *)&r1.chunks[0U], (const unsigned
-          int *)&r7.chunks[0U], (unsigned int *)&res.chunks[0U], (unsigned int *)
-                          &nk_unsgn.chunks[0U], (unsigned int *)&r8.chunks[0U],
-                          (unsigned int *)&r9.chunks[0U]);
-        uMultiWordDivZero((const unsigned int *)&r1.chunks[0U], (const unsigned
-          int *)&r7.chunks[0U], (unsigned int *)&nk_unsgn.chunks[0U], (unsigned
-          int *)&r9.chunks[0U], (unsigned int *)&r11.chunks[0U], (unsigned int *)
-                          &r12.chunks[0U]);
-        uMultiWordMul((const unsigned int *)&nk_unsgn.chunks[0U], (const
-          unsigned int *)&r7.chunks[0U], (unsigned int *)&r15.chunks[0U]);
-        uMultiWord2MultiWord((const unsigned int *)&r15.chunks[0U], 4, (unsigned
-          int *)&r6.chunks[0U]);
-        MultiWordSub((const unsigned int *)&r1.chunks[0U], (const unsigned int *)
-                     &r6.chunks[0U], (unsigned int *)&nk_unsgn.chunks[0U], 2);
+        r5 = r6;
+        uMultiWordDivZero((const unsigned int *)&nk_unsgn.chunks[0U], (const
+          unsigned int *)&r6.chunks[0U], (unsigned int *)&res.chunks[0U],
+                          (unsigned int *)&b_nk_unsgn.chunks[0U], (unsigned int *)
+                          &r7.chunks[0U], (unsigned int *)&r8.chunks[0U]);
+        uMultiWordDivZero((const unsigned int *)&nk_unsgn.chunks[0U], (const
+          unsigned int *)&r6.chunks[0U], (unsigned int *)&b_nk_unsgn.chunks[0U],
+                          (unsigned int *)&r8.chunks[0U], (unsigned int *)
+                          &r10.chunks[0U], (unsigned int *)&r11.chunks[0U]);
+        uMultiWordMul((const unsigned int *)&b_nk_unsgn.chunks[0U], (const
+          unsigned int *)&r6.chunks[0U], (unsigned int *)&r14.chunks[0U]);
+        uMultiWord2MultiWord((const unsigned int *)&r14.chunks[0U], 4, (unsigned
+          int *)&r5.chunks[0U]);
+        MultiWordSub((const unsigned int *)&nk_unsgn.chunks[0U], (const unsigned
+          int *)&r5.chunks[0U], (unsigned int *)&b_nk_unsgn.chunks[0U], 2);
         int exitg1;
         do {
           exitg1 = 0;
@@ -2875,56 +2896,57 @@ namespace coder
 
             uMultiWordShr((const unsigned int *)&res.chunks[0U], static_cast<
                           unsigned int>(64 - shiftAmount), (unsigned int *)
-                          &r9.chunks[0U]);
-            if (uMultiWordGt((const unsigned int *)&r9.chunks[0U], (const
-                  unsigned int *)&r5.chunks[0U])) {
-              res = r18;
+                          &r8.chunks[0U]);
+            if (uMultiWordGt((const unsigned int *)&r8.chunks[0U], (const
+                  unsigned int *)&r4.chunks[0U])) {
+              res = r17;
               exitg1 = 1;
             } else {
               uMultiWordShl((const unsigned int *)&res.chunks[0U], static_cast<
                             unsigned int>(shiftAmount), (unsigned int *)
-                            &r17.chunks[0U]);
-              uMultiWordShl((const unsigned int *)&nk_unsgn.chunks[0U],
+                            &r16.chunks[0U]);
+              uMultiWordShl((const unsigned int *)&b_nk_unsgn.chunks[0U],
                             static_cast<unsigned int>(shiftAmount), (unsigned
-                int *)&b_nk_unsgn.chunks[0U]);
+                int *)&c_nk_unsgn.chunks[0U]);
               xexp += shiftAmount;
-              r8 = r7;
-              uMultiWordDivZero((const unsigned int *)&b_nk_unsgn.chunks[0U], (
-                const unsigned int *)&r7.chunks[0U], (unsigned int *)&t.chunks
+              nk_unsgn = r6;
+              uMultiWordDivZero((const unsigned int *)&c_nk_unsgn.chunks[0U], (
+                const unsigned int *)&r6.chunks[0U], (unsigned int *)&t.chunks
                                 [0U], (unsigned int *)&res.chunks[0U], (unsigned
-                int *)&r19.chunks[0U], (unsigned int *)&r20.chunks[0U]);
-              res = r18;
-              MultiWordSub((const unsigned int *)&r18.chunks[0U], (const
-                unsigned int *)&t.chunks[0U], (unsigned int *)&r8.chunks[0U], 2);
-              if (uMultiWordLe((const unsigned int *)&r8.chunks[0U], (const
-                    unsigned int *)&r17.chunks[0U])) {
+                int *)&r18.chunks[0U], (unsigned int *)&r19.chunks[0U]);
+              res = r17;
+              MultiWordSub((const unsigned int *)&r17.chunks[0U], (const
+                unsigned int *)&t.chunks[0U], (unsigned int *)&nk_unsgn.chunks
+                           [0U], 2);
+              if (uMultiWordLe((const unsigned int *)&nk_unsgn.chunks[0U], (
+                    const unsigned int *)&r16.chunks[0U])) {
                 exitg1 = 1;
               } else {
-                MultiWordAdd((const unsigned int *)&r17.chunks[0U], (const
+                MultiWordAdd((const unsigned int *)&r16.chunks[0U], (const
                   unsigned int *)&t.chunks[0U], (unsigned int *)&res.chunks[0U]);
-                uMultiWordDivZero((const unsigned int *)&b_nk_unsgn.chunks[0U],
-                                  (const unsigned int *)&r7.chunks[0U],
-                                  (unsigned int *)&r20.chunks[0U], (unsigned int
-                  *)&r1.chunks[0U], (unsigned int *)&r21.chunks[0U], (unsigned
-                  int *)&r22.chunks[0U]);
-                uMultiWordMul((const unsigned int *)&r20.chunks[0U], (const
-                  unsigned int *)&r7.chunks[0U], (unsigned int *)&r15.chunks[0U]);
-                uMultiWord2MultiWord((const unsigned int *)&r15.chunks[0U], 4,
-                                     (unsigned int *)&r19.chunks[0U]);
-                MultiWordSub((const unsigned int *)&b_nk_unsgn.chunks[0U], (
-                  const unsigned int *)&r19.chunks[0U], (unsigned int *)
-                             &r20.chunks[0U], 2);
-                nk_unsgn = r20;
+                uMultiWordDivZero((const unsigned int *)&c_nk_unsgn.chunks[0U],
+                                  (const unsigned int *)&r6.chunks[0U],
+                                  (unsigned int *)&r19.chunks[0U], (unsigned int
+                  *)&nk_unsgn.chunks[0U], (unsigned int *)&r20.chunks[0U],
+                                  (unsigned int *)&r21.chunks[0U]);
+                uMultiWordMul((const unsigned int *)&r19.chunks[0U], (const
+                  unsigned int *)&r6.chunks[0U], (unsigned int *)&r14.chunks[0U]);
+                uMultiWord2MultiWord((const unsigned int *)&r14.chunks[0U], 4,
+                                     (unsigned int *)&r18.chunks[0U]);
+                MultiWordSub((const unsigned int *)&c_nk_unsgn.chunks[0U], (
+                  const unsigned int *)&r18.chunks[0U], (unsigned int *)
+                             &r19.chunks[0U], 2);
+                b_nk_unsgn = r19;
               }
             }
           } else {
-            uMultiWordShl((const unsigned int *)&nk_unsgn.chunks[0U], 1U,
-                          (unsigned int *)&r6.chunks[0U]);
-            if (uMultiWordGe((const unsigned int *)&r6.chunks[0U], (const
-                  unsigned int *)&r7.chunks[0U])) {
+            uMultiWordShl((const unsigned int *)&b_nk_unsgn.chunks[0U], 1U,
+                          (unsigned int *)&r5.chunks[0U]);
+            if (uMultiWordGe((const unsigned int *)&r5.chunks[0U], (const
+                  unsigned int *)&r6.chunks[0U])) {
               MultiWordAdd((const unsigned int *)&res.chunks[0U], (const
-                unsigned int *)&r16.chunks[0U], (unsigned int *)&r11.chunks[0U]);
-              res = r11;
+                unsigned int *)&r15.chunks[0U], (unsigned int *)&r10.chunks[0U]);
+              res = r10;
             }
 
             exitg1 = 1;
@@ -2935,20 +2957,20 @@ namespace coder
       if (sMultiWordLt((const unsigned int *)&x.chunks[0U], (const unsigned int *)
                        &r.chunks[0U])) {
         if (uMultiWordLe((const unsigned int *)&res.chunks[0U], (const unsigned
-              int *)&r10.chunks[0U])) {
+              int *)&r9.chunks[0U])) {
           uMultiWord2MultiWord((const unsigned int *)&res.chunks[0U], 2,
-                               (unsigned int *)&r14.chunks[0U]);
-          MultiWordNeg((const unsigned int *)&r14.chunks[0U], (unsigned int *)
+                               (unsigned int *)&r13.chunks[0U]);
+          MultiWordNeg((const unsigned int *)&r13.chunks[0U], (unsigned int *)
                        &z.chunks[0U]);
         } else {
-          z = r2;
+          z = r1;
         }
       } else if (uMultiWordLe((const unsigned int *)&res.chunks[0U], (const
-                   unsigned int *)&r10.chunks[0U])) {
+                   unsigned int *)&r9.chunks[0U])) {
         uMultiWord2MultiWord((const unsigned int *)&res.chunks[0U], 2, (unsigned
           int *)&z.chunks[0U]);
       } else {
-        z = r13;
+        z = r12;
       }
 
       return z;
@@ -2958,10 +2980,10 @@ namespace coder
     {
       static int xgeqp3(array<double, 2U> &A, double tau_data[], int jpvt[2])
       {
-        int m_tmp;
+        int m;
         int tau_size;
         bool guard1;
-        m_tmp = A.size(0);
+        m = A.size(0);
         tau_size = A.size(0);
         if (tau_size > 2) {
           tau_size = 2;
@@ -2976,19 +2998,20 @@ namespace coder
         if (A.size(0) == 0) {
           guard1 = true;
         } else {
-          int u0;
-          u0 = A.size(0);
-          if (u0 > 2) {
-            u0 = 2;
+          int ix;
+          ix = A.size(0);
+          if (ix > 2) {
+            ix = 2;
           }
 
-          if (u0 < 1) {
+          if (ix < 1) {
             guard1 = true;
           } else {
             double vn1[2];
             double vn2[2];
             double work[2];
             double temp;
+            int u0;
             u0 = A.size(0);
             if (u0 > 2) {
               u0 = 2;
@@ -2996,30 +3019,27 @@ namespace coder
 
             jpvt[0] = 1;
             work[0] = 0.0;
-            temp = blas::xnrm2(m_tmp, A, 1);
+            temp = blas::xnrm2(m, A, 1);
             vn1[0] = temp;
             vn2[0] = temp;
             jpvt[1] = 2;
             work[1] = 0.0;
-            temp = blas::xnrm2(m_tmp, A, m_tmp + 1);
+            temp = blas::xnrm2(m, A, m + 1);
             vn1[1] = temp;
             vn2[1] = temp;
             for (int i{0}; i < u0; i++) {
-              double atmp;
-              double temp2;
-              int b_i;
+              double beta1;
               int ii;
-              int ii_tmp;
               int ip1;
-              int ix;
               int knt;
+              int lastc;
               int lastv;
               int mmi;
               int pvt;
               ip1 = i + 2;
-              ii_tmp = i * m_tmp;
-              ii = ii_tmp + i;
-              mmi = m_tmp - i;
+              lastc = i * m;
+              ii = lastc + i;
+              mmi = m - i;
               ix = 0;
               if ((2 - i > 1) && (std::abs(vn1[1]) > std::abs(vn1[i]))) {
                 ix = 1;
@@ -3027,13 +3047,13 @@ namespace coder
 
               pvt = i + ix;
               if (pvt != i) {
-                ix = pvt * m_tmp;
-                for (lastv = 0; lastv < m_tmp; lastv++) {
-                  knt = ix + lastv;
+                ix = pvt * m;
+                for (int k{0}; k < m; k++) {
+                  knt = ix + k;
                   temp = A[knt];
-                  b_i = ii_tmp + lastv;
-                  A[knt] = A[b_i];
-                  A[b_i] = temp;
+                  lastv = lastc + k;
+                  A[knt] = A[lastv];
+                  A[lastv] = temp;
                 }
 
                 ix = jpvt[pvt];
@@ -3043,83 +3063,84 @@ namespace coder
                 vn2[pvt] = vn2[i];
               }
 
-              if (i + 1 < m_tmp) {
+              if (i + 1 < m) {
+                double atmp;
                 atmp = A[ii];
-                ix = ii + 2;
+                lastv = ii + 2;
                 tau_data[i] = 0.0;
                 if (mmi > 0) {
                   temp = blas::xnrm2(mmi - 1, A, ii + 2);
                   if (temp != 0.0) {
-                    temp2 = std::abs(A[ii]);
+                    beta1 = std::abs(A[ii]);
                     temp = std::abs(temp);
-                    if (temp2 < temp) {
-                      temp2 /= temp;
-                      temp *= std::sqrt(temp2 * temp2 + 1.0);
-                    } else if (temp2 > temp) {
-                      temp /= temp2;
-                      temp = temp2 * std::sqrt(temp * temp + 1.0);
+                    if (beta1 < temp) {
+                      beta1 /= temp;
+                      beta1 = temp * std::sqrt(beta1 * beta1 + 1.0);
+                    } else if (beta1 > temp) {
+                      temp /= beta1;
+                      beta1 *= std::sqrt(temp * temp + 1.0);
                     } else if (std::isnan(temp)) {
-                      temp = rtNaN;
+                      beta1 = rtNaN;
                     } else {
-                      temp = temp2 * 1.4142135623730951;
+                      beta1 *= 1.4142135623730951;
                     }
 
                     if (A[ii] >= 0.0) {
-                      temp = -temp;
+                      beta1 = -beta1;
                     }
 
-                    if (std::abs(temp) < 1.0020841800044864E-292) {
+                    if (std::abs(beta1) < 1.0020841800044864E-292) {
                       knt = 0;
-                      b_i = ii + mmi;
+                      ix = ii + mmi;
                       do {
                         knt++;
-                        for (lastv = ix; lastv <= b_i; lastv++) {
-                          A[lastv - 1] = 9.9792015476736E+291 * A[lastv - 1];
+                        for (int k{lastv}; k <= ix; k++) {
+                          A[k - 1] = 9.9792015476736E+291 * A[k - 1];
                         }
 
-                        temp *= 9.9792015476736E+291;
+                        beta1 *= 9.9792015476736E+291;
                         atmp *= 9.9792015476736E+291;
-                      } while ((std::abs(temp) < 1.0020841800044864E-292) &&
+                      } while ((std::abs(beta1) < 1.0020841800044864E-292) &&
                                (knt < 20));
 
-                      temp2 = std::abs(atmp);
-                      temp = std::abs(blas::xnrm2(mmi - 1, A, ii + 2));
-                      if (temp2 < temp) {
-                        temp2 /= temp;
-                        temp *= std::sqrt(temp2 * temp2 + 1.0);
-                      } else if (temp2 > temp) {
-                        temp /= temp2;
-                        temp = temp2 * std::sqrt(temp * temp + 1.0);
-                      } else if (std::isnan(temp)) {
-                        temp = rtNaN;
+                      temp = std::abs(atmp);
+                      beta1 = std::abs(blas::xnrm2(mmi - 1, A, ii + 2));
+                      if (temp < beta1) {
+                        temp /= beta1;
+                        beta1 *= std::sqrt(temp * temp + 1.0);
+                      } else if (temp > beta1) {
+                        beta1 /= temp;
+                        beta1 = temp * std::sqrt(beta1 * beta1 + 1.0);
+                      } else if (std::isnan(beta1)) {
+                        beta1 = rtNaN;
                       } else {
-                        temp = temp2 * 1.4142135623730951;
+                        beta1 = temp * 1.4142135623730951;
                       }
 
                       if (atmp >= 0.0) {
-                        temp = -temp;
+                        beta1 = -beta1;
                       }
 
-                      tau_data[i] = (temp - atmp) / temp;
-                      temp2 = 1.0 / (atmp - temp);
-                      for (lastv = ix; lastv <= b_i; lastv++) {
-                        A[lastv - 1] = temp2 * A[lastv - 1];
+                      tau_data[i] = (beta1 - atmp) / beta1;
+                      temp = 1.0 / (atmp - beta1);
+                      for (int k{lastv}; k <= ix; k++) {
+                        A[k - 1] = temp * A[k - 1];
                       }
 
-                      for (lastv = 0; lastv < knt; lastv++) {
-                        temp *= 1.0020841800044864E-292;
+                      for (int k{0}; k < knt; k++) {
+                        beta1 *= 1.0020841800044864E-292;
                       }
 
-                      atmp = temp;
+                      atmp = beta1;
                     } else {
-                      tau_data[i] = (temp - A[ii]) / temp;
-                      temp2 = 1.0 / (A[ii] - temp);
-                      b_i = ii + mmi;
-                      for (lastv = ix; lastv <= b_i; lastv++) {
-                        A[lastv - 1] = temp2 * A[lastv - 1];
+                      tau_data[i] = (beta1 - A[ii]) / beta1;
+                      temp = 1.0 / (A[ii] - beta1);
+                      ix = ii + mmi;
+                      for (int k{lastv}; k <= ix; k++) {
+                        A[k - 1] = temp * A[k - 1];
                       }
 
-                      atmp = temp;
+                      atmp = beta1;
                     }
                   }
                 }
@@ -3130,10 +3151,9 @@ namespace coder
               }
 
               if (i + 1 < 2) {
-                int jA;
-                atmp = A[ii];
+                beta1 = A[ii];
                 A[ii] = 1.0;
-                jA = (ii + m_tmp) + 1;
+                pvt = (ii + m) + 1;
                 if (tau_data[0] != 0.0) {
                   lastv = mmi - 1;
                   ix = (ii + mmi) - 1;
@@ -3142,64 +3162,63 @@ namespace coder
                     ix--;
                   }
 
-                  pvt = 1;
-                  ix = jA;
+                  lastc = 1;
+                  ix = pvt;
                   int exitg1;
                   do {
                     exitg1 = 0;
-                    if (ix <= jA + lastv) {
+                    if (ix <= pvt + lastv) {
                       if (A[ix - 1] != 0.0) {
                         exitg1 = 1;
                       } else {
                         ix++;
                       }
                     } else {
-                      pvt = 0;
+                      lastc = 0;
                       exitg1 = 1;
                     }
                   } while (exitg1 == 0);
                 } else {
                   lastv = -1;
-                  pvt = 0;
+                  lastc = 0;
                 }
 
                 if (lastv + 1 > 0) {
-                  if (pvt != 0) {
+                  if (lastc != 0) {
                     work[0] = 0.0;
-                    knt = 0;
-                    for (ii_tmp = jA; m_tmp < 0 ? ii_tmp >= jA : ii_tmp <= jA;
-                         ii_tmp += m_tmp) {
+                    ix = 0;
+                    for (int k{pvt}; m < 0 ? k >= pvt : k <= pvt; k += m) {
                       temp = 0.0;
-                      b_i = ii_tmp + lastv;
-                      for (ix = ii_tmp; ix <= b_i; ix++) {
-                        temp += A[ix - 1] * A[(ii + ix) - ii_tmp];
+                      knt = k + lastv;
+                      for (int ia{k}; ia <= knt; ia++) {
+                        temp += A[ia - 1] * A[(ii + ia) - k];
                       }
 
-                      work[knt] += temp;
-                      knt++;
+                      work[ix] += temp;
+                      ix++;
                     }
                   }
 
                   if (!(-tau_data[0] == 0.0)) {
-                    for (ii_tmp = 0; ii_tmp < pvt; ii_tmp++) {
+                    for (int k{0}; k < lastc; k++) {
                       if (work[0] != 0.0) {
                         temp = work[0] * -tau_data[0];
-                        b_i = lastv + jA;
-                        for (knt = jA; knt <= b_i; knt++) {
-                          A[knt - 1] = A[knt - 1] + A[(ii + knt) - jA] * temp;
+                        ix = lastv + pvt;
+                        for (int ia{pvt}; ia <= ix; ia++) {
+                          A[ia - 1] = A[ia - 1] + A[(ii + ia) - pvt] * temp;
                         }
                       }
 
-                      jA += m_tmp;
+                      pvt += m;
                     }
                   }
                 }
 
-                A[ii] = atmp;
+                A[ii] = beta1;
               }
 
-              for (ii_tmp = ip1; ii_tmp < 3; ii_tmp++) {
-                ix = i + m_tmp;
+              for (int k{ip1}; k < 3; k++) {
+                ix = i + m;
                 if (vn1[1] != 0.0) {
                   temp = std::abs(A[ix]) / vn1[1];
                   temp = 1.0 - temp * temp;
@@ -3207,10 +3226,10 @@ namespace coder
                     temp = 0.0;
                   }
 
-                  temp2 = vn1[1] / vn2[1];
-                  temp2 = temp * (temp2 * temp2);
-                  if (temp2 <= 1.4901161193847656E-8) {
-                    if (i + 1 < m_tmp) {
+                  beta1 = vn1[1] / vn2[1];
+                  beta1 = temp * (beta1 * beta1);
+                  if (beta1 <= 1.4901161193847656E-8) {
+                    if (i + 1 < m) {
                       temp = blas::xnrm2(mmi - 1, A, ix + 2);
                       vn1[1] = temp;
                       vn2[1] = temp;
@@ -3264,10 +3283,10 @@ namespace coder
         }
       } else {
         int idx;
-        int k;
         if (!std::isnan(x[0])) {
           idx = 1;
         } else {
+          int k;
           bool exitg1;
           idx = 0;
           k = 2;
@@ -3287,9 +3306,9 @@ namespace coder
         } else {
           ex = x[idx - 1];
           idx++;
-          for (k = idx; k <= last; k++) {
+          for (int b_k{idx}; b_k <= last; b_k++) {
             double d;
-            d = x[k - 1];
+            d = x[b_k - 1];
             if (ex < d) {
               ex = d;
             }
@@ -3303,8 +3322,8 @@ namespace coder
     static double minimum(const double x_data[], const int x_size[2], int &idx)
     {
       double ex;
-      int last_tmp;
-      last_tmp = x_size[1];
+      int last;
+      last = x_size[1];
       if (x_size[1] <= 2) {
         if (x_size[1] == 1) {
           ex = x_data[0];
@@ -3320,17 +3339,18 @@ namespace coder
           }
         }
       } else {
-        int k;
+        int b_idx;
         if (!std::isnan(x_data[0])) {
-          idx = 1;
+          b_idx = 1;
         } else {
+          int k;
           bool exitg1;
-          idx = 0;
+          b_idx = 0;
           k = 2;
           exitg1 = false;
-          while ((!exitg1) && (k <= last_tmp)) {
+          while ((!exitg1) && (k <= last)) {
             if (!std::isnan(x_data[k - 1])) {
-              idx = k;
+              b_idx = k;
               exitg1 = true;
             } else {
               k++;
@@ -3338,19 +3358,19 @@ namespace coder
           }
         }
 
-        if (idx == 0) {
+        if (b_idx == 0) {
           ex = x_data[0];
           idx = 1;
         } else {
-          int i;
-          ex = x_data[idx - 1];
-          i = idx + 1;
-          for (k = i; k <= last_tmp; k++) {
+          ex = x_data[b_idx - 1];
+          idx = b_idx;
+          b_idx++;
+          for (int b_k{b_idx}; b_k <= last; b_k++) {
             double d;
-            d = x_data[k - 1];
+            d = x_data[b_k - 1];
             if (ex > d) {
               ex = d;
-              idx = k;
+              idx = b_k;
             }
           }
         }
@@ -3381,30 +3401,30 @@ namespace coder
     array<double, 2U> x;
     array<double, 2U> y;
     double xtmp;
-    int i;
     int loop_ub;
     int nx;
     loop_ub = varargin_2.size(1);
     y.set_size(1, varargin_2.size(1));
-    for (i = 0; i < loop_ub; i++) {
-      y[i] = varargin_2[i];
+    for (int b_j1{0}; b_j1 < loop_ub; b_j1++) {
+      y[b_j1] = varargin_2[b_j1];
     }
 
     nx = varargin_1.size(1);
     x.set_size(1, varargin_1.size(1));
-    for (i = 0; i < nx; i++) {
-      x[i] = varargin_1[i];
+    for (int b_j1{0}; b_j1 < nx; b_j1++) {
+      x[b_j1] = varargin_1[b_j1];
     }
 
     nx = varargin_1.size(1) - 1;
     if (varargin_1[1] < varargin_1[0]) {
       int j2;
-      i = varargin_1.size(1) >> 1;
-      for (int b_j1{0}; b_j1 < i; b_j1++) {
+      j2 = varargin_1.size(1) >> 1;
+      for (int b_j1{0}; b_j1 < j2; b_j1++) {
+        int x_tmp;
         xtmp = x[b_j1];
-        j2 = nx - b_j1;
-        x[b_j1] = x[j2];
-        x[j2] = xtmp;
+        x_tmp = nx - b_j1;
+        x[b_j1] = x[x_tmp];
+        x[x_tmp] = xtmp;
       }
 
       nx = varargin_2.size(1) >> 1;
@@ -3417,17 +3437,17 @@ namespace coder
     }
 
     b_y.set_size(1, varargin_2.size(1));
-    for (i = 0; i < loop_ub; i++) {
-      b_y[i] = y[i];
+    if (loop_ub - 1 >= 0) {
+      std::copy(&y[0], &y[loop_ub], &b_y[0]);
     }
 
     pchip(x, b_y, y, pp_coefs);
-    for (nx = 0; nx < 500; nx++) {
-      xtmp = varargin_3[nx];
+    for (int b_j1{0}; b_j1 < 500; b_j1++) {
+      xtmp = varargin_3[b_j1];
       if (std::isnan(xtmp)) {
-        Vq[nx] = rtNaN;
+        Vq[b_j1] = rtNaN;
       } else {
-        Vq[nx] = ppval(y, pp_coefs, xtmp);
+        Vq[b_j1] = ppval(y, pp_coefs, xtmp);
       }
     }
   }
@@ -3440,104 +3460,62 @@ namespace coder
     array<double, 2U> pp_coefs;
     array<double, 2U> x;
     array<double, 2U> y;
-    int i;
     int loop_ub;
     int nd2;
     int nx;
     loop_ub = varargin_2.size(1);
     y.set_size(1, varargin_2.size(1));
-    for (i = 0; i < loop_ub; i++) {
-      y[i] = varargin_2[i];
+    for (int b_j1{0}; b_j1 < loop_ub; b_j1++) {
+      y[b_j1] = varargin_2[b_j1];
     }
 
     nd2 = varargin_1.size(1);
     x.set_size(1, varargin_1.size(1));
-    for (i = 0; i < nd2; i++) {
-      x[i] = varargin_1[i];
+    for (int b_j1{0}; b_j1 < nd2; b_j1++) {
+      x[b_j1] = varargin_1[b_j1];
     }
 
     nx = varargin_1.size(1) - 1;
     Vq.set_size(1, varargin_3.size(1));
     nd2 = varargin_3.size(1);
-    for (i = 0; i < nd2; i++) {
-      Vq[i] = 0.0;
+    for (int b_j1{0}; b_j1 < nd2; b_j1++) {
+      Vq[b_j1] = 0.0;
     }
 
     if (varargin_3.size(1) != 0) {
       double xtmp;
       if (varargin_1[1] < varargin_1[0]) {
-        i = varargin_1.size(1) >> 1;
-        for (int b_j1{0}; b_j1 < i; b_j1++) {
+        int j2;
+        nd2 = varargin_1.size(1) >> 1;
+        for (int b_j1{0}; b_j1 < nd2; b_j1++) {
           xtmp = x[b_j1];
-          nd2 = nx - b_j1;
-          x[b_j1] = x[nd2];
-          x[nd2] = xtmp;
+          j2 = nx - b_j1;
+          x[b_j1] = x[j2];
+          x[j2] = xtmp;
         }
 
         nd2 = varargin_2.size(1) >> 1;
         for (int b_j1{0}; b_j1 < nd2; b_j1++) {
-          nx = (varargin_2.size(1) - b_j1) - 1;
+          j2 = (varargin_2.size(1) - b_j1) - 1;
           xtmp = y[b_j1];
-          y[b_j1] = y[nx];
-          y[nx] = xtmp;
+          y[b_j1] = y[j2];
+          y[j2] = xtmp;
         }
       }
 
       b_y.set_size(1, varargin_2.size(1));
-      for (i = 0; i < loop_ub; i++) {
-        b_y[i] = y[i];
+      if (loop_ub - 1 >= 0) {
+        std::copy(&y[0], &y[loop_ub], &b_y[0]);
       }
 
       pchip(x, b_y, y, pp_coefs);
       nd2 = varargin_3.size(1);
-      for (nx = 0; nx < nd2; nx++) {
-        xtmp = varargin_3[nx];
+      for (int b_j1{0}; b_j1 < nd2; b_j1++) {
+        xtmp = varargin_3[b_j1];
         if (std::isnan(xtmp)) {
-          Vq[nx] = rtNaN;
+          Vq[b_j1] = rtNaN;
         } else {
-          Vq[nx] = ppval(y, pp_coefs, xtmp);
-        }
-      }
-    }
-  }
-
-  static void linspace(double d1, double d2, const int64m_T n, array<double, 2U>
-                       &y)
-  {
-    static const int64m_T r{ { 0U, 0U }// chunks
-    };
-
-    if (sMultiWordLt((const unsigned int *)&n.chunks[0U], (const unsigned int *)
-                     &r.chunks[0U])) {
-      y.set_size(1, 0);
-    } else {
-      int i;
-      i = MultiWord2sLong((const unsigned int *)&n.chunks[0U]);
-      y.set_size(1, i);
-      if (i >= 1) {
-        y[MultiWord2sLong((const unsigned int *)&n.chunks[0U]) - 1] = d2;
-        if (y.size(1) >= 2) {
-          y[0] = d1;
-          if (y.size(1) >= 3) {
-            if (d1 == -d2) {
-              double delta1;
-              delta1 = d2 / (static_cast<double>(y.size(1)) - 1.0);
-              for (int k{2}; k < i; k++) {
-                y[k - 1] = static_cast<double>(((k << 1) - y.size(1)) - 1) *
-                  delta1;
-              }
-
-              if ((static_cast<unsigned int>(y.size(1)) & 1U) == 1U) {
-                y[y.size(1) >> 1] = 0.0;
-              }
-            } else {
-              double delta1;
-              delta1 = (d2 - d1) / (static_cast<double>(y.size(1)) - 1.0);
-              for (int k{0}; k <= i - 3; k++) {
-                y[k + 1] = d1 + (static_cast<double>(k) + 1.0) * delta1;
-              }
-            }
-          }
+          Vq[b_j1] = ppval(y, pp_coefs, xtmp);
         }
       }
     }
@@ -3554,27 +3532,66 @@ namespace coder
     }
   }
 
+  static void linspace(double d1, double d2, const int64m_T N, array<double, 2U>
+                       &y)
+  {
+    static const int64m_T r{ { 1U, 0U }// chunks
+    };
+
+    if (sMultiWordLt((const unsigned int *)&N.chunks[0U], (const unsigned int *)
+                     &r.chunks[0U])) {
+      y.set_size(1, 0);
+    } else {
+      int i;
+      i = MultiWord2sLong((const unsigned int *)&N.chunks[0U]);
+      y.set_size(1, i);
+      y[MultiWord2sLong((const unsigned int *)&N.chunks[0U]) - 1] = d2;
+      if (y.size(1) >= 2) {
+        y[0] = d1;
+        if (y.size(1) >= 3) {
+          if (d1 == -d2) {
+            double d2scaled;
+            d2scaled = d2 / (static_cast<double>(y.size(1)) - 1.0);
+            for (int k{2}; k < i; k++) {
+              y[k - 1] = static_cast<double>(((k << 1) - y.size(1)) - 1) *
+                d2scaled;
+            }
+
+            if ((static_cast<unsigned int>(y.size(1)) & 1U) == 1U) {
+              y[y.size(1) >> 1] = 0.0;
+            }
+          } else {
+            double d2scaled;
+            d2scaled = (d2 - d1) / (static_cast<double>(y.size(1)) - 1.0);
+            for (int k{0}; k <= i - 3; k++) {
+              y[k + 1] = d1 + static_cast<double>(k + 1) * d2scaled;
+            }
+          }
+        }
+      }
+    }
+  }
+
   static void pchip(const array<double, 2U> &x, const array<double, 2U> &y,
                     array<double, 2U> &v_breaks, array<double, 2U> &v_coefs)
   {
     array<double, 2U> del;
     array<double, 2U> h;
     array<double, 2U> slopes;
-    double d;
-    double d2;
+    double b_signd1;
     double dzdxdx;
     double dzzdx;
     double signd1;
     int i;
-    int nxm2;
-    nxm2 = x.size(1) - 2;
+    int nxm1;
+    nxm1 = x.size(1) - 2;
     h.set_size(1, x.size(1) - 1);
     i = y.size(1) - 1;
     del.set_size(1, y.size(1) - 1);
-    for (int k{0}; k <= nxm2; k++) {
-      d2 = x[k + 1] - x[k];
-      h[k] = d2;
-      del[k] = (y[k + 1] - y[k]) / d2;
+    for (int k{0}; k <= nxm1; k++) {
+      dzdxdx = x[k + 1] - x[k];
+      h[k] = dzdxdx;
+      del[k] = (y[k + 1] - y[k]) / dzdxdx;
     }
 
     slopes.set_size(1, y.size(1));
@@ -3582,16 +3599,17 @@ namespace coder
       slopes[0] = del[0];
       slopes[1] = del[0];
     } else {
-      nxm2 = x.size(1);
-      for (int k{0}; k <= nxm2 - 3; k++) {
-        d2 = h[k + 1];
-        d = h[k];
-        signd1 = 2.0 * d2 + d;
-        dzdxdx = d2 + 2.0 * d;
+      double w1;
+      nxm1 = x.size(1);
+      for (int k{0}; k <= nxm1 - 3; k++) {
+        dzdxdx = h[k + 1];
+        signd1 = h[k];
+        w1 = 2.0 * dzdxdx + signd1;
+        dzdxdx += 2.0 * signd1;
         slopes[k + 1] = 0.0;
-        d2 = del[k];
-        d = del[k + 1];
-        dzzdx = d2 * d;
+        signd1 = del[k];
+        b_signd1 = del[k + 1];
+        dzzdx = signd1 * b_signd1;
         if (!std::isnan(dzzdx)) {
           if (dzzdx < 0.0) {
             dzzdx = -1.0;
@@ -3601,106 +3619,112 @@ namespace coder
         }
 
         if (dzzdx > 0.0) {
-          slopes[k + 1] = (signd1 + dzdxdx) / (signd1 / d2 + dzdxdx / d);
+          slopes[k + 1] = (w1 + dzdxdx) / (w1 / signd1 + dzdxdx / b_signd1);
         }
       }
 
-      dzzdx = del[0];
-      d2 = del[1];
-      dzdxdx = h[0];
-      signd1 = h[1];
-      dzdxdx = ((2.0 * dzdxdx + signd1) * dzzdx - dzdxdx * d2) / (dzdxdx +
-        signd1);
-      if (std::isnan(dzzdx)) {
+      w1 = del[0];
+      dzzdx = del[1];
+      signd1 = h[0];
+      dzdxdx = h[1];
+      b_signd1 = ((2.0 * signd1 + dzdxdx) * w1 - signd1 * dzzdx) / (signd1 +
+        dzdxdx);
+      if (std::isnan(w1)) {
         signd1 = rtNaN;
-      } else if (dzzdx < 0.0) {
+      } else if (w1 < 0.0) {
         signd1 = -1.0;
       } else {
-        signd1 = (dzzdx > 0.0);
+        signd1 = (w1 > 0.0);
       }
 
-      if (std::isnan(dzdxdx)) {
-        d = rtNaN;
-      } else if (dzdxdx < 0.0) {
-        d = -1.0;
+      if (std::isnan(b_signd1)) {
+        dzdxdx = rtNaN;
+      } else if (b_signd1 < 0.0) {
+        dzdxdx = -1.0;
       } else {
-        d = (dzdxdx > 0.0);
+        dzdxdx = (b_signd1 > 0.0);
       }
 
-      if (d != signd1) {
-        dzdxdx = 0.0;
+      if (dzdxdx != signd1) {
+        b_signd1 = 0.0;
       } else {
-        if (std::isnan(d2)) {
-          d = rtNaN;
-        } else if (d2 < 0.0) {
-          d = -1.0;
+        if (std::isnan(dzzdx)) {
+          dzdxdx = rtNaN;
+        } else if (dzzdx < 0.0) {
+          dzdxdx = -1.0;
         } else {
-          d = (d2 > 0.0);
+          dzdxdx = (dzzdx > 0.0);
         }
 
-        if ((signd1 != d) && (std::abs(dzdxdx) > std::abs(3.0 * dzzdx))) {
-          dzdxdx = 3.0 * dzzdx;
+        if (signd1 != dzdxdx) {
+          dzdxdx = 3.0 * w1;
+          if (std::abs(b_signd1) > std::abs(dzdxdx)) {
+            b_signd1 = dzdxdx;
+          }
         }
       }
 
-      slopes[0] = dzdxdx;
-      dzzdx = del[x.size(1) - 2];
-      d2 = del[x.size(1) - 3];
+      slopes[0] = b_signd1;
+      w1 = del[x.size(1) - 2];
+      dzzdx = del[x.size(1) - 3];
       dzdxdx = h[x.size(1) - 2];
       signd1 = h[x.size(1) - 3];
-      dzdxdx = ((2.0 * dzdxdx + signd1) * dzzdx - dzdxdx * d2) / (dzdxdx +
+      signd1 = ((2.0 * dzdxdx + signd1) * w1 - dzdxdx * dzzdx) / (dzdxdx +
         signd1);
-      if (std::isnan(dzzdx)) {
-        signd1 = rtNaN;
-      } else if (dzzdx < 0.0) {
-        signd1 = -1.0;
+      if (std::isnan(w1)) {
+        b_signd1 = rtNaN;
+      } else if (w1 < 0.0) {
+        b_signd1 = -1.0;
       } else {
-        signd1 = (dzzdx > 0.0);
+        b_signd1 = (w1 > 0.0);
       }
 
-      if (std::isnan(dzdxdx)) {
-        d = rtNaN;
-      } else if (dzdxdx < 0.0) {
-        d = -1.0;
+      if (std::isnan(signd1)) {
+        dzdxdx = rtNaN;
+      } else if (signd1 < 0.0) {
+        dzdxdx = -1.0;
       } else {
-        d = (dzdxdx > 0.0);
+        dzdxdx = (signd1 > 0.0);
       }
 
-      if (d != signd1) {
-        dzdxdx = 0.0;
+      if (dzdxdx != b_signd1) {
+        signd1 = 0.0;
       } else {
-        if (std::isnan(d2)) {
-          d = rtNaN;
-        } else if (d2 < 0.0) {
-          d = -1.0;
+        if (std::isnan(dzzdx)) {
+          dzdxdx = rtNaN;
+        } else if (dzzdx < 0.0) {
+          dzdxdx = -1.0;
         } else {
-          d = (d2 > 0.0);
+          dzdxdx = (dzzdx > 0.0);
         }
 
-        if ((signd1 != d) && (std::abs(dzdxdx) > std::abs(3.0 * dzzdx))) {
-          dzdxdx = 3.0 * dzzdx;
+        if (b_signd1 != dzdxdx) {
+          dzdxdx = 3.0 * w1;
+          if (std::abs(signd1) > std::abs(dzdxdx)) {
+            signd1 = dzdxdx;
+          }
         }
       }
 
-      slopes[x.size(1) - 1] = dzdxdx;
+      slopes[x.size(1) - 1] = signd1;
     }
 
-    nxm2 = x.size(1);
+    nxm1 = x.size(1);
     v_breaks.set_size(1, x.size(1));
-    for (int k{0}; k < nxm2; k++) {
+    for (int k{0}; k < nxm1; k++) {
       v_breaks[k] = x[k];
     }
 
     v_coefs.set_size(y.size(1) - 1, 4);
-    for (int k{0}; k <= nxm2 - 2; k++) {
-      d2 = del[k];
-      d = slopes[k];
-      signd1 = h[k];
-      dzzdx = (d2 - d) / signd1;
-      dzdxdx = (slopes[k + 1] - d2) / signd1;
-      v_coefs[k] = (dzdxdx - dzzdx) / signd1;
+    for (int k{0}; k <= nxm1 - 2; k++) {
+      dzdxdx = del[k];
+      signd1 = slopes[k];
+      b_signd1 = h[k];
+      dzzdx = (dzdxdx - signd1) / b_signd1;
+      dzdxdx = (slopes[k + 1] - dzdxdx) / b_signd1;
+      v_coefs[k] = (dzdxdx - dzzdx) / b_signd1;
       v_coefs[i + k] = 2.0 * dzzdx - dzdxdx;
-      v_coefs[(i << 1) + k] = d;
+      v_coefs[(i << 1) + k] = signd1;
       v_coefs[3 * i + k] = y[k];
     }
   }
@@ -3747,17 +3771,16 @@ namespace coder
 static double find_pulse_points(const double processed_pulse[500], double
   &diastolic_peak, double &dicrotic_notch)
 {
-  coder::array<double, 2U> b_tmp_data;
   coder::array<double, 2U> r;
+  coder::array<double, 2U> tmp_data;
   double pulse[500];
   double a__1_data[426];
-  double tmp_data[426];
+  double pulse_indices_data[426];
   double search_end;
   double systolic_peak;
   int a__1_size[2];
-  int iv[2];
+  int pulse_indices_size[2];
   int i;
-  int iindx;
   int loop_ub;
 
   // FIND_PULSE_POINTS
@@ -3770,100 +3793,74 @@ static double find_pulse_points(const double processed_pulse[500], double
   //  Then, trim a small amount from the beginning and end to remove the foot
   //  (these are guaranteed to be in range by preprocess_ppg_pulse, which
   //  resamples the pulse to a fixed number of samples
-  coder::findpeaks(&pulse[59], a__1_data, a__1_size, tmp_data, iv);
+  coder::findpeaks(&pulse[59], a__1_data, a__1_size, pulse_indices_data,
+                   pulse_indices_size);
 
   //  Case 0: very poor signal, no peaks at all
-  if (iv[1] == 0) {
+  if (pulse_indices_size[1] == 0) {
     systolic_peak = 1.0;
     diastolic_peak = 426.0;
 
     //  Case 1: the notch is clearly visible, with 2 whole peaks
-  } else if (iv[1] > 1) {
-    systolic_peak = tmp_data[0];
-    diastolic_peak = tmp_data[1];
+  } else if (pulse_indices_size[1] > 1) {
+    systolic_peak = pulse_indices_data[0];
+    diastolic_peak = pulse_indices_data[1];
 
     //  Case 2: the notch is too flat, but systolic notch is there -- use
     //  derivative method to find the location of the diastolic notch
   } else {
     double b_dv[2];
-    systolic_peak = tmp_data[0];
+    systolic_peak = pulse_indices_data[0];
 
     //  Add a small offset so that we don't select the systolic peak again
     b_dv[0] = 20.0;
-    b_dv[1] = 426.0 - tmp_data[0];
-    search_end = tmp_data[0] + coder::internal::minimum(b_dv);
+    b_dv[1] = 426.0 - pulse_indices_data[0];
+    search_end = pulse_indices_data[0] + coder::internal::minimum(b_dv);
     if (search_end > 426.0) {
-      iindx = -1;
-      i = -2;
+      i = -1;
+      loop_ub = -2;
     } else {
-      iindx = static_cast<int>(search_end) - 2;
-      i = 424;
+      i = static_cast<int>(search_end) - 2;
+      loop_ub = 424;
     }
 
-    iv[0] = 1;
-    loop_ub = i - iindx;
-    iv[1] = loop_ub + 1;
-    for (i = 0; i <= loop_ub; i++) {
-      a__1_data[i] = pulse[(iindx + i) + 60];
+    loop_ub -= i;
+    a__1_size[0] = 1;
+    a__1_size[1] = loop_ub + 1;
+    for (int i1{0}; i1 <= loop_ub; i1++) {
+      a__1_data[i1] = pulse[(i + i1) + 60];
     }
 
-    coder::gradient(a__1_data, iv, tmp_data, a__1_size);
-    b_tmp_data.set(&tmp_data[0], a__1_size[0], a__1_size[1]);
-    coder::b_abs(b_tmp_data, r);
-    iv[0] = (*(int (*)[2])r.size())[0];
-    iv[1] = (*(int (*)[2])r.size())[1];
-    coder::internal::minimum((const double *)r.data(), iv, iindx);
-    diastolic_peak = (search_end + static_cast<double>(iindx)) - 1.0;
+    coder::gradient(a__1_data, a__1_size, pulse_indices_data, pulse_indices_size);
+    tmp_data.set(&pulse_indices_data[0], pulse_indices_size[0],
+                 pulse_indices_size[1]);
+    coder::b_abs(tmp_data, r);
+    coder::internal::minimum((const double *)r.data(), r.size(), loop_ub);
+    diastolic_peak = (search_end + static_cast<double>(loop_ub)) - 1.0;
   }
 
   //  Finally, search for the dicrotic notch in between both peaks
   //  Don't search the entire range to avoid slipping into the diastolic peak
   search_end = systolic_peak + std::round(0.65 * (diastolic_peak - systolic_peak));
   if (systolic_peak > search_end) {
-    iindx = -1;
-    i = -2;
+    i = -1;
+    loop_ub = -2;
   } else {
-    iindx = static_cast<int>(systolic_peak) - 2;
-    i = static_cast<int>(search_end) - 2;
+    i = static_cast<int>(systolic_peak) - 2;
+    loop_ub = static_cast<int>(search_end) - 2;
   }
 
   coder::filter(processed_pulse, pulse);
-  iv[0] = 1;
-  loop_ub = i - iindx;
-  iv[1] = loop_ub + 1;
-  for (i = 0; i <= loop_ub; i++) {
-    a__1_data[i] = pulse[(iindx + i) + 60];
+  loop_ub -= i;
+  a__1_size[0] = 1;
+  a__1_size[1] = loop_ub + 1;
+  for (int i1{0}; i1 <= loop_ub; i1++) {
+    a__1_data[i1] = pulse[(i + i1) + 60];
   }
 
-  coder::internal::minimum(a__1_data, iv, iindx);
-  dicrotic_notch = (systolic_peak + static_cast<double>(iindx)) - 1.0;
+  coder::internal::minimum(a__1_data, a__1_size, loop_ub);
+  dicrotic_notch = (systolic_peak + static_cast<double>(loop_ub)) - 1.0;
   return systolic_peak;
-}
-
-static void minus(coder::array<double, 1U> &in1, const coder::array<double, 1U>
-                  &in2)
-{
-  coder::array<double, 1U> b_in1;
-  int loop_ub;
-  int stride_0_0;
-  int stride_1_0;
-  if (in2.size(0) == 1) {
-    loop_ub = in1.size(0);
-  } else {
-    loop_ub = in2.size(0);
-  }
-
-  b_in1.set_size(loop_ub);
-  stride_0_0 = (in1.size(0) != 1);
-  stride_1_0 = (in2.size(0) != 1);
-  for (int i{0}; i < loop_ub; i++) {
-    b_in1[i] = in1[i * stride_0_0] - in2[i * stride_1_0];
-  }
-
-  in1.set_size(loop_ub);
-  for (int i{0}; i < loop_ub; i++) {
-    in1[i] = b_in1[i];
-  }
 }
 
 static double sMultiWord2Double(const unsigned int u1[])
@@ -3873,15 +3870,14 @@ static double sMultiWord2Double(const unsigned int u1[])
   y = 0.0;
   b_exp = 0;
   if ((u1[1] & 2147483648U) != 0U) {
-    int cb;
-    cb = 1;
+    unsigned int cb;
+    cb = 1U;
     for (int i{0}; i < 2; i++) {
       unsigned int u1i;
-      unsigned int yi;
       u1i = ~u1[i];
-      yi = u1i + static_cast<unsigned int>(cb);
-      y -= std::ldexp(static_cast<double>(yi), b_exp);
-      cb = (yi < u1i);
+      cb += u1i;
+      y -= std::ldexp(static_cast<double>(cb), b_exp);
+      cb = (cb < u1i);
       b_exp += 32;
     }
   } else {
@@ -4004,14 +4000,14 @@ static void sMultiWordMul(const unsigned int u1[], const unsigned int u2[],
   unsigned int y[])
 {
   unsigned int cb;
-  int cb1;
+  unsigned int cb1;
   int k;
   unsigned int yk;
   bool isNegative1;
   bool isNegative2;
   isNegative1 = ((u1[1] & 2147483648U) != 0U);
   isNegative2 = ((u2[1] & 2147483648U) != 0U);
-  cb1 = 1;
+  cb1 = 1U;
 
   // Initialize output to zero
   for (k = 0; k < 3; k++) {
@@ -4019,51 +4015,50 @@ static void sMultiWordMul(const unsigned int u1[], const unsigned int u2[],
   }
 
   for (int i{0}; i < 2; i++) {
-    int a0;
-    int a1;
-    int cb2;
+    unsigned int a0;
+    unsigned int a1;
+    unsigned int cb2;
     unsigned int u1i;
     cb = 0U;
     u1i = u1[i];
     if (isNegative1) {
-      u1i = ~u1i + static_cast<unsigned int>(cb1);
-      cb1 = (u1i < static_cast<unsigned int>(cb1));
+      u1i = ~u1i + cb1;
+      cb1 = (u1i < cb1);
     }
 
-    a1 = static_cast<int>(u1i >> 16U);
-    a0 = static_cast<int>(u1i & 65535U);
-    cb2 = 1;
+    a1 = u1i >> 16U;
+    a0 = u1i & 65535U;
+    cb2 = 1U;
     k = i;
     for (int j{0}; j < 2; j++) {
-      int b0;
-      int b1;
-      unsigned int t;
+      unsigned int b1;
       unsigned int w01;
+      unsigned int w10;
       u1i = u2[j];
       if (isNegative2) {
-        u1i = ~u1i + static_cast<unsigned int>(cb2);
-        cb2 = (u1i < static_cast<unsigned int>(cb2));
+        u1i = ~u1i + cb2;
+        cb2 = (u1i < cb2);
       }
 
-      b1 = static_cast<int>(u1i >> 16U);
-      b0 = static_cast<int>(u1i & 65535U);
-      u1i = static_cast<unsigned int>(a1) * static_cast<unsigned int>(b0);
-      w01 = static_cast<unsigned int>(a0) * static_cast<unsigned int>(b1);
+      b1 = u1i >> 16U;
+      u1i &= 65535U;
+      w10 = a1 * u1i;
+      w01 = a0 * b1;
       yk = y[k] + cb;
       cb = (yk < cb);
-      t = static_cast<unsigned int>(a0) * static_cast<unsigned int>(b0);
-      yk += t;
-      cb += (yk < t);
-      t = u1i << 16U;
-      yk += t;
-      cb += (yk < t);
-      t = w01 << 16U;
-      yk += t;
-      cb += (yk < t);
+      u1i *= a0;
+      yk += u1i;
+      cb += (yk < u1i);
+      u1i = w10 << 16U;
+      yk += u1i;
+      cb += (yk < u1i);
+      u1i = w01 << 16U;
+      yk += u1i;
+      cb += (yk < u1i);
       y[k] = yk;
-      cb += u1i >> 16U;
+      cb += w10 >> 16U;
       cb += w01 >> 16U;
-      cb += static_cast<unsigned int>(a1) * static_cast<unsigned int>(b1);
+      cb += a1 * b1;
       k++;
     }
 
@@ -4142,10 +4137,11 @@ static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
   }
 
   if (nzb > 0) {
+    int kq;
     int nza;
     nza = 2;
-    for (tpi = 0; tpi < 2; tpi++) {
-      q[tpi] = 0U;
+    for (kq = 0; kq < 2; kq++) {
+      q[kq] = 0U;
     }
 
     tpi = 1;
@@ -4155,25 +4151,24 @@ static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
     }
 
     if ((nza > 0) && (nza >= nzb)) {
-      int kr;
       int na1;
       int nb1;
       nb1 = nzb - 1;
       na1 = nza - 1;
-      for (kr = 0; kr < 2; kr++) {
-        r[kr] = 0U;
+      for (kq = 0; kq < 2; kq++) {
+        r[kq] = 0U;
       }
 
       // Quick return if dividend and divisor fit into single word.
       if (nza == 1) {
         unsigned int ak;
         unsigned int bk;
-        unsigned int u;
+        unsigned int qk;
         ak = a[0];
         bk = b[0];
-        u = ak / bk;
-        q[0] = u;
-        r[0] = ak - u * bk;
+        qk = ak / bk;
+        q[0] = qk;
+        r[0] = ak - qk * bk;
         y = 7;
       } else {
         unsigned int kba;
@@ -4203,21 +4198,21 @@ static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
           unsigned int mask;
           unsigned int nba;
           unsigned int nbb;
+          unsigned int qk;
           unsigned int tnb;
-          unsigned int u;
           nba = kba + 32U;
           nbb = static_cast<unsigned int>(nzb - 1) * 32U + kbb;
 
           // Normalize b.
           if (kbb != 32U) {
             bk = b[nzb - 1];
-            kr = nzb - 1;
-            while (kr > 0) {
+            kq = nzb - 1;
+            while (kq > 0) {
               t = bk << (32U - kbb);
               bk = b[0];
               t |= bk >> kbb;
               b[1] = t;
-              kr = 0;
+              kq = 0;
             }
 
             b[0] = bk << (32U - kbb);
@@ -4252,19 +4247,19 @@ static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
             ak = a[na1];
             bk = b[nzb - 1];
             if (nzb - 1 == 0) {
-              u = mask;
+              qk = mask;
             } else {
-              u = MAX_uint32_T;
+              qk = MAX_uint32_T;
             }
 
-            if ((ak & u) == bk) {
+            if ((ak & qk) == bk) {
               tpi = 0;
               ka = na1;
-              kr = nzb - 1;
-              while ((tpi == 0) && (kr > 0)) {
+              kq = nzb - 1;
+              while ((tpi == 0) && (kq > 0)) {
                 ka--;
                 ak = a[ka];
-                kr = 0;
+                kq = 0;
                 bk = b[0];
                 if ((ak & mask) != bk) {
                   if (ak > bk) {
@@ -4282,16 +4277,16 @@ static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
 
             // If the remainder in a is still greater or equal to b, subtract normalized divisor from a.
             if ((tpi >= 0) || (nba > nbb)) {
-              u = nba - nbb;
+              qk = nba - nbb;
 
               // If the remainder and the divisor are equal, set remainder to zero.
               if (tpi == 0) {
                 ka = na1;
-                kr = nzb - 1;
-                while (kr > 0) {
+                kq = nzb - 1;
+                while (kq > 0) {
                   a[ka] = 0U;
                   ka--;
-                  kr = 0;
+                  kq = 0;
                 }
 
                 a[ka] -= b[0];
@@ -4311,18 +4306,18 @@ static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
 
                   a[0] = ak << 1U;
                   tnb++;
-                  u--;
+                  qk--;
                 }
 
-                tpi = 0;
+                bk = 0U;
                 ka = (na1 - nzb) + 1;
-                for (kr = 0; kr < nzb; kr++) {
+                for (kq = 0; kq < nzb; kq++) {
                   t = a[ka];
-                  ak = (t - b[kr]) - static_cast<unsigned int>(tpi);
-                  if (tpi != 0) {
-                    tpi = (ak >= t);
+                  ak = (t - b[kq]) - bk;
+                  if (bk != 0U) {
+                    bk = (ak >= t);
                   } else {
-                    tpi = (ak > t);
+                    bk = (ak > t);
                   }
 
                   a[ka] = ak;
@@ -4331,8 +4326,8 @@ static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
               }
 
               // Update the quotient.
-              tpi = static_cast<int>(u) / 32;
-              q[tpi] |= 1U << (u - static_cast<unsigned int>(tpi) * 32U);
+              tpi = static_cast<int>(qk) / 32;
+              q[tpi] |= 1U << (qk - static_cast<unsigned int>(tpi) * 32U);
 
               // Remove leading zeros from the remainder and check whether the exit conditions have been met.
               tpi = na1;
@@ -4370,51 +4365,51 @@ static int uMultiWordDiv(unsigned int a[], unsigned int b[], unsigned int q[],
             r[0] = a[0];
           } else {
             tpi = static_cast<int>(tnb) / 32;
-            u = tnb - static_cast<unsigned int>(tpi) * 32U;
-            if (u == 0U) {
+            qk = tnb - static_cast<unsigned int>(tpi) * 32U;
+            if (qk == 0U) {
               ka = tpi;
-              for (kr = 0; kr <= nb1; kr++) {
-                r[kr] = a[ka];
+              for (kq = 0; kq <= nb1; kq++) {
+                r[kq] = a[ka];
                 ka++;
               }
             } else {
               ak = a[tpi];
-              kr = 0;
+              kq = 0;
               for (ka = tpi + 1; ka <= na1; ka++) {
-                t = ak >> u;
+                t = ak >> qk;
                 ak = a[ka];
-                t |= ak << (32U - u);
-                r[kr] = t;
-                kr++;
+                t |= ak << (32U - qk);
+                r[kq] = t;
+                kq++;
               }
 
-              r[kr] = ak >> u;
+              r[kq] = ak >> qk;
             }
           }
 
           // Restore b.
           if (kbb != 32U) {
             bk = b[0];
-            for (kr = 0; kr < nb1; kr++) {
+            for (kq = 0; kq < nb1; kq++) {
               t = bk >> (32U - kbb);
               bk = b[1];
               t |= bk << kbb;
               b[0] = t;
             }
 
-            b[kr] = bk >> (32U - kbb);
+            b[kq] = bk >> (32U - kbb);
           }
         } else {
-          for (kr = 0; kr < 2; kr++) {
-            r[kr] = a[kr];
+          for (kq = 0; kq < 2; kq++) {
+            r[kq] = a[kq];
           }
 
           y = 6;
         }
       }
     } else {
-      for (int kr{0}; kr < 2; kr++) {
-        r[kr] = a[kr];
+      for (kq = 0; kq < 2; kq++) {
+        r[kq] = a[kq];
       }
 
       y = 5;
@@ -4467,41 +4462,40 @@ static void uMultiWordMul(const unsigned int u1[], const unsigned int u2[],
   }
 
   for (int i{0}; i < 2; i++) {
-    int a0;
-    int a1;
+    unsigned int a0;
+    unsigned int a1;
     unsigned int cb;
     unsigned int u1i;
     cb = 0U;
     u1i = u1[i];
-    a1 = static_cast<int>(u1i >> 16U);
-    a0 = static_cast<int>(u1i & 65535U);
+    a1 = u1i >> 16U;
+    a0 = u1i & 65535U;
     k = i;
     for (int j{0}; j < 2; j++) {
-      int b0;
-      int b1;
-      unsigned int t;
+      unsigned int b1;
       unsigned int w01;
+      unsigned int w10;
       unsigned int yk;
       u1i = u2[j];
-      b1 = static_cast<int>(u1i >> 16U);
-      b0 = static_cast<int>(u1i & 65535U);
-      u1i = static_cast<unsigned int>(a1) * static_cast<unsigned int>(b0);
-      w01 = static_cast<unsigned int>(a0) * static_cast<unsigned int>(b1);
+      b1 = u1i >> 16U;
+      u1i &= 65535U;
+      w10 = a1 * u1i;
+      w01 = a0 * b1;
       yk = y[k] + cb;
       cb = (yk < cb);
-      t = static_cast<unsigned int>(a0) * static_cast<unsigned int>(b0);
-      yk += t;
-      cb += (yk < t);
-      t = u1i << 16U;
-      yk += t;
-      cb += (yk < t);
-      t = w01 << 16U;
-      yk += t;
-      cb += (yk < t);
+      u1i *= a0;
+      yk += u1i;
+      cb += (yk < u1i);
+      u1i = w10 << 16U;
+      yk += u1i;
+      cb += (yk < u1i);
+      u1i = w01 << 16U;
+      yk += u1i;
+      cb += (yk < u1i);
       y[k] = yk;
-      cb += u1i >> 16U;
+      cb += w10 >> 16U;
       cb += w01 >> 16U;
-      cb += static_cast<unsigned int>(a1) * static_cast<unsigned int>(b1);
+      cb += a1 * b1;
       k++;
     }
 
@@ -4550,10 +4544,10 @@ static void uMultiWordShl(const unsigned int u1[], unsigned int n2, unsigned int
 
     nc -= i;
     if (nl > 0U) {
-      for (nb = 0; nb < nc; nb++) {
+      for (int i1{0}; i1 < nc; i1++) {
         unsigned int yi;
         yi = u1i >> (32U - nl);
-        u1i = u1[nb];
+        u1i = u1[i1];
         y[i] = yi | u1i << nl;
         i++;
       }
@@ -4563,8 +4557,8 @@ static void uMultiWordShl(const unsigned int u1[], unsigned int n2, unsigned int
         i++;
       }
     } else {
-      for (nb = 0; nb < nc; nb++) {
-        y[i] = u1[nb];
+      for (int i1{0}; i1 < nc; i1++) {
+        y[i] = u1[i1];
         i++;
       }
     }
@@ -4628,16 +4622,16 @@ void preprocess_ppg_signal(const coder::array<double, 2U> &ppg_signal, const
   coder::array<int64m_T, 2U> &timestamps, coder::array<double, 2U>
   &processed_ppg_signal)
 {
-  static const int64m_T r2{ { 150U, 0U }// chunks
+  static const int64m_T r3{ { 150U, 0U }// chunks
   };
 
   coder::array<double, 2U> b_processed_ppg_signal;
   coder::array<double, 2U> b_timestamps;
   coder::array<double, 2U> r;
-  int96m_T r3;
-  int96m_T r5;
+  int96m_T r4;
   int96m_T r6;
   int96m_T r7;
+  int96m_T r8;
   double y;
   int loop_ub;
 
@@ -4673,25 +4667,26 @@ void preprocess_ppg_signal(const coder::array<double, 2U> &ppg_signal, const
   }
 
   int64m_T r1;
-  int64m_T r4;
-  r1 = r2;
-  sMultiWord2MultiWord((const unsigned int *)&timestamps[timestamps.size(1) - 1]
-                       .chunks[0U], (unsigned int *)&r3.chunks[0U], 3);
-  r4 = timestamps[0];
+  int64m_T r2;
+  int64m_T r5;
+  r1 = timestamps[timestamps.size(1) - 1];
+  r2 = r3;
+  sMultiWord2MultiWord((const unsigned int *)&r1.chunks[0U], (unsigned int *)
+                       &r4.chunks[0U], 3);
+  r5 = timestamps[0];
   sMultiWord2MultiWord((const unsigned int *)&timestamps[0].chunks[0U],
-                       (unsigned int *)&r5.chunks[0U], 3);
-  MultiWordSub((const unsigned int *)&r3.chunks[0U], (const unsigned int *)
-               &r5.chunks[0U], (unsigned int *)&r6.chunks[0U], 3);
-  sMultiWord2sMultiWordSat((const unsigned int *)&r6.chunks[0U], (unsigned int *)
-    &r4.chunks[0U]);
-  r4 = coder::internal::i64ddiv(r4);
-  sMultiWordMul((const unsigned int *)&r2.chunks[0U], (const unsigned int *)
-                &r4.chunks[0U], (unsigned int *)&r7.chunks[0U]);
+                       (unsigned int *)&r6.chunks[0U], 3);
+  MultiWordSub((const unsigned int *)&r4.chunks[0U], (const unsigned int *)
+               &r6.chunks[0U], (unsigned int *)&r7.chunks[0U], 3);
   sMultiWord2sMultiWordSat((const unsigned int *)&r7.chunks[0U], (unsigned int *)
-    &r1.chunks[0U]);
+    &r5.chunks[0U]);
+  r5 = coder::internal::i64ddiv(r5);
+  sMultiWordMul((const unsigned int *)&r3.chunks[0U], (const unsigned int *)
+                &r5.chunks[0U], (unsigned int *)&r8.chunks[0U]);
+  sMultiWord2sMultiWordSat((const unsigned int *)&r8.chunks[0U], (unsigned int *)
+    &r2.chunks[0U]);
   coder::linspace(sMultiWord2Double((const unsigned int *)&timestamps[0].chunks
-    [0U]), sMultiWord2Double((const unsigned int *)&timestamps[timestamps.size(1)
-    - 1].chunks[0U]), r1, r);
+    [0U]), sMultiWord2Double((const unsigned int *)&r1.chunks[0U]), r2, r);
   b_processed_ppg_signal.set_size(1, processed_ppg_signal.size(1));
   loop_ub = processed_ppg_signal.size(0) * processed_ppg_signal.size(1) - 1;
   for (int i{0}; i <= loop_ub; i++) {
@@ -5894,20 +5889,15 @@ void score_ppg_signal_fourier(const coder::array<double, 2U>
     0.024541228522912288, 0.01840672990580482, 0.012271538285719925,
     0.0061358846491544753, 0.0 };
 
-  coder::array<double, 2U> a__1;
-  coder::array<double, 2U> b_smoothed_ppg_signal;
+  coder::array<double, 2U> b_processed_ppg_signal;
   coder::array<double, 2U> c_combined_coef_data;
   coder::array<double, 2U> indices;
-  coder::array<double, 2U> smoothed_ppg_signal;
-  double b_combined_coef_data[500];
-  double d{ 0.0 };
-
+  coder::array<double, 2U> y;
+  double combined_coef_data[500];
   int combined_coef_size[2];
-  int b_loop_ub_tmp{ 0 };
+  int b_loop_ub{ 0 };
 
-  int i;
   int loop_ub;
-  int loop_ub_tmp;
 
   // SCORE_PPG_SIGNAL_FOURIER
   //  Returns the health scores of all pulses in a preprocessed
@@ -5915,29 +5905,7 @@ void score_ppg_signal_fourier(const coder::array<double, 2U>
   //  https://drive.google.com/file/u/3/d/1pe0JXUnOhZpmCMGCEVop8Zxzz9kD3FCD/view
   //  for complete details on algorithm, developed by Shreya.
   //  Preprocess signal and split it into pulses
-  // SPLIT_PPG_SIGNAL
-  //  Returns an array of indices such that each pair of
-  //  adjacent indices forms a pulse in the ppg signal. Also returns smoothed
-  //  PPG signal for debugging purposes
-  //  Smooth the ppg signal aggressively using a moving average
-  coder::filter(processed_ppg_signal, smoothed_ppg_signal);
-
-  //  Fix the delay caused by the filter before finding the peaks
-  if (smoothed_ppg_signal.size(1) - 19 < 19) {
-    i = 0;
-    loop_ub_tmp = 0;
-  } else {
-    i = 18;
-    loop_ub_tmp = smoothed_ppg_signal.size(1) - 19;
-  }
-
-  loop_ub = loop_ub_tmp - i;
-  b_smoothed_ppg_signal.set_size(1, loop_ub);
-  for (loop_ub_tmp = 0; loop_ub_tmp < loop_ub; loop_ub_tmp++) {
-    b_smoothed_ppg_signal[loop_ub_tmp] = -smoothed_ppg_signal[i + loop_ub_tmp];
-  }
-
-  coder::findpeaks(b_smoothed_ppg_signal, a__1, indices);
+  split_ppg_signal(processed_ppg_signal, indices);
 
   //  Calculate scores of all pulses
   scores.set_size(indices.size(1) - 1);
@@ -5945,66 +5913,67 @@ void score_ppg_signal_fourier(const coder::array<double, 2U>
   if (loop_ub - 2 >= 0) {
     if (sMultiWord2Double((const unsigned int *)&coefficient_count.chunks[0U]) <
         1.0) {
-      b_loop_ub_tmp = 0;
+      b_loop_ub = 0;
     } else {
-      b_loop_ub_tmp = static_cast<int>(sMultiWord2Double((const unsigned int *)
+      b_loop_ub = static_cast<int>(sMultiWord2Double((const unsigned int *)
         &coefficient_count.chunks[0U]));
     }
 
-    d = sMultiWord2Double((const unsigned int *)&coefficient_count.chunks[0U]);
     combined_coef_size[0] = 1;
-    combined_coef_size[1] = b_loop_ub_tmp;
+    combined_coef_size[1] = b_loop_ub;
   }
 
-  for (int b_i{0}; b_i <= loop_ub - 2; b_i++) {
+  for (int i{0}; i <= loop_ub - 2; i++) {
     creal_T yCol[500];
-    double combined_coef_data[500];
-    double d1;
-    double y;
-    int b_loop_ub;
-    scores[b_i] = 0.0;
-    y = indices[b_i];
-    d1 = indices[b_i + 1];
-    if (y > d1) {
-      i = 0;
-      loop_ub_tmp = 0;
+    double b_combined_coef_data[500];
+    double b_y;
+    double d;
+    int b_i;
+    int c_loop_ub;
+    int d_loop_ub;
+    scores[i] = 0.0;
+    b_y = indices[i];
+    d = indices[i + 1];
+    if (b_y > d) {
+      b_i = 0;
+      c_loop_ub = 0;
     } else {
-      i = static_cast<int>(y) - 1;
-      loop_ub_tmp = static_cast<int>(d1);
+      b_i = static_cast<int>(b_y) - 1;
+      c_loop_ub = static_cast<int>(d);
     }
 
     // PREPROCESS_PPG_PULSE
     //  Returns a processed copy of a PPG pulse.
     //  Normalize and rescale to [0, 1] range
-    b_loop_ub = loop_ub_tmp - i;
-    smoothed_ppg_signal.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      smoothed_ppg_signal[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp];
+    d_loop_ub = c_loop_ub - b_i;
+    b_processed_ppg_signal.set_size(1, d_loop_ub);
+    for (int i1{0}; i1 < d_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[b_i + i1];
     }
 
-    y = coder::combineVectorElements(smoothed_ppg_signal) / static_cast<double>
-      (b_loop_ub);
-    a__1.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      a__1[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp] - y;
+    b_y = coder::combineVectorElements(b_processed_ppg_signal) / static_cast<
+      double>(d_loop_ub);
+    b_processed_ppg_signal.set_size(1, d_loop_ub);
+    for (int i1{0}; i1 < d_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[b_i + i1] - b_y;
     }
 
-    coder::b_abs(a__1, smoothed_ppg_signal);
-    y = coder::internal::maximum(smoothed_ppg_signal);
-    a__1.set_size(1, a__1.size(1));
-    loop_ub_tmp = a__1.size(1) - 1;
-    for (i = 0; i <= loop_ub_tmp; i++) {
-      a__1[i] = a__1[i] / y;
+    coder::b_abs(b_processed_ppg_signal, y);
+    b_y = coder::internal::maximum(y);
+    b_processed_ppg_signal.set_size(1, b_processed_ppg_signal.size(1));
+    c_loop_ub = b_processed_ppg_signal.size(1) - 1;
+    for (int i1{0}; i1 <= c_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = b_processed_ppg_signal[i1] / b_y;
     }
 
     //  Interpolate using cubic interpolation
     //  We want a fixed amount of samples for all pulses
-    if (a__1.size(1) < 1) {
-      smoothed_ppg_signal.set_size(1, 0);
+    if (b_processed_ppg_signal.size(1) < 1) {
+      y.set_size(1, 0);
     } else {
-      smoothed_ppg_signal.set_size(1, b_loop_ub);
-      for (i = 0; i <= loop_ub_tmp; i++) {
-        smoothed_ppg_signal[i] = static_cast<double>(i) + 1.0;
+      y.set_size(1, d_loop_ub);
+      for (int i1{0}; i1 <= c_loop_ub; i1++) {
+        y[i1] = static_cast<double>(i1) + 1.0;
       }
     }
 
@@ -6013,47 +5982,46 @@ void score_ppg_signal_fourier(const coder::array<double, 2U>
     //  FFT returns the coefficients in complex form, but we can convert that
     //  into the real form (sin/cos) using Euler's identity
     //  https://en.wikipedia.org/wiki/Sine_and_cosine_transforms#Relation_with_complex_exponentials
-    coder::linspace(static_cast<double>(a__1.size(1)), combined_coef_data);
-    coder::interp1(smoothed_ppg_signal, a__1, combined_coef_data,
+    coder::linspace(static_cast<double>(b_processed_ppg_signal.size(1)),
+                    combined_coef_data);
+    coder::interp1(y, b_processed_ppg_signal, combined_coef_data,
                    b_combined_coef_data);
     coder::internal::fft::FFTImplementationCallback::doHalfLengthBluestein
       (b_combined_coef_data, yCol, wwc, dv, sintabinv);
-    for (i = 0; i < b_loop_ub_tmp; i++) {
-      b_combined_coef_data[i] = yCol[i].re;
+    for (int i1{0}; i1 < b_loop_ub; i1++) {
+      combined_coef_data[i1] = yCol[i1].re;
     }
 
-    if (d < 1.0) {
-      smoothed_ppg_signal.set_size(1, 0);
+    if (sMultiWord2Double((const unsigned int *)&coefficient_count.chunks[0U]) <
+        1.0) {
+      y.set_size(1, 0);
     } else {
-      b_loop_ub = static_cast<int>(d - 1.0);
-      smoothed_ppg_signal.set_size(1, static_cast<int>(d - 1.0) + 1);
-      for (i = 0; i <= b_loop_ub; i++) {
-        smoothed_ppg_signal[i] = static_cast<double>(i) + 1.0;
+      y.set_size(1, static_cast<int>(sMultiWord2Double((const unsigned int *)
+        &coefficient_count.chunks[0U]) - 1.0) + 1);
+      c_loop_ub = static_cast<int>(sMultiWord2Double((const unsigned int *)
+        &coefficient_count.chunks[0U]) - 1.0);
+      for (int i1{0}; i1 <= c_loop_ub; i1++) {
+        y[i1] = static_cast<double>(i1) + 1.0;
       }
     }
 
-    c_combined_coef_data.set(&b_combined_coef_data[0], 1, b_loop_ub_tmp);
-    y = coder::combineVectorElements(c_combined_coef_data);
-    for (i = 0; i < b_loop_ub_tmp; i++) {
-      combined_coef_data[i] = b_combined_coef_data[i] / y;
+    c_combined_coef_data.set(&combined_coef_data[0], 1, b_loop_ub);
+    b_y = coder::combineVectorElements(c_combined_coef_data);
+    for (int i1{0}; i1 < b_loop_ub; i1++) {
+      b_combined_coef_data[i1] = combined_coef_data[i1] / b_y;
     }
 
-    scores[b_i] = coder::dot(combined_coef_data, combined_coef_size,
-      smoothed_ppg_signal);
+    scores[i] = coder::dot(b_combined_coef_data, combined_coef_size, y);
   }
 }
 
 void score_ppg_signal_linear_slope(const coder::array<double, 2U>
   &processed_ppg_signal, coder::array<double, 1U> &scores)
 {
-  coder::array<double, 2U> a__1;
-  coder::array<double, 2U> b_smoothed_ppg_signal;
+  coder::array<double, 2U> b_processed_ppg_signal;
   coder::array<double, 2U> indices;
-  coder::array<double, 2U> smoothed_ppg_signal;
-  double a__3;
-  int i;
+  coder::array<double, 2U> y;
   int loop_ub;
-  int loop_ub_tmp;
 
   // SCORE_PPG_LINEAR_SLOPE
   //  Returns the health scores of all pulses in a preprocessed
@@ -6061,92 +6029,72 @@ void score_ppg_signal_linear_slope(const coder::array<double, 2U>
   //  Ouyang's thesis for details -- this algorithm simply calculates
   //  the slope of the rising edge of each pulse.
   //  Split signal into pulses
-  // SPLIT_PPG_SIGNAL
-  //  Returns an array of indices such that each pair of
-  //  adjacent indices forms a pulse in the ppg signal. Also returns smoothed
-  //  PPG signal for debugging purposes
-  //  Smooth the ppg signal aggressively using a moving average
-  coder::filter(processed_ppg_signal, smoothed_ppg_signal);
-
-  //  Fix the delay caused by the filter before finding the peaks
-  if (smoothed_ppg_signal.size(1) - 19 < 19) {
-    i = 0;
-    loop_ub_tmp = 0;
-  } else {
-    i = 18;
-    loop_ub_tmp = smoothed_ppg_signal.size(1) - 19;
-  }
-
-  loop_ub = loop_ub_tmp - i;
-  b_smoothed_ppg_signal.set_size(1, loop_ub);
-  for (loop_ub_tmp = 0; loop_ub_tmp < loop_ub; loop_ub_tmp++) {
-    b_smoothed_ppg_signal[loop_ub_tmp] = -smoothed_ppg_signal[i + loop_ub_tmp];
-  }
-
-  coder::findpeaks(b_smoothed_ppg_signal, a__1, indices);
+  split_ppg_signal(processed_ppg_signal, indices);
 
   //  Calculate scores of all pulses
   scores.set_size(indices.size(1) - 1);
   loop_ub = indices.size(1);
-  for (int b_i{0}; b_i <= loop_ub - 2; b_i++) {
+  for (int i{0}; i <= loop_ub - 2; i++) {
     double b_dv[500];
     double ppg_pulse[500];
     double a__2;
-    double y;
+    double b_y;
+    int b_i;
     int b_loop_ub;
-    scores[b_i] = 0.0;
-    y = indices[b_i];
-    a__2 = indices[b_i + 1];
-    if (y > a__2) {
-      i = 0;
-      loop_ub_tmp = 0;
+    int c_loop_ub;
+    scores[i] = 0.0;
+    b_y = indices[i];
+    a__2 = indices[i + 1];
+    if (b_y > a__2) {
+      b_i = 0;
+      b_loop_ub = 0;
     } else {
-      i = static_cast<int>(y) - 1;
-      loop_ub_tmp = static_cast<int>(a__2);
+      b_i = static_cast<int>(b_y) - 1;
+      b_loop_ub = static_cast<int>(a__2);
     }
 
     // PREPROCESS_PPG_PULSE
     //  Returns a processed copy of a PPG pulse.
     //  Normalize and rescale to [0, 1] range
-    b_loop_ub = loop_ub_tmp - i;
-    smoothed_ppg_signal.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      smoothed_ppg_signal[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp];
+    c_loop_ub = b_loop_ub - b_i;
+    b_processed_ppg_signal.set_size(1, c_loop_ub);
+    for (int i1{0}; i1 < c_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[b_i + i1];
     }
 
-    y = coder::combineVectorElements(smoothed_ppg_signal) / static_cast<double>
-      (b_loop_ub);
-    a__1.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      a__1[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp] - y;
+    b_y = coder::combineVectorElements(b_processed_ppg_signal) / static_cast<
+      double>(c_loop_ub);
+    b_processed_ppg_signal.set_size(1, c_loop_ub);
+    for (int i1{0}; i1 < c_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[b_i + i1] - b_y;
     }
 
-    coder::b_abs(a__1, smoothed_ppg_signal);
-    y = coder::internal::maximum(smoothed_ppg_signal);
-    a__1.set_size(1, a__1.size(1));
-    loop_ub_tmp = a__1.size(1) - 1;
-    for (i = 0; i <= loop_ub_tmp; i++) {
-      a__1[i] = a__1[i] / y;
+    coder::b_abs(b_processed_ppg_signal, y);
+    b_y = coder::internal::maximum(y);
+    b_processed_ppg_signal.set_size(1, b_processed_ppg_signal.size(1));
+    b_loop_ub = b_processed_ppg_signal.size(1) - 1;
+    for (int i1{0}; i1 <= b_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = b_processed_ppg_signal[i1] / b_y;
     }
 
     //  Interpolate using cubic interpolation
     //  We want a fixed amount of samples for all pulses
-    if (a__1.size(1) < 1) {
-      smoothed_ppg_signal.set_size(1, 0);
+    if (b_processed_ppg_signal.size(1) < 1) {
+      y.set_size(1, 0);
     } else {
-      smoothed_ppg_signal.set_size(1, b_loop_ub);
-      for (i = 0; i <= loop_ub_tmp; i++) {
-        smoothed_ppg_signal[i] = static_cast<double>(i) + 1.0;
+      y.set_size(1, c_loop_ub);
+      for (int i1{0}; i1 <= b_loop_ub; i1++) {
+        y[i1] = static_cast<double>(i1) + 1.0;
       }
     }
 
-    coder::linspace(static_cast<double>(a__1.size(1)), b_dv);
-    coder::interp1(smoothed_ppg_signal, a__1, b_dv, ppg_pulse);
-    y = find_pulse_points(ppg_pulse, a__2, a__3);
-    if (y == 1.0) {
-      scores[b_i] = 0.0;
+    coder::linspace(static_cast<double>(b_processed_ppg_signal.size(1)), b_dv);
+    coder::interp1(y, b_processed_ppg_signal, b_dv, ppg_pulse);
+    b_y = find_pulse_points(ppg_pulse, b_y, a__2);
+    if (b_y == 1.0) {
+      scores[i] = 0.0;
     } else {
-      scores[b_i] = (ppg_pulse[static_cast<int>(y) - 1] - ppg_pulse[0]) / (y -
+      scores[i] = (ppg_pulse[static_cast<int>(b_y) - 1] - ppg_pulse[0]) / (b_y -
         1.0);
     }
   }
@@ -6155,14 +6103,10 @@ void score_ppg_signal_linear_slope(const coder::array<double, 2U>
 void score_ppg_signal_peak_detection(const coder::array<double, 2U>
   &processed_ppg_signal, coder::array<double, 1U> &scores)
 {
-  coder::array<double, 2U> a__1;
-  coder::array<double, 2U> b_smoothed_ppg_signal;
+  coder::array<double, 2U> b_processed_ppg_signal;
   coder::array<double, 2U> indices;
-  coder::array<double, 2U> smoothed_ppg_signal;
-  double dicrotic_notch;
-  int i;
+  coder::array<double, 2U> y;
   int loop_ub;
-  int loop_ub_tmp;
 
   // SCORE_PPG_SIGNAL_PEAK_DETECTION
   //  Returns the health scores of all pulses in a preprocessed
@@ -6170,94 +6114,75 @@ void score_ppg_signal_peak_detection(const coder::array<double, 2U>
   //  detection to find position of dicrotic notch relative to the
   //  diastolic and systolic peaks.
   //  Split signal into pulses
-  // SPLIT_PPG_SIGNAL
-  //  Returns an array of indices such that each pair of
-  //  adjacent indices forms a pulse in the ppg signal. Also returns smoothed
-  //  PPG signal for debugging purposes
-  //  Smooth the ppg signal aggressively using a moving average
-  coder::filter(processed_ppg_signal, smoothed_ppg_signal);
-
-  //  Fix the delay caused by the filter before finding the peaks
-  if (smoothed_ppg_signal.size(1) - 19 < 19) {
-    i = 0;
-    loop_ub_tmp = 0;
-  } else {
-    i = 18;
-    loop_ub_tmp = smoothed_ppg_signal.size(1) - 19;
-  }
-
-  loop_ub = loop_ub_tmp - i;
-  b_smoothed_ppg_signal.set_size(1, loop_ub);
-  for (loop_ub_tmp = 0; loop_ub_tmp < loop_ub; loop_ub_tmp++) {
-    b_smoothed_ppg_signal[loop_ub_tmp] = -smoothed_ppg_signal[i + loop_ub_tmp];
-  }
-
-  coder::findpeaks(b_smoothed_ppg_signal, a__1, indices);
+  split_ppg_signal(processed_ppg_signal, indices);
 
   //  Calculate scores of all pulses
   scores.set_size(indices.size(1) - 1);
   loop_ub = indices.size(1);
-  for (int b_i{0}; b_i <= loop_ub - 2; b_i++) {
+  for (int i{0}; i <= loop_ub - 2; i++) {
     double b_dv[500];
     double ppg_pulse[500];
+    double b_y;
     double diastolic_peak;
-    double y;
+    double dicrotic_notch;
+    int b_i;
     int b_loop_ub;
-    scores[b_i] = 0.0;
-    y = indices[b_i];
-    diastolic_peak = indices[b_i + 1];
-    if (y > diastolic_peak) {
-      i = 0;
-      loop_ub_tmp = 0;
+    int c_loop_ub;
+    scores[i] = 0.0;
+    b_y = indices[i];
+    diastolic_peak = indices[i + 1];
+    if (b_y > diastolic_peak) {
+      b_i = 0;
+      b_loop_ub = 0;
     } else {
-      i = static_cast<int>(y) - 1;
-      loop_ub_tmp = static_cast<int>(diastolic_peak);
+      b_i = static_cast<int>(b_y) - 1;
+      b_loop_ub = static_cast<int>(diastolic_peak);
     }
 
     // PREPROCESS_PPG_PULSE
     //  Returns a processed copy of a PPG pulse.
     //  Normalize and rescale to [0, 1] range
-    b_loop_ub = loop_ub_tmp - i;
-    smoothed_ppg_signal.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      smoothed_ppg_signal[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp];
+    c_loop_ub = b_loop_ub - b_i;
+    b_processed_ppg_signal.set_size(1, c_loop_ub);
+    for (int i1{0}; i1 < c_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[b_i + i1];
     }
 
-    y = coder::combineVectorElements(smoothed_ppg_signal) / static_cast<double>
-      (b_loop_ub);
-    a__1.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      a__1[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp] - y;
+    b_y = coder::combineVectorElements(b_processed_ppg_signal) / static_cast<
+      double>(c_loop_ub);
+    b_processed_ppg_signal.set_size(1, c_loop_ub);
+    for (int i1{0}; i1 < c_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[b_i + i1] - b_y;
     }
 
-    coder::b_abs(a__1, smoothed_ppg_signal);
-    y = coder::internal::maximum(smoothed_ppg_signal);
-    a__1.set_size(1, a__1.size(1));
-    loop_ub_tmp = a__1.size(1) - 1;
-    for (i = 0; i <= loop_ub_tmp; i++) {
-      a__1[i] = a__1[i] / y;
+    coder::b_abs(b_processed_ppg_signal, y);
+    b_y = coder::internal::maximum(y);
+    b_processed_ppg_signal.set_size(1, b_processed_ppg_signal.size(1));
+    b_loop_ub = b_processed_ppg_signal.size(1) - 1;
+    for (int i1{0}; i1 <= b_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = b_processed_ppg_signal[i1] / b_y;
     }
 
     //  Interpolate using cubic interpolation
     //  We want a fixed amount of samples for all pulses
-    if (a__1.size(1) < 1) {
-      smoothed_ppg_signal.set_size(1, 0);
+    if (b_processed_ppg_signal.size(1) < 1) {
+      y.set_size(1, 0);
     } else {
-      smoothed_ppg_signal.set_size(1, b_loop_ub);
-      for (i = 0; i <= loop_ub_tmp; i++) {
-        smoothed_ppg_signal[i] = static_cast<double>(i) + 1.0;
+      y.set_size(1, c_loop_ub);
+      for (int i1{0}; i1 <= b_loop_ub; i1++) {
+        y[i1] = static_cast<double>(i1) + 1.0;
       }
     }
 
-    coder::linspace(static_cast<double>(a__1.size(1)), b_dv);
-    coder::interp1(smoothed_ppg_signal, a__1, b_dv, ppg_pulse);
-    y = find_pulse_points(ppg_pulse, diastolic_peak, dicrotic_notch);
-    if (y == diastolic_peak) {
-      scores[b_i] = 0.0;
+    coder::linspace(static_cast<double>(b_processed_ppg_signal.size(1)), b_dv);
+    coder::interp1(y, b_processed_ppg_signal, b_dv, ppg_pulse);
+    b_y = find_pulse_points(ppg_pulse, diastolic_peak, dicrotic_notch);
+    if (b_y == diastolic_peak) {
+      scores[i] = 0.0;
     } else {
-      y = ppg_pulse[static_cast<int>(y) - 1];
-      scores[b_i] = (y - ppg_pulse[static_cast<int>(dicrotic_notch) - 1]) / (y -
-        ppg_pulse[static_cast<int>(diastolic_peak) - 1]);
+      b_y = ppg_pulse[static_cast<int>(b_y) - 1];
+      scores[i] = (b_y - ppg_pulse[static_cast<int>(dicrotic_notch) - 1]) / (b_y
+        - ppg_pulse[static_cast<int>(diastolic_peak) - 1]);
     }
   }
 }
@@ -6265,17 +6190,13 @@ void score_ppg_signal_peak_detection(const coder::array<double, 2U>
 void score_ppg_signal_rising_edge_area(const coder::array<double, 2U>
   &processed_ppg_signal, coder::array<double, 1U> &scores)
 {
-  coder::array<double, 2U> a__1;
-  coder::array<double, 2U> b_a__4_data;
-  coder::array<double, 2U> b_smoothed_ppg_signal;
+  coder::array<double, 2U> b_a__3_data;
+  coder::array<double, 2U> b_processed_ppg_signal;
   coder::array<double, 2U> indices;
-  coder::array<double, 2U> smoothed_ppg_signal;
-  double a__4_data[500];
+  coder::array<double, 2U> y;
+  double a__3_data[500];
   double first_derivative_peak_indices_data[500];
-  double a__3;
-  int i;
   int loop_ub;
-  int loop_ub_tmp;
 
   // SCORE_PPG_RISING_EDGE_AREA
   //  Returns the health scores of all pulses in a preprocessed
@@ -6283,98 +6204,79 @@ void score_ppg_signal_rising_edge_area(const coder::array<double, 2U>
   //  Ouyang's thesis for details -- this algorithm calculates the area under
   //  the rising edge curve.
   //  Split signal into pulses
-  // SPLIT_PPG_SIGNAL
-  //  Returns an array of indices such that each pair of
-  //  adjacent indices forms a pulse in the ppg signal. Also returns smoothed
-  //  PPG signal for debugging purposes
-  //  Smooth the ppg signal aggressively using a moving average
-  coder::filter(processed_ppg_signal, smoothed_ppg_signal);
-
-  //  Fix the delay caused by the filter before finding the peaks
-  if (smoothed_ppg_signal.size(1) - 19 < 19) {
-    i = 0;
-    loop_ub_tmp = 0;
-  } else {
-    i = 18;
-    loop_ub_tmp = smoothed_ppg_signal.size(1) - 19;
-  }
-
-  loop_ub = loop_ub_tmp - i;
-  b_smoothed_ppg_signal.set_size(1, loop_ub);
-  for (loop_ub_tmp = 0; loop_ub_tmp < loop_ub; loop_ub_tmp++) {
-    b_smoothed_ppg_signal[loop_ub_tmp] = -smoothed_ppg_signal[i + loop_ub_tmp];
-  }
-
-  coder::findpeaks(b_smoothed_ppg_signal, a__1, indices);
+  split_ppg_signal(processed_ppg_signal, indices);
 
   //  Calculate scores of all pulses
   scores.set_size(indices.size(1) - 1);
   loop_ub = indices.size(1);
-  for (int b_i{0}; b_i <= loop_ub - 2; b_i++) {
+  for (int i{0}; i <= loop_ub - 2; i++) {
     double first_derivative[500];
     double ppg_pulse[500];
     double a__2;
     double ending_point;
-    int a__4_size[2];
+    int a__3_size[2];
     int first_derivative_peak_indices_size[2];
+    int b_i;
     int b_loop_ub;
-    scores[b_i] = 0.0;
-    ending_point = indices[b_i];
-    a__2 = indices[b_i + 1];
+    int c_loop_ub;
+    scores[i] = 0.0;
+    ending_point = indices[i];
+    a__2 = indices[i + 1];
     if (ending_point > a__2) {
-      i = 0;
-      loop_ub_tmp = 0;
+      b_i = 0;
+      b_loop_ub = 0;
     } else {
-      i = static_cast<int>(ending_point) - 1;
-      loop_ub_tmp = static_cast<int>(a__2);
+      b_i = static_cast<int>(ending_point) - 1;
+      b_loop_ub = static_cast<int>(a__2);
     }
 
     // PREPROCESS_PPG_PULSE
     //  Returns a processed copy of a PPG pulse.
     //  Normalize and rescale to [0, 1] range
-    b_loop_ub = loop_ub_tmp - i;
-    smoothed_ppg_signal.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      smoothed_ppg_signal[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp];
+    c_loop_ub = b_loop_ub - b_i;
+    b_processed_ppg_signal.set_size(1, c_loop_ub);
+    for (int i1{0}; i1 < c_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[b_i + i1];
     }
 
-    ending_point = coder::combineVectorElements(smoothed_ppg_signal) /
-      static_cast<double>(b_loop_ub);
-    a__1.set_size(1, b_loop_ub);
-    for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-      a__1[loop_ub_tmp] = processed_ppg_signal[i + loop_ub_tmp] - ending_point;
+    ending_point = coder::combineVectorElements(b_processed_ppg_signal) /
+      static_cast<double>(c_loop_ub);
+    b_processed_ppg_signal.set_size(1, c_loop_ub);
+    for (int i1{0}; i1 < c_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[b_i + i1] - ending_point;
     }
 
-    coder::b_abs(a__1, smoothed_ppg_signal);
-    ending_point = coder::internal::maximum(smoothed_ppg_signal);
-    a__1.set_size(1, a__1.size(1));
-    loop_ub_tmp = a__1.size(1) - 1;
-    for (i = 0; i <= loop_ub_tmp; i++) {
-      a__1[i] = a__1[i] / ending_point;
+    coder::b_abs(b_processed_ppg_signal, y);
+    ending_point = coder::internal::maximum(y);
+    b_processed_ppg_signal.set_size(1, b_processed_ppg_signal.size(1));
+    b_loop_ub = b_processed_ppg_signal.size(1) - 1;
+    for (int i1{0}; i1 <= b_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = b_processed_ppg_signal[i1] / ending_point;
     }
 
     //  Interpolate using cubic interpolation
     //  We want a fixed amount of samples for all pulses
-    if (a__1.size(1) < 1) {
-      smoothed_ppg_signal.set_size(1, 0);
+    if (b_processed_ppg_signal.size(1) < 1) {
+      y.set_size(1, 0);
     } else {
-      smoothed_ppg_signal.set_size(1, b_loop_ub);
-      for (i = 0; i <= loop_ub_tmp; i++) {
-        smoothed_ppg_signal[i] = static_cast<double>(i) + 1.0;
+      y.set_size(1, c_loop_ub);
+      for (int i1{0}; i1 <= b_loop_ub; i1++) {
+        y[i1] = static_cast<double>(i1) + 1.0;
       }
     }
 
-    coder::linspace(static_cast<double>(a__1.size(1)), first_derivative);
-    coder::interp1(smoothed_ppg_signal, a__1, first_derivative, ppg_pulse);
-    ending_point = find_pulse_points(ppg_pulse, a__2, a__3);
+    coder::linspace(static_cast<double>(b_processed_ppg_signal.size(1)),
+                    first_derivative);
+    coder::interp1(y, b_processed_ppg_signal, first_derivative, ppg_pulse);
+    ending_point = find_pulse_points(ppg_pulse, ending_point, a__2);
 
     //  Find the first derivative
     coder::gradient(ppg_pulse, first_derivative);
-    coder::b_findpeaks(first_derivative, a__4_data, a__4_size,
+    coder::b_findpeaks(first_derivative, a__3_data, a__3_size,
                        first_derivative_peak_indices_data,
                        first_derivative_peak_indices_size);
     if (first_derivative_peak_indices_size[1] == 0) {
-      scores[b_i] = 0.0;
+      scores[i] = 0.0;
     } else {
       double first_derivative_peak_indices[2];
 
@@ -6385,25 +6287,57 @@ void score_ppg_signal_rising_edge_area(const coder::array<double, 2U>
 
       //  Integral of second derivative (numerator) and original pulse (denominator)
       if (first_derivative_peak_indices_data[0] > ending_point) {
-        i = 0;
-        loop_ub_tmp = 0;
+        b_i = 0;
+        b_loop_ub = 0;
       } else {
-        i = static_cast<int>(first_derivative_peak_indices_data[0]) - 1;
-        loop_ub_tmp = static_cast<int>(ending_point);
+        b_i = static_cast<int>(first_derivative_peak_indices_data[0]) - 1;
+        b_loop_ub = static_cast<int>(ending_point);
       }
 
-      b_loop_ub = loop_ub_tmp - i;
-      for (loop_ub_tmp = 0; loop_ub_tmp < b_loop_ub; loop_ub_tmp++) {
-        a__4_data[loop_ub_tmp] = ppg_pulse[i + loop_ub_tmp];
+      b_loop_ub -= b_i;
+      for (int i1{0}; i1 < b_loop_ub; i1++) {
+        a__3_data[i1] = ppg_pulse[b_i + i1];
       }
 
-      b_a__4_data.set(&a__4_data[0], 1, b_loop_ub);
-      scores[b_i] = std::abs((first_derivative[static_cast<int>(ending_point) -
-        1] - first_derivative[static_cast<int>
-        (first_derivative_peak_indices_data[0]) - 1]) / coder::
-        combineVectorElements(b_a__4_data));
+      b_a__3_data.set(&a__3_data[0], 1, b_loop_ub);
+      scores[i] = std::abs((first_derivative[static_cast<int>(ending_point) - 1]
+                            - first_derivative[static_cast<int>
+                            (first_derivative_peak_indices_data[0]) - 1]) /
+                           coder::combineVectorElements(b_a__3_data));
     }
   }
+}
+
+void split_ppg_signal(const coder::array<double, 2U> &ppg_signal, coder::array<
+                      double, 2U> &indices)
+{
+  coder::array<double, 2U> b_smoothed_ppg_signal;
+  coder::array<double, 2U> smoothed_ppg_signal;
+  int i;
+  int loop_ub;
+
+  // SPLIT_PPG_SIGNAL
+  //  Returns an array of indices such that each pair of
+  //  adjacent indices forms a pulse in the ppg signal
+  //  Smooth the ppg signal aggressively using a moving average
+  coder::filter(ppg_signal, smoothed_ppg_signal);
+
+  //  Fix the delay caused by the filter before finding the peaks
+  if (smoothed_ppg_signal.size(1) - 19 < 19) {
+    i = 0;
+    loop_ub = 0;
+  } else {
+    i = 18;
+    loop_ub = smoothed_ppg_signal.size(1) - 19;
+  }
+
+  loop_ub -= i;
+  b_smoothed_ppg_signal.set_size(1, loop_ub);
+  for (int i1{0}; i1 < loop_ub; i1++) {
+    b_smoothed_ppg_signal[i1] = -smoothed_ppg_signal[i + i1];
+  }
+
+  coder::findpeaks(b_smoothed_ppg_signal, smoothed_ppg_signal, indices);
 }
 
 // End of code generation (preprocess_ppg_signal.cpp)

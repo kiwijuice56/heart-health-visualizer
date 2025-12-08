@@ -35,15 +35,15 @@ func initialize_information(recording: Recording) -> void:
 	preprocessed_timestamps.resize(recording.processed_ppg_signal.size())
 	for i in range(preprocessed_timestamps.size()):
 		preprocessed_timestamps[i] = i
-	var smoothed_signal: PackedFloat64Array =  Ref.recorder.ppg_analyzer.smoothed_ppg_signal(Ref.recorder.ppg_analyzer.smoothed_ppg_signal(recording.processed_ppg_signal, x), y)
-	var peak_indices: PackedInt32Array = Ref.recorder.ppg_analyzer.peak_finder(smoothed_signal)
-	%ProcessedChart.InitializeDebug(smoothed_signal, preprocessed_timestamps, peak_indices)
+	# var smoothed_signal: PackedFloat64Array = Ref.recorder.ppg_analyzer.smoothed_ppg_signal(Ref.recorder.ppg_analyzer.smoothed_ppg_signal(recording.processed_ppg_signal, x), y)
+	# var peak_indices: PackedInt32Array = Ref.recorder.ppg_analyzer.peak_finder(smoothed_signal)
+	%ProcessedChart.InitializeDebug(recording.processed_ppg_signal, preprocessed_timestamps, Ref.recorder.ppg_analyzer.get_ppg_indices(recording.processed_ppg_signal))
 	
 	show_advanced_info = false
 	handle_advanced_info()
 
 func handle_advanced_info() -> void:
-	%ProcessedChart.visible = show_advanced_info
+	%Chart.visible = show_advanced_info
 	%FourierPulseScoresLabel.visible = show_advanced_info
 	%LinearSlopePulseScoresLabel.visible = show_advanced_info
 	%RisingEdgeAreaPulseScoresLabel.visible = show_advanced_info

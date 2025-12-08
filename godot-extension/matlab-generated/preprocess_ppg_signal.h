@@ -45,5 +45,8 @@ extern void score_ppg_signal_rising_edge_area(
     const coder::array<double, 2U> &processed_ppg_signal,
     coder::array<double, 1U> &scores);
 
+extern void split_ppg_signal(const coder::array<double, 2U> &ppg_signal,
+                             coder::array<double, 2U> &indices);
+
 #endif
 // End of code generation (preprocess_ppg_signal.h)

@@ -11,6 +11,8 @@ class_name Recording extends Resource
 
 @export_group("Processed Data")
 @export var processed_ppg_signal: PackedFloat64Array # Evenly spaced 150 Hz signal
+@export var pulse_indices: PackedInt32Array
+@export var average_ppg_pulse: PackedFloat64Array
 @export var health_score: float
 @export var heart_rate: float
 @export var heart_rate_variability: float

@@ -42,6 +42,9 @@ public:
 	PackedFloat64Array calculate_pulse_scores_rising_edge_area(PackedFloat64Array preprocessed_ppg_signal);
 	PackedFloat64Array calculate_pulse_scores_peak_detection(PackedFloat64Array preprocessed_ppg_signal);
 
+	// Returns the indices splitting the PPG signal into pulses
+	PackedInt32Array get_ppg_indices(PackedFloat64Array processed_ppg_signal);
+
 	// Helper functions to convert data to and from Godot
 	PackedFloat64Array matlab_scores_to_godot_scores(coder::array<double, 1U> matlab_scores);
 	coder::array<double, 2U> godot_signal_to_matlab_signal(PackedFloat64Array godot_signal);

@@ -143,27 +143,28 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.133333)
 
-[node name="Chart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-padding = 0.3
-
 [node name="ProcessedChart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 peakColor = Color(0.1098039, 0.61208344, 0.92156863, 0.6)
-padding = 0.3
+padding = 0.4
 peakLength = 0
 lineWidth = 3.0
 peakRadius = 5.0
 
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer/ProcessedChart"]
-modulate = Color(1, 1, 1, 0.372549)
+[node name="Chart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-text = "(resampled and smoothened signal)"
+padding = 0.4
+
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer/Chart"]
+modulate = Color(1, 1, 1, 0.372549)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "(raw data)"
 
 [node name="ScoreLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
