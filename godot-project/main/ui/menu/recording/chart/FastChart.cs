@@ -1,4 +1,4 @@
-// Script taken from GDMuse (also created by me): https://github.com/kiwijuice56/gd-muse/tree/master/godot-project/main/ui/data_panel/stream_panel/chart
+// Script taken from GDMuse (also created by me): https://github.com/kiwijuice56/gd-muse/blob/master/godot-project/main/ui/recording_data_panel/stream_panel/chart/FastChart.cs
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -20,9 +20,7 @@ public partial class FastChart : PanelContainer {
 	[Export]
 	public double lineWidth = 0.9;
 	[Export]
-	public double peakLineWidth = 3.5;
-	[Export]
-	public long timestampThreshold = 20000;
+	public double peakRadius = 3.5;
 	[Export]
 	public bool live;
 
@@ -70,34 +68,36 @@ public partial class FastChart : PanelContainer {
 			}
 		}
 
+		List<Vector2> points = new List<Vector2>();
+		List<Vector2> circles = new List<Vector2>();
 		int peakCounter = 0;
 		for (int i = 1; i < stream.Count; i++) {
-			if (timestamps[i - 1] < minX || timestamps[i - 1] > maxX) {
+			if ((i != stream.Count - 1 && timestamps[i + 1] < minX) || timestamps[i] > maxX) {
 				continue;
 			}
 			Vector2 from = new Vector2(
 				(float) Fit(timestamps[i - 1], minX, maxX, Size.X),
 				(float) (Size.Y - Fit(stream[i - 1], minY, maxY, Size.Y))
 			);
+			
 			from.Y = (float) (from.Y * (1.0 - padding) + Size.Y * padding / 2.0);
-
-			Vector2 to = new Vector2(
-				(float) (Fit(timestamps[i], minX, maxX, Size.X)),
-				(float) (Size.Y - Fit(stream[i], minY, maxY, Size.Y))
-			);
-			to.Y = (float) (to.Y * (1.0 - padding) + Size.Y * padding / 2.0);
-			to.X = Mathf.Min(Size.X, to.X);
+			points.Add(new Vector2(from.X, from.Y));
+			
 			if (peakCounter < peakIndices.Count && (peakIndices[peakCounter] - i) <= peakLength) {
-				DrawLine(from, to, peakColor, (float) peakLineWidth, true);
+				circles.Add(new Vector2(from.X, from.Y));
 				if (i == peakIndices[peakCounter]) {
 					peakCounter += 1;
 				}
-			} else {
-				DrawLine(from, to, lineColor, (float) lineWidth, true);
 			}
-			
 		}
-
+		
+		if (points.Count > 2) {
+			DrawPolyline(points.ToArray(), lineColor, (float) lineWidth);
+		}
+		
+		for (int i = 0; i < circles.Count; i++) {
+			DrawCircle(circles[i], (float) peakRadius, peakColor);
+		}
 	}
 
 	public double Fit(double v, double minV, double maxV, double scalar) {
@@ -116,10 +116,6 @@ public partial class FastChart : PanelContainer {
 		
 		for (int i = timestamps.Count - 1; i >= 0; i--) {
 			if (timestamps[i] < timestamp) {
-				if (Mathf.Abs(timestamps[i] - timestamp) <= timestampThreshold) {
-					return;
-				}
-
 				timestamps.Insert(i + 1, timestamp);
 				stream.Insert(i + 1, value);
 				break;

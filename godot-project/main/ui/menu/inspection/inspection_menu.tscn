@@ -147,14 +147,17 @@ color = Color(0, 0, 0, 0.133333)
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
+padding = 0.3
 
 [node name="ProcessedChart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-peakColor = Color(0.281833, 0.89, 0, 1)
+peakColor = Color(0.1098039, 0.61208344, 0.92156863, 0.6)
+padding = 0.3
 peakLength = 0
-peakLineWidth = 16.0
+lineWidth = 3.0
+peakRadius = 5.0
 
 [node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer/ProcessedChart"]
 modulate = Color(1, 1, 1, 0.372549)
