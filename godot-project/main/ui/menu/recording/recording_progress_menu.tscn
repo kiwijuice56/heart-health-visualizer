@@ -73,17 +73,12 @@ size_flags_horizontal = 4
 size_flags_vertical = 10
 text = "Recording... Please remain still."
 
-[node name="Chart" parent="VisualContainer/VBoxContainer" instance=ExtResource("3_76lal")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 4
-live = true
-
 [node name="SpinnyWheel" type="Control" parent="VisualContainer/VBoxContainer"]
+visible = false
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 size_flags_horizontal = 4
-size_flags_vertical = 2
+size_flags_vertical = 0
 
 [node name="TextureRect" type="TextureRect" parent="VisualContainer/VBoxContainer/SpinnyWheel"]
 layout_mode = 0
@@ -98,6 +93,22 @@ libraries = {
 &"": SubResource("AnimationLibrary_s758e")
 }
 autoplay = "spin"
+
+[node name="Chart" parent="VisualContainer/VBoxContainer" instance=ExtResource("3_76lal")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+size_flags_vertical = 0
+timeWindow = 5.5
+lineWidth = 3.0
+live = true
+
+[node name="ProgressBar" type="ProgressBar" parent="VisualContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 2
+max_value = 1.0
+show_percentage = false
 
 [node name="CameraTexture" type="TextureRect" parent="VisualContainer/VBoxContainer"]
 unique_name_in_owner = true

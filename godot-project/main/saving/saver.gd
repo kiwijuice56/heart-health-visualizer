@@ -20,33 +20,55 @@ func reload_recordings() -> void:
 	saved_recordings.clear()
 	
 	print("Reloading recordings...")
-	var dir: DirAccess = DirAccess.open(Ref.file_selector.get_save_path())
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-	while file_name != "":
-		var path: String = dir.get_current_dir() + "/" + file_name
-		if path.ends_with(".csv") or not path.contains(".tres"):
-			file_name = dir.get_next()
-			continue
+	
+	var root_path: String = Ref.file_selector.get_save_path()
+	var root_dir: DirAccess = DirAccess.open(root_path)
+	root_dir.list_dir_begin()
+	
+	var entry: String = root_dir.get_next()
+	while entry != "":
+		if root_dir.current_is_dir() and entry != "." and entry != "..":
+			var sub_path: String = root_path + "/" + entry
+			var sub_dir: DirAccess = DirAccess.open(sub_path)
+			
+			if sub_dir:
+				sub_dir.list_dir_begin()
+				var file: String = sub_dir.get_next()
+				
+				while file != "":
+					var file_path: String = sub_path + "/" + file
+					if file_path.ends_with(".csv") or not file_path.ends_with(".tres"):
+						file = sub_dir.get_next()
+						continue
+					var resource: Resource = ResourceLoader.load(file_path)
+					if resource is Recording:
+						saved_recordings.append(resource as Recording)
+					file = sub_dir.get_next()
 		
-		var resource: Resource = ResourceLoader.load(path)
-		if resource is Recording:
-			var recording: Recording = resource as Recording
-			saved_recordings.append(recording)
-		file_name = dir.get_next()
+		entry = root_dir.get_next()
 	print("Done reloading recordings.")
 	recordings_refreshed.emit(saved_recordings)
 
 ## Saved a recording to storage.
 func save_recording(new_recording: Recording) -> void:
+	var folder: String = ""
+	if new_recording.user_id.length() == 0:
+		folder = "myself"
+	else:
+		folder = new_recording.user_id.validate_filename()
+	assert(folder.length() > 0)
+	
+	var root_path: String = Ref.file_selector.get_save_path() + folder + "/"
+	DirAccess.make_dir_absolute(root_path)
+	
 	# Save the app resource
 	var uuid: String = UUID.v4()
 	var file_name: String = uuid + ".tres"
-	ResourceSaver.save(new_recording, Ref.file_selector.get_save_path() + file_name)
+	ResourceSaver.save(new_recording, root_path + file_name)
 	
 	# Save the raw .csv for processing
 	var csv_file_name: String = uuid + ".csv"
-	var file_access: FileAccess = FileAccess.open(Ref.file_selector.get_save_path() + csv_file_name, FileAccess.WRITE)
+	var file_access: FileAccess = FileAccess.open(root_path + csv_file_name, FileAccess.WRITE)
 	# time | red channel
 	for i in range(len(new_recording.raw_ppg_signal_timestamps)):
 		file_access.store_csv_line([new_recording.raw_ppg_signal_timestamps[i], new_recording.raw_ppg_signal[i]])

@@ -39,7 +39,7 @@ func _on_recording_requested() -> void:
 	if not Ref.recorder.recording:
 		recording_progress_menu.enter()
 		
-		Ref.recorder.start_recording()
+		Ref.recorder.start_recording(%RecordingMenu.user_id.text)
 		var recording: Recording = await Ref.recorder.recording_completed
 		Ref.renderer.add_render_to_recording(recording)
 		Ref.saver.save_recording(recording)

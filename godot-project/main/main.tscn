@@ -135,7 +135,6 @@ text = "Record"
 
 [node name="RecordContainer" type="MarginContainer" parent="ScreenManager/MainContainer/ContentContainer"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 128
@@ -152,9 +151,11 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 text = "Record a snapshot of your heart health. 
 
+Enter a user ID if recording for a person other than yourself.
+
 Your pulse will be measured with your phone camera, then analyzed for warning signs of cardiovascular disease.
 
-No internet connection is needed. Results will be saved and viewable in the History tab."
+No internet connection is needed. Results will be saved and viewable in the history tab."
 autowrap_mode = 2
 
 [node name="CreateRecordingButton" type="Button" parent="ScreenManager/MainContainer/ContentContainer/RecordContainer/ContentContainer"]
@@ -253,6 +254,7 @@ layout_mode = 2
 
 [node name="SettingsContainer" type="MarginContainer" parent="ScreenManager/MainContainer/ContentContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 128
@@ -432,6 +434,7 @@ size_flags_horizontal = 4
 text = "Settings"
 
 [node name="RecordingMenuContainer" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -445,6 +448,7 @@ unique_name_in_owner = true
 layout_mode = 1
 
 [node name="AboutMenuContainer" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -458,6 +462,7 @@ unique_name_in_owner = true
 layout_mode = 1
 
 [node name="RecordingProgressMenuContainer" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -473,6 +478,7 @@ layout_mode = 1
 
 [node name="InspectionMenuContainer" type="Control" parent="."]
 unique_name_in_owner = true
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

@@ -16,6 +16,7 @@ var recording: bool = false
 var ignore_timer: SceneTreeTimer
 
 # Current recording state
+var recording_user_id: String
 var ppg_signal_timestamps: PackedInt64Array
 var ppg_signal: PackedInt32Array
 
@@ -54,10 +55,21 @@ func _on_camera_frame(timestamp: int, data: PackedByteArray, width: int, height:
 	ppg_signal.append(ppg_value)
 	ppg_signal_timestamps.append(timestamp)
 
-func start_recording() -> void:
+func start_progress_bar() -> void:
+	var tween: Tween = get_tree().create_tween()
+	%RecordingProgressMenu.progress_bar.value = 0.0
+	tween.tween_property(%RecordingProgressMenu.progress_bar, "value", 1.0, recording_length)
+
+func reset_progress_bar() -> void:
+	%RecordingProgressMenu.progress_bar.value = 0.0
+
+func start_recording(user_id: String) -> void:
 	if not camera.request_camera_permissions():
 		printerr("Camera permissions denied.")
 		return
+	
+	reset_progress_bar()
+	recording_user_id = user_id
 	
 	assert(not recording)
 	recording = true
@@ -68,7 +80,11 @@ func start_recording() -> void:
 	ppg_signal_timestamps.clear()
 	camera.start_camera(300, 300, true)
 	
-	await get_tree().create_timer(recording_length + initial_ignore_length).timeout
+	await get_tree().create_timer(initial_ignore_length).timeout
+	
+	start_progress_bar()
+	
+	await get_tree().create_timer(recording_length).timeout
 	if recording:
 		stop_recording()
 
@@ -78,11 +94,11 @@ func stop_recording() -> void:
 	
 	camera.stop_camera()
 	
-	var new_recording: Recording = create_recording()
+	var new_recording: Recording = create_recording(recording_user_id)
 	
 	recording_completed.emit(new_recording)
 
-func create_recording() -> Recording:
+func create_recording(user_id: String) -> Recording:
 	# These were observed experimentally and are used to normalize the scores into roughly the same scale
 	# because the original units are arbitrary -- these can be updated to weigh certain scores more than others
 	const median_fourier: float = 1.98
@@ -97,15 +113,18 @@ func create_recording() -> Recording:
 	
 	var new_recording: Recording = Recording.new()
 	
+	new_recording.user_id = user_id
 	new_recording.version = ProjectSettings.get_setting("application/config/version")
 	new_recording.time = Time.get_datetime_dict_from_system()
 	new_recording.recording_length = recording_length
 	new_recording.raw_ppg_signal = ppg_signal.duplicate()
 	new_recording.raw_ppg_signal_timestamps = ppg_signal_timestamps.duplicate()
 	
+	# Store intermediate steps of calculation for debugging and futureproofing
 	new_recording.processed_ppg_signal = ppg_analyzer.get_preprocessed_ppg_signal(ppg_signal, ppg_signal_timestamps)
+	new_recording.pulse_indices = ppg_analyzer.get_ppg_indices(new_recording.processed_ppg_signal)
 	
-	# Calculate HR and HRV using algorithms implemented in C++
+	# Calculate HR and HRV using algorithms entirely implemented in C++
 	new_recording.heart_rate = ppg_analyzer.calculate_heart_rate(new_recording.processed_ppg_signal, 150)
 	new_recording.heart_rate_variability = ppg_analyzer.calculate_heart_rate_variability(new_recording.processed_ppg_signal, 150)
 	

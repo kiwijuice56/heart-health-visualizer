@@ -1,6 +1,7 @@
 class_name RecordingProgressMenu extends Menu
 
 @onready var camera_texture_rect: TextureRect = %CameraTexture
+@onready var progress_bar: ProgressBar = %ProgressBar
 
 func _ready() -> void:
 	super._ready()

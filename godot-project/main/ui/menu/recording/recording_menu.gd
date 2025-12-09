@@ -1,6 +1,7 @@
 class_name RecordingMenu extends Menu
 
 @onready var record_button: Button = %RecordButton
+@onready var user_id: LineEdit = %UserIDLineEdit
 
 signal recording_requested
 

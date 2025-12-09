@@ -84,45 +84,60 @@ flat = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 128
-theme_override_constants/margin_top = 96
+theme_override_constants/margin_top = 64
 theme_override_constants/margin_right = 128
 theme_override_constants/margin_bottom = 128
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 64
+theme_override_constants/separation = 48
+
+[node name="UserIDContainer" type="HBoxContainer" parent="VBoxContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="VBoxContainer/MarginContainer/VBoxContainer/UserIDContainer"]
+layout_mode = 2
+text = "User ID: "
+
+[node name="UserIDLineEdit" type="LineEdit" parent="VBoxContainer/MarginContainer/VBoxContainer/UserIDContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "myself"
 
 [node name="InstructionsContainer" type="VBoxContainer" parent="VBoxContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 64
+theme_override_constants/separation = 32
 
 [node name="Instructions" type="VBoxContainer" parent="VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer"]
 layout_mode = 2
-theme_override_constants/separation = 32
+theme_override_constants/separation = 16
+
+[node name="Step0" type="Label" parent="VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+text = "Instructions:"
+autowrap_mode = 2
 
 [node name="Step1" type="Label" parent="VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-text = "1. Place your hand palm-up on a flat surface at an even level with your heart."
-autowrap_mode = 2
-
-[node name="Step3" type="Label" parent="VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-text = "2. Close your fist and extend your pointer finger outwards."
+text = "1. Place your hand palm-up on a flat surface."
 autowrap_mode = 2
 
 [node name="Step2" type="Label" parent="VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-text = "3. Rest your device on the flat surface with the camera placed over your pointer finger."
+text = "2. Close it and extend your pointer finger."
 autowrap_mode = 2
 
-[node name="Step4" type="Label" parent="VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
+[node name="Step3" type="Label" parent="VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer/Instructions"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-text = "4. Press \"Begin Recording\" and remain still for 30 seconds."
+text = "3. Rest your phone on the surface with the camera placed over your finger tip"
 autowrap_mode = 2
 
 [node name="Diagram" type="TextureRect" parent="VBoxContainer/MarginContainer/VBoxContainer/InstructionsContainer"]

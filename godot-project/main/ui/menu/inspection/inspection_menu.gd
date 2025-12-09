@@ -16,8 +16,10 @@ func initialize_information(recording: Recording) -> void:
 	recording.heart_rate = Ref.recorder.ppg_analyzer.calculate_heart_rate(recording.processed_ppg_signal, 150)
 	recording.heart_rate_variability = Ref.recorder.ppg_analyzer.calculate_heart_rate_variability(recording.processed_ppg_signal, 150)
 	
+	%NameLabel.text = "ID: " + recording.user_id
+	%NameLabel.visible = recording.user_id.length() > 0
 	%Render.texture = recording.render
-	%DateLabel.text = "%s/%s/%s" % [recording.time.year, recording.time.month, recording.time.day]
+	%DateLabel.text = "Date: %s/%s/%s" % [recording.time.year, recording.time.month, recording.time.day]
 	%ScoreLabel.text = "Score: " + str(int(100 * recording.health_score))
 	%HeartRateLabel.text = "Heart Rate: %.2f bpm" % recording.heart_rate
 	%HeartRateVariabilityLabel.text = "Heart Rate Variability: %.2f ms" % recording.heart_rate_variability

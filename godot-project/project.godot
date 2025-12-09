@@ -25,10 +25,6 @@ config/icon="uid://ooqjvjk5uawq"
 Ref="*res://main/autoload/ref.gd"
 UUID="*res://main/autoload/uuid.gd"
 
-[debug]
-
-settings/stdout/print_fps=true
-
 [display]
 
 window/size/viewport_width=1080
