@@ -3,15 +3,15 @@
 // course requirements at degree granting institutions only.  Not for
 // government, commercial, or other organizational use.
 //
-// preprocess_ppg_signal.cpp
+// score_ppg_signal_fourier.cpp
 //
-// Code generation for function 'preprocess_ppg_signal'
+// Code generation for function 'score_ppg_signal_fourier'
 //
 
 // Include files
-#include "preprocess_ppg_signal.h"
-#include "preprocess_ppg_signal_types.h"
+#include "score_ppg_signal_fourier.h"
 #include "rt_nonfinite.h"
+#include "score_ppg_signal_fourier_types.h"
 #include "coder_array.h"
 #include <algorithm>
 #include <cmath>
@@ -233,9 +233,9 @@ namespace coder
                         double Xpk_data[], int Xpk_size[2]);
   static void findpeaks(const array<double, 2U> &Yin, array<double, 2U> &Ypk,
                         array<double, 2U> &Xpk);
-  static void gradient(const double x[500], double varargout_1[500]);
   static void gradient(const double x_data[], const int x_size[2], double
                        varargout_1_data[], int varargout_1_size[2]);
+  static void gradient(const double x[500], double varargout_1[500]);
   namespace internal
   {
     namespace blas
@@ -249,8 +249,8 @@ namespace coder
       static int xgeqp3(array<double, 2U> &A, double tau_data[], int jpvt[2]);
     }
 
-    static double maximum(const array<double, 2U> &x);
     static double maximum(const double x[2]);
+    static double maximum(const array<double, 2U> &x);
     static double minimum(const double x[2]);
     static double minimum(const double x_data[], const int x_size[2], int &idx);
   }
@@ -261,9 +261,9 @@ namespace coder
   static void interp1(const array<double, 2U> &varargin_1, const array<double,
                       2U> &varargin_2, const double varargin_3[500], double Vq
                       [500]);
-  static void linspace(double d2, double y[500]);
   static void linspace(double d1, double d2, const int64m_T N, array<double, 2U>
                        &y);
+  static void linspace(double d2, double y[500]);
   static void pchip(const array<double, 2U> &x, const array<double, 2U> &y,
                     array<double, 2U> &v_breaks, array<double, 2U> &v_coefs);
   static double ppval(const array<double, 2U> &pp_breaks, const array<double, 2U>
@@ -2400,6 +2400,18 @@ namespace coder
     return c;
   }
 
+  static void filter(const double x[500], double y[500])
+  {
+    std::memset(&y[0], 0, 500U * sizeof(double));
+    for (int k{0}; k < 50; k++) {
+      int b_k;
+      b_k = k + 1;
+      for (int j{b_k}; j < 501; j++) {
+        y[j - 1] += 0.02 * x[(j - k) - 1];
+      }
+    }
+  }
+
   static void filter(const array<double, 2U> &x, array<double, 2U> &y)
   {
     array<double, 1U> b;
@@ -2460,15 +2472,125 @@ namespace coder
     }
   }
 
-  static void filter(const double x[500], double y[500])
+  static void findpeaks(const double Yin[426], double Ypk_data[], int Ypk_size[2],
+                        double Xpk_data[], int Xpk_size[2])
   {
-    std::memset(&y[0], 0, 500U * sizeof(double));
-    for (int k{0}; k < 50; k++) {
-      int b_k;
-      b_k = k + 1;
-      for (int j{b_k}; j < 501; j++) {
-        y[j - 1] += 0.02 * x[(j - k) - 1];
+    array<int, 2U> y;
+    array<int, 1U> b_fPk_data;
+    array<int, 1U> b_iInfinite_data;
+    array<int, 1U> c;
+    array<int, 1U> ia;
+    array<int, 1U> ib;
+    double ykfirst;
+    int idx_data[852];
+    int fPk_data[426];
+    int iInfinite_data[426];
+    int kfirst;
+    int nInf;
+    int nPk;
+    short iFinite_data[426];
+    char dir;
+    bool isinfykfirst;
+    nPk = -1;
+    nInf = -1;
+    dir = 'n';
+    kfirst = 0;
+    ykfirst = rtInf;
+    isinfykfirst = true;
+    for (int k{0}; k < 426; k++) {
+      double yk;
+      bool isinfyk;
+      yk = Yin[k];
+      if (std::isnan(yk)) {
+        yk = rtInf;
+        isinfyk = true;
+      } else if (std::isinf(yk) && (yk > 0.0)) {
+        isinfyk = true;
+        nInf++;
+        iInfinite_data[nInf] = k + 1;
+      } else {
+        isinfyk = false;
       }
+
+      if (yk != ykfirst) {
+        char previousdir;
+        previousdir = dir;
+        if (isinfyk || isinfykfirst) {
+          dir = 'n';
+        } else if (yk < ykfirst) {
+          dir = 'd';
+          if (previousdir == 'i') {
+            nPk++;
+            iFinite_data[nPk] = static_cast<short>(kfirst);
+          }
+        } else {
+          dir = 'i';
+        }
+
+        ykfirst = yk;
+        kfirst = k + 1;
+        isinfykfirst = isinfyk;
+      }
+    }
+
+    kfirst = 0;
+    if (nPk + 1 < 1) {
+      nPk = -1;
+    }
+
+    nPk++;
+    for (int k{0}; k < nPk; k++) {
+      short i;
+      i = iFinite_data[k];
+      ykfirst = Yin[i - 1];
+      if ((ykfirst > rtMinusInf) && (ykfirst - std::fmax(Yin[i - 2], Yin[i]) >=
+           0.0)) {
+        kfirst++;
+        fPk_data[kfirst - 1] = i;
+      }
+    }
+
+    if (kfirst < 1) {
+      kfirst = 0;
+    }
+
+    b_fPk_data.set(&fPk_data[0], kfirst);
+    if (nInf + 1 < 1) {
+      nInf = -1;
+    }
+
+    b_iInfinite_data.set(&iInfinite_data[0], nInf + 1);
+    do_vectors(b_fPk_data, b_iInfinite_data, c, ia, ib);
+    kfirst = c.size(0);
+    y.set_size(1, c.size(0));
+    if (c.size(0) > 0) {
+      y[0] = 1;
+      nPk = 1;
+      for (int k{2}; k <= kfirst; k++) {
+        nPk++;
+        y[k - 1] = nPk;
+      }
+    }
+
+    if (kfirst - 1 >= 0) {
+      std::copy(&y[0], &y[kfirst], &idx_data[0]);
+    }
+
+    if (c.size(0) > 426) {
+      kfirst = 426;
+    }
+
+    for (int k{0}; k < kfirst; k++) {
+      fPk_data[k] = c[idx_data[k] - 1];
+    }
+
+    Ypk_size[0] = 1;
+    Ypk_size[1] = kfirst;
+    Xpk_size[0] = 1;
+    Xpk_size[1] = kfirst;
+    for (int k{0}; k < kfirst; k++) {
+      Ypk_data[k] = Yin[fPk_data[k] - 1];
+      Xpk_data[k] = static_cast<short>(static_cast<short>(fPk_data[k] - 1) + 1);
     }
   }
 
@@ -2597,138 +2719,6 @@ namespace coder
     }
   }
 
-  static void findpeaks(const double Yin[426], double Ypk_data[], int Ypk_size[2],
-                        double Xpk_data[], int Xpk_size[2])
-  {
-    array<int, 2U> y;
-    array<int, 1U> b_fPk_data;
-    array<int, 1U> b_iInfinite_data;
-    array<int, 1U> c;
-    array<int, 1U> ia;
-    array<int, 1U> ib;
-    double ykfirst;
-    int idx_data[852];
-    int fPk_data[426];
-    int iInfinite_data[426];
-    int kfirst;
-    int nInf;
-    int nPk;
-    short iFinite_data[426];
-    char dir;
-    bool isinfykfirst;
-    nPk = -1;
-    nInf = -1;
-    dir = 'n';
-    kfirst = 0;
-    ykfirst = rtInf;
-    isinfykfirst = true;
-    for (int k{0}; k < 426; k++) {
-      double yk;
-      bool isinfyk;
-      yk = Yin[k];
-      if (std::isnan(yk)) {
-        yk = rtInf;
-        isinfyk = true;
-      } else if (std::isinf(yk) && (yk > 0.0)) {
-        isinfyk = true;
-        nInf++;
-        iInfinite_data[nInf] = k + 1;
-      } else {
-        isinfyk = false;
-      }
-
-      if (yk != ykfirst) {
-        char previousdir;
-        previousdir = dir;
-        if (isinfyk || isinfykfirst) {
-          dir = 'n';
-        } else if (yk < ykfirst) {
-          dir = 'd';
-          if (previousdir == 'i') {
-            nPk++;
-            iFinite_data[nPk] = static_cast<short>(kfirst);
-          }
-        } else {
-          dir = 'i';
-        }
-
-        ykfirst = yk;
-        kfirst = k + 1;
-        isinfykfirst = isinfyk;
-      }
-    }
-
-    kfirst = 0;
-    if (nPk + 1 < 1) {
-      nPk = -1;
-    }
-
-    nPk++;
-    for (int k{0}; k < nPk; k++) {
-      short i;
-      i = iFinite_data[k];
-      ykfirst = Yin[i - 1];
-      if ((ykfirst > rtMinusInf) && (ykfirst - std::fmax(Yin[i - 2], Yin[i]) >=
-           0.0)) {
-        kfirst++;
-        fPk_data[kfirst - 1] = i;
-      }
-    }
-
-    if (kfirst < 1) {
-      kfirst = 0;
-    }
-
-    b_fPk_data.set(&fPk_data[0], kfirst);
-    if (nInf + 1 < 1) {
-      nInf = -1;
-    }
-
-    b_iInfinite_data.set(&iInfinite_data[0], nInf + 1);
-    do_vectors(b_fPk_data, b_iInfinite_data, c, ia, ib);
-    kfirst = c.size(0);
-    y.set_size(1, c.size(0));
-    if (c.size(0) > 0) {
-      y[0] = 1;
-      nPk = 1;
-      for (int k{2}; k <= kfirst; k++) {
-        nPk++;
-        y[k - 1] = nPk;
-      }
-    }
-
-    if (kfirst - 1 >= 0) {
-      std::copy(&y[0], &y[kfirst], &idx_data[0]);
-    }
-
-    if (c.size(0) > 426) {
-      kfirst = 426;
-    }
-
-    for (int k{0}; k < kfirst; k++) {
-      fPk_data[k] = c[idx_data[k] - 1];
-    }
-
-    Ypk_size[0] = 1;
-    Ypk_size[1] = kfirst;
-    Xpk_size[0] = 1;
-    Xpk_size[1] = kfirst;
-    for (int k{0}; k < kfirst; k++) {
-      Ypk_data[k] = Yin[fPk_data[k] - 1];
-      Xpk_data[k] = static_cast<short>(static_cast<short>(fPk_data[k] - 1) + 1);
-    }
-  }
-
-  static void gradient(const double x[500], double varargout_1[500])
-  {
-    varargout_1[0] = x[1] - x[0];
-    for (int j{0}; j < 498; j++) {
-      varargout_1[j + 1] = (x[j + 2] - x[j]) / 2.0;
-    }
-
-    varargout_1[499] = x[499] - x[498];
-  }
-
   static void gradient(const double x_data[], const int x_size[2], double
                        varargout_1_data[], int varargout_1_size[2])
   {
@@ -2757,6 +2747,16 @@ namespace coder
       varargout_1_data[x_size[1] - 1] = x_data[x_size[1] - 1] - x_data[x_size[1]
         - 2];
     }
+  }
+
+  static void gradient(const double x[500], double varargout_1[500])
+  {
+    varargout_1[0] = x[1] - x[0];
+    for (int j{0}; j < 498; j++) {
+      varargout_1[j + 1] = (x[j + 2] - x[j]) / 2.0;
+    }
+
+    varargout_1[499] = x[499] - x[498];
   }
 
   namespace internal
@@ -3255,18 +3255,6 @@ namespace coder
       }
     }
 
-    static double maximum(const double x[2])
-    {
-      double ex;
-      if ((x[0] < x[1]) || (std::isnan(x[0]) && (!std::isnan(x[1])))) {
-        ex = x[1];
-      } else {
-        ex = x[0];
-      }
-
-      return ex;
-    }
-
     static double maximum(const array<double, 2U> &x)
     {
       double ex;
@@ -3314,6 +3302,30 @@ namespace coder
             }
           }
         }
+      }
+
+      return ex;
+    }
+
+    static double maximum(const double x[2])
+    {
+      double ex;
+      if ((x[0] < x[1]) || (std::isnan(x[0]) && (!std::isnan(x[1])))) {
+        ex = x[1];
+      } else {
+        ex = x[0];
+      }
+
+      return ex;
+    }
+
+    static double minimum(const double x[2])
+    {
+      double ex;
+      if ((x[0] > x[1]) || (std::isnan(x[0]) && (!std::isnan(x[1])))) {
+        ex = x[1];
+      } else {
+        ex = x[0];
       }
 
       return ex;
@@ -3374,18 +3386,6 @@ namespace coder
             }
           }
         }
-      }
-
-      return ex;
-    }
-
-    static double minimum(const double x[2])
-    {
-      double ex;
-      if ((x[0] > x[1]) || (std::isnan(x[0]) && (!std::isnan(x[1])))) {
-        ex = x[1];
-      } else {
-        ex = x[0];
       }
 
       return ex;
@@ -4618,6 +4618,88 @@ static void uMultiWordShr(const unsigned int u1[], unsigned int n2, unsigned int
   }
 }
 
+void average_pulse(const coder::array<double, 2U> &processed_ppg_signal, double
+                   b_average_pulse[500])
+{
+  coder::array<double, 2U> b_processed_ppg_signal;
+  coder::array<double, 2U> indices;
+  coder::array<double, 2U> y;
+  int i;
+  int num_pulses;
+
+  // AVERAGE_PULSE
+  //  Returns the average pulse waveform of the processed PPG signal
+  split_ppg_signal(processed_ppg_signal, indices);
+  std::memset(&b_average_pulse[0], 0, 500U * sizeof(double));
+  num_pulses = 0;
+  i = indices.size(1);
+  for (int b_i{0}; b_i <= i - 2; b_i++) {
+    double b_dv[500];
+    double ppg_pulse[500];
+    double b_y;
+    double d;
+    int b_loop_ub;
+    int i2;
+    int loop_ub;
+    b_y = indices[b_i];
+    d = indices[b_i + 1];
+    if (b_y > d) {
+      i2 = 0;
+      loop_ub = 0;
+    } else {
+      i2 = static_cast<int>(b_y) - 1;
+      loop_ub = static_cast<int>(d);
+    }
+
+    // PREPROCESS_PPG_PULSE
+    //  Returns a processed copy of a PPG pulse.
+    //  Normalize and rescale to [0, 1] range
+    b_loop_ub = loop_ub - i2;
+    b_processed_ppg_signal.set_size(1, b_loop_ub);
+    for (int i1{0}; i1 < b_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[i2 + i1];
+    }
+
+    b_y = coder::combineVectorElements(b_processed_ppg_signal) / static_cast<
+      double>(b_loop_ub);
+    b_processed_ppg_signal.set_size(1, b_loop_ub);
+    for (int i1{0}; i1 < b_loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = processed_ppg_signal[i2 + i1] - b_y;
+    }
+
+    coder::b_abs(b_processed_ppg_signal, y);
+    b_y = coder::internal::maximum(y);
+    b_processed_ppg_signal.set_size(1, b_processed_ppg_signal.size(1));
+    loop_ub = b_processed_ppg_signal.size(1) - 1;
+    for (int i1{0}; i1 <= loop_ub; i1++) {
+      b_processed_ppg_signal[i1] = b_processed_ppg_signal[i1] / b_y;
+    }
+
+    //  Interpolate using cubic interpolation
+    //  We want a fixed amount of samples for all pulses (500)
+    if (b_processed_ppg_signal.size(1) < 1) {
+      y.set_size(1, 0);
+    } else {
+      y.set_size(1, b_loop_ub);
+      for (int i1{0}; i1 <= loop_ub; i1++) {
+        y[i1] = static_cast<double>(i1) + 1.0;
+      }
+    }
+
+    coder::linspace(static_cast<double>(b_processed_ppg_signal.size(1)), b_dv);
+    coder::interp1(y, b_processed_ppg_signal, b_dv, ppg_pulse);
+    for (int i1{0}; i1 < 500; i1++) {
+      b_average_pulse[i1] += ppg_pulse[i1];
+    }
+
+    num_pulses++;
+  }
+
+  for (int i1{0}; i1 < 500; i1++) {
+    b_average_pulse[i1] /= static_cast<double>(num_pulses);
+  }
+}
+
 void preprocess_ppg_signal(const coder::array<double, 2U> &ppg_signal, const
   coder::array<int64m_T, 2U> &timestamps, coder::array<double, 2U>
   &processed_ppg_signal)
@@ -4703,14 +4785,6 @@ void preprocess_ppg_signal(const coder::array<double, 2U> &ppg_signal, const
   }
 
   coder::detrend(b_processed_ppg_signal, processed_ppg_signal);
-}
-
-void preprocess_ppg_signal_initialize()
-{
-}
-
-void preprocess_ppg_signal_terminate()
-{
 }
 
 void score_ppg_signal_fourier(const coder::array<double, 2U>
@@ -5967,7 +6041,7 @@ void score_ppg_signal_fourier(const coder::array<double, 2U>
     }
 
     //  Interpolate using cubic interpolation
-    //  We want a fixed amount of samples for all pulses
+    //  We want a fixed amount of samples for all pulses (500)
     if (b_processed_ppg_signal.size(1) < 1) {
       y.set_size(1, 0);
     } else {
@@ -6013,6 +6087,14 @@ void score_ppg_signal_fourier(const coder::array<double, 2U>
 
     scores[i] = coder::dot(b_combined_coef_data, combined_coef_size, y);
   }
+}
+
+void score_ppg_signal_fourier_initialize()
+{
+}
+
+void score_ppg_signal_fourier_terminate()
+{
 }
 
 void score_ppg_signal_linear_slope(const coder::array<double, 2U>
@@ -6078,7 +6160,7 @@ void score_ppg_signal_linear_slope(const coder::array<double, 2U>
     }
 
     //  Interpolate using cubic interpolation
-    //  We want a fixed amount of samples for all pulses
+    //  We want a fixed amount of samples for all pulses (500)
     if (b_processed_ppg_signal.size(1) < 1) {
       y.set_size(1, 0);
     } else {
@@ -6164,7 +6246,7 @@ void score_ppg_signal_peak_detection(const coder::array<double, 2U>
     }
 
     //  Interpolate using cubic interpolation
-    //  We want a fixed amount of samples for all pulses
+    //  We want a fixed amount of samples for all pulses (500)
     if (b_processed_ppg_signal.size(1) < 1) {
       y.set_size(1, 0);
     } else {
@@ -6255,7 +6337,7 @@ void score_ppg_signal_rising_edge_area(const coder::array<double, 2U>
     }
 
     //  Interpolate using cubic interpolation
-    //  We want a fixed amount of samples for all pulses
+    //  We want a fixed amount of samples for all pulses (500)
     if (b_processed_ppg_signal.size(1) < 1) {
       y.set_size(1, 0);
     } else {
@@ -6340,4 +6422,4 @@ void split_ppg_signal(const coder::array<double, 2U> &ppg_signal, coder::array<
   coder::findpeaks(b_smoothed_ppg_signal, smoothed_ppg_signal, indices);
 }
 
-// End of code generation (preprocess_ppg_signal.cpp)
+// End of code generation (score_ppg_signal_fourier.cpp)

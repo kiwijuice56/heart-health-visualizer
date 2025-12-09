@@ -272,6 +272,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 64
 
 [node name="DataContainer" type="VBoxContainer" parent="ScreenManager/MainContainer/ContentContainer/SettingsContainer/ScrollContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
 

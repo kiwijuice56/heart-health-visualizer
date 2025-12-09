@@ -5,7 +5,7 @@
 //
 // rtGetInf.h
 //
-// Code generation for function 'preprocess_ppg_signal'
+// Code generation for function 'score_ppg_signal_fourier'
 //
 
 #ifndef RTGETINF_H

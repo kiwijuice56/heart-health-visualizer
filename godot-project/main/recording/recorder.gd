@@ -124,6 +124,8 @@ func create_recording(user_id: String) -> Recording:
 	new_recording.processed_ppg_signal = ppg_analyzer.get_preprocessed_ppg_signal(ppg_signal, ppg_signal_timestamps)
 	new_recording.pulse_indices = ppg_analyzer.get_ppg_indices(new_recording.processed_ppg_signal)
 	
+	new_recording.average_ppg_pulse = ppg_analyzer.get_average_pulse(new_recording.processed_ppg_signal)
+	
 	# Calculate HR and HRV using algorithms entirely implemented in C++
 	new_recording.heart_rate = ppg_analyzer.calculate_heart_rate(new_recording.processed_ppg_signal, 150)
 	new_recording.heart_rate_variability = ppg_analyzer.calculate_heart_rate_variability(new_recording.processed_ppg_signal, 150)

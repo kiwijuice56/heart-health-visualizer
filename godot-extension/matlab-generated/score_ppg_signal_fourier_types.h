@@ -3,13 +3,13 @@
 // course requirements at degree granting institutions only.  Not for
 // government, commercial, or other organizational use.
 //
-// preprocess_ppg_signal_types.h
+// score_ppg_signal_fourier_types.h
 //
-// Code generation for function 'preprocess_ppg_signal'
+// Code generation for function 'score_ppg_signal_fourier'
 //
 
-#ifndef PREPROCESS_PPG_SIGNAL_TYPES_H
-#define PREPROCESS_PPG_SIGNAL_TYPES_H
+#ifndef SCORE_PPG_SIGNAL_FOURIER_TYPES_H
+#define SCORE_PPG_SIGNAL_FOURIER_TYPES_H
 
 // Include files
 #include "rtwtypes.h"
@@ -32,4 +32,4 @@ struct uint128m_T {
 };
 
 #endif
-// End of code generation (preprocess_ppg_signal_types.h)
+// End of code generation (score_ppg_signal_fourier_types.h)
