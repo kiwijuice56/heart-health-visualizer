@@ -1,18 +1,24 @@
 class_name InspectionMenu extends Menu
 
-@export var x: int = 60
-@export var y: int = 20
+var current_recording: Recording
 var show_advanced_info: bool = false
 
 func _ready() -> void:
 	super._ready()
+	%DeleteButton.pressed.connect(_on_delete_pressed)
 	%AdvancedButton.pressed.connect(_on_advanced_pressed)
 
 func _on_advanced_pressed() -> void:
 	show_advanced_info = not show_advanced_info
 	handle_advanced_info()
 
+func _on_delete_pressed() -> void:
+	Ref.saver.delete_recording(current_recording)
+	_on_close_button_pressed()
+
 func initialize_information(recording: Recording) -> void:
+	current_recording = recording
+	
 	recording.heart_rate = Ref.recorder.ppg_analyzer.calculate_heart_rate(recording.processed_ppg_signal, 150)
 	recording.heart_rate_variability = Ref.recorder.ppg_analyzer.calculate_heart_rate_variability(recording.processed_ppg_signal, 150)
 	

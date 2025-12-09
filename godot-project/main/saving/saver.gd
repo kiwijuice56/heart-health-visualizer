@@ -51,24 +51,17 @@ func reload_recordings() -> void:
 
 ## Saved a recording to storage.
 func save_recording(new_recording: Recording) -> void:
-	var folder: String = ""
-	if new_recording.user_id.length() == 0:
-		folder = "myself"
-	else:
-		folder = new_recording.user_id.validate_filename()
+	var folder: String = get_folder_name(new_recording)
 	assert(folder.length() > 0)
 	
 	var root_path: String = Ref.file_selector.get_save_path() + folder + "/"
 	DirAccess.make_dir_absolute(root_path)
 	
 	# Save the app resource
-	var uuid: String = UUID.v4()
-	var file_name: String = uuid + ".tres"
-	ResourceSaver.save(new_recording, root_path + file_name)
+	ResourceSaver.save(new_recording, root_path + new_recording.uuid + ".tres")
 	
 	# Save the raw .csv for processing
-	var csv_file_name: String = uuid + ".csv"
-	var file_access: FileAccess = FileAccess.open(root_path + csv_file_name, FileAccess.WRITE)
+	var file_access: FileAccess = FileAccess.open(root_path + new_recording.uuid + ".csv", FileAccess.WRITE)
 	# time | red channel
 	for i in range(len(new_recording.raw_ppg_signal_timestamps)):
 		file_access.store_csv_line([new_recording.raw_ppg_signal_timestamps[i], new_recording.raw_ppg_signal[i]])
@@ -77,16 +70,27 @@ func save_recording(new_recording: Recording) -> void:
 	saved_recordings.append(new_recording)
 	recording_saved.emit(new_recording)
 
+# TODO: Fix to account for new structure
 func clear_all_data() -> void:
+	assert(false, "Not implemented.")
+	
 	saved_recordings.clear()
 	
-	var dir: DirAccess = DirAccess.open(Ref.file_selector.get_save_path())
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-	while file_name != "":
-		var path: String = dir.get_current_dir() + "/" + file_name
-		if path.ends_with(".csv") or path.contains(".tres") and ResourceLoader.load(path) is Recording:
-			DirAccess.remove_absolute(path)
-		file_name = dir.get_next()
+	# ...
 	
 	reload_recordings()
+
+func delete_recording(recording: Recording) -> void:
+	var folder: String = get_folder_name(recording)
+	var root_path: String = Ref.file_selector.get_save_path() + folder + "/"
+	DirAccess.remove_absolute(root_path + recording.uuid + ".csv")
+	DirAccess.remove_absolute(root_path + recording.uuid + ".tres")
+	reload_recordings()
+
+func get_folder_name(recording: Recording) -> String:
+	var folder: String = ""
+	if recording.user_id.length() == 0:
+		folder = "myself"
+	else:
+		folder = recording.user_id.validate_filename()
+	return folder

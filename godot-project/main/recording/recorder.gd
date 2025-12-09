@@ -113,6 +113,7 @@ func create_recording(user_id: String) -> Recording:
 	
 	var new_recording: Recording = Recording.new()
 	
+	new_recording.uuid = UUID.v4()
 	new_recording.user_id = user_id
 	new_recording.version = ProjectSettings.get_setting("application/config/version")
 	new_recording.time = Time.get_datetime_dict_from_system()

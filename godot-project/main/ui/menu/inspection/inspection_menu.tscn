@@ -1,8 +1,9 @@
-[gd_scene load_steps=13 format=3 uid="uid://bekhx2vhpfex3"]
+[gd_scene load_steps=17 format=3 uid="uid://bekhx2vhpfex3"]
 
 [ext_resource type="Theme" uid="uid://bqitn6bx4np8k" path="res://main/ui/theme/theme.tres" id="1_mth0t"]
 [ext_resource type="Script" uid="uid://dy8u0prb4movh" path="res://main/ui/menu/inspection/inspection_menu.gd" id="2_mth0t"]
 [ext_resource type="Shader" uid="uid://drfp5s1djbnr3" path="res://main/ui/title_background.gdshader" id="3_kn5ta"]
+[ext_resource type="Shader" uid="uid://yg5ga3aa5x2i" path="res://main/ui/menu/inspection/vignette.gdshader" id="3_wyglj"]
 [ext_resource type="Texture2D" uid="uid://qemvk0srnrrq" path="res://main/ui/icons/x.png" id="4_wyglj"]
 [ext_resource type="PackedScene" uid="uid://bsjbwo2ih2fke" path="res://main/ui/menu/recording/chart/chart.tscn" id="5_c0lnj"]
 
@@ -42,6 +43,38 @@ bg_color = Color(1, 1, 1, 0.819608)
 border_width_bottom = 2
 border_color = Color(0, 0, 0, 1)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4u0tk"]
+shader = ExtResource("3_wyglj")
+shader_parameter/alpha = 0.5
+shader_parameter/begin = 0.9
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kn5ta"]
+content_margin_left = 8.0
+content_margin_top = 16.0
+content_margin_right = 8.0
+content_margin_bottom = 16.0
+bg_color = Color(0.49019608, 0.21176471, 0.28627452, 1)
+border_width_bottom = 6
+border_color = Color(0.36862746, 0.105882354, 0.1764706, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wyglj"]
+content_margin_left = 8.0
+content_margin_top = 16.0
+content_margin_right = 8.0
+content_margin_bottom = 16.0
+bg_color = Color(0.36862746, 0.105882354, 0.1764706, 1)
+border_width_bottom = 6
+border_color = Color(0.3019608, 0.06666667, 0.12941177, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+corner_detail = 9
+
 [node name="InspectionMenu" type="PanelContainer" node_paths=PackedStringArray("close_button")]
 anchors_preset = 15
 anchor_right = 1.0
@@ -51,7 +84,6 @@ grow_vertical = 2
 theme = ExtResource("1_mth0t")
 theme_override_styles/panel = SubResource("StyleBoxFlat_bsumw")
 script = ExtResource("2_mth0t")
-y = 10
 close_button = NodePath("VBoxContainer/TitleContainer/HBoxContainer/CloseButton")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
@@ -103,6 +135,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 theme_override_constants/margin_left = 128
 theme_override_constants/margin_right = 128
 
@@ -110,6 +143,7 @@ theme_override_constants/margin_right = 128
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 theme_override_constants/separation = 16
 
 [node name="TopSpacing" type="Control" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
@@ -152,6 +186,19 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.133333)
 
+[node name="RawChart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+padding = 0.4
+
+[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer/RawChart"]
+modulate = Color(1, 1, 1, 0.372549)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "raw data"
+
 [node name="ProcessedChart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
 unique_name_in_owner = true
 layout_mode = 2
@@ -175,7 +222,7 @@ layout_mode = 2
 size_flags_vertical = 0
 lineColor = Color(0.17254902, 0.5411765, 0.05490196, 1)
 peakColor = Color(0.110400006, 0.60965323, 0.92, 0)
-padding = 0.0391
+padding = 0.45
 peakLength = 0
 lineWidth = 5.877
 peakRadius = 5.0
@@ -186,19 +233,6 @@ layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 text = "average pulse"
-
-[node name="RawChart" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer" instance=ExtResource("5_c0lnj")]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-padding = 0.4
-
-[node name="Label" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer/RawChart"]
-modulate = Color(1, 1, 1, 0.372549)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-text = "raw data"
 
 [node name="ScoreLabel" type="Label" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
@@ -266,20 +300,43 @@ theme_override_colors/font_color = Color(0.449555, 0.4277, 0.47, 1)
 text = "Your heart health score is a heuristic based on the shape of your pulse waveform. It is not conclusive evidence of your overall heart health. Use this information with caution and consult with a health care professional if you are concerned about your results."
 autowrap_mode = 2
 
-[node name="BottomgSpacing" type="Control" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 64)
+[node name="Spacing" type="Control" parent="VBoxContainer/VBoxContainer/MarginContainer/ScrollContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 128)
 layout_mode = 2
+mouse_filter = 2
 
-[node name="AdvancedButtonContainer" type="MarginContainer" parent="VBoxContainer/VBoxContainer/MarginContainer"]
+[node name="Vignette" type="ColorRect" parent="VBoxContainer/VBoxContainer/MarginContainer"]
+material = SubResource("ShaderMaterial_4u0tk")
+layout_mode = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="ButtonContainer" type="MarginContainer" parent="VBoxContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="AdvancedButton" type="Button" parent="VBoxContainer/VBoxContainer/MarginContainer/AdvancedButtonContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer/MarginContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="AdvancedButton" type="Button" parent="VBoxContainer/VBoxContainer/MarginContainer/ButtonContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
 focus_mode = 0
 text = "Show Advanced Info"
+
+[node name="DeleteButton" type="Button" parent="VBoxContainer/VBoxContainer/MarginContainer/ButtonContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_kn5ta")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_wyglj")
+text = "Delete Recording"

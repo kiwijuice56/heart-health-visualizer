@@ -96,7 +96,7 @@ autoplay = "spin"
 
 [node name="Chart" parent="VisualContainer/VBoxContainer" instance=ExtResource("3_76lal")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 400)
+custom_minimum_size = Vector2(0, 800)
 layout_mode = 2
 size_flags_vertical = 0
 timeWindow = 5.5
@@ -105,9 +105,11 @@ live = true
 
 [node name="ProgressBar" type="ProgressBar" parent="VisualContainer/VBoxContainer"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 size_flags_vertical = 2
 max_value = 1.0
+step = 0.001
 show_percentage = false
 
 [node name="CameraTexture" type="TextureRect" parent="VisualContainer/VBoxContainer"]

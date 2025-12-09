@@ -4,6 +4,7 @@ class_name Recording extends Resource
 @export var version: String
 @export var time: Dictionary
 @export var user_id: String
+@export var uuid: String
 
 @export_group("Raw Data")
 @export var raw_ppg_signal: PackedInt32Array
